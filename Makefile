@@ -1,4 +1,8 @@
 # Omega make file
+SOURCEDIR:=$(HOME)/devel
+INSTALLDIR:=$(HOME)/prg
+LIBDIR:=$(INSTALLDIR)/lib
+INCDIR:=$(INSTALLDIR)/include
 
 CC:=gcc
 LEX:=flex
@@ -12,28 +16,22 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wwrite-strings #-Wconversion
 
 
-CFLAGS:= $(CWARNINGS) --std=c11 -g -DDEBUG
+CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=-d
 
 
-SRC    :=scanner.l parse.c parse_expressions.c parse_statements.c
-HEADERS:=tokens.h utility.h
-OBJECTS:=scanner.o parse.o parse_expressions.o parse_statements.o
-LIBS   :=
+SRC    :=scanner.l parse.c parse_expressions.c parse_statements.c globals.c
+HEADERS:=compiler.h functions.h globals.h tokens.h
+OBJECTS:=main.o scanner.o parse_expressions.o parse_statements.o globals.o
+LIBS   :=-ldata
 
-parse_headers:=tokens.h utility.h parse.h
-
-
-scanner.o: scanner.c tokens.h utility.h
-parse.o            : $(parse_headers) parse.c
-parse_expressions.o: $(parse_headers) parse_expressions.c
-parse_statements.o : $(parse_headers) parse_statements.c
+%.o: %.c $(HEADERS)
 
 scanner.c: scanner.l Makefile
 	$(LEX) $(LFLAGS) -o $@ $<
 
 compiler: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 
 ################################## UTILITIES ###################################

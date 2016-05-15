@@ -1,19 +1,6 @@
 #ifndef _TOKENS_H
 #define _TOKENS_H
 
-#include <stdint.h>
-
-typedef uint16_t token_t;
-typedef unsigned long long umax;
-typedef unsigned int uint;
-
-umax  yynumber;      // numbers passed to the parser by T_NUM
-
-uint block_lvl;      // no. of leading tabs on the current line passed by T_TAB
-
-token_t yylex(void);
-#define YY_DECL token_t yylex(void)
-
 
 /******************************************************************************/
 //                       Primary data and formatting
@@ -105,7 +92,9 @@ token_t yylex(void);
 #define T_UINT   (token_t)0x004a
 #define T_UINTM  (token_t)0x004b
 
-#define T_CONST  (token_t)0x004c
-#define T_STATIC (token_t)0x004d
+#define T_CH     (token_t)0x004c
+
+#define T_CONST  (token_t)0x004d
+#define T_STATIC (token_t)0x004e
 
 #endif // _TOKENS_H

@@ -7,9 +7,10 @@
 //
 /******************************************************************************/
 
+#define _SCANNER
 
-	#include "tokens.h"
-	#include "utility.h"
+#include "compiler.h"
+#define YY_DECL token_t yylex(void)
 %}
 
 
@@ -128,11 +129,17 @@ int8  return T_INT8;
 int16 return T_INT16;
 int32 return T_INT32;
 int64 return T_INT64;
+int   return T_INT;
+intm  return T_INTM;
 
 uint8  return T_UINT8;
 uint16 return T_UINT16;
 uint32 return T_UINT32;
 uint64 return T_UINT64;
+uint   return T_UINT;
+uintm  return T_UINTM;
+
+char   return T_CH;
 
 const  return T_CONST;
 static return T_STATIC;

@@ -1,6 +1,8 @@
 
 
-#include "parse.h"
+#include "compiler.h"
+
+
 /******************************************************************************/
 //                           PRIVATE PROTOTYPES
 /******************************************************************************/
@@ -11,10 +13,13 @@ void Jump      (void);
 void If        (uint lvl); // only control statements need to know the block_lvl
 void While     (uint lvl);
 
+void Declaration(void);
+
 
 /******************************************************************************/
-//                             PRIVATE FUNCTIONS
+//                           CONTROL STATEMENTS
 /******************************************************************************/
+
 
 void If(uint lvl){
 	char if_label[UNQ_LABEL_SZ];
@@ -77,33 +82,49 @@ void Jump(void){
 }
 
 
+/******************************************************************************/
+//                              DECLARATIONS
+/******************************************************************************/
+
+
+void Declaration(void){
+	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));
+	
+	if (new_symbol == NULL)
+		error("Out of memory");
+	
+	switch (token){
+	case T_INT8:
+		break;
+	case T_INT16:
+		break;
+	case T_INT32:
+		break;
+	case T_INT64:
+		break;
+	case T_INTM:
+		break;
+	case T_INT:
+		break;
+	case T_UINT8:
+		break;
+	case T_UINT16:
+		break;
+	case T_UINT32:
+		break;
+	case T_UINT64:
+		break;
+	case T_UINTM:
+		break;
+	case T_UINT:
+		break;
+	}
+}
 
 
 /******************************************************************************/
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
-
-
-/*void Block(void){ // a block needs to be a type of statement*/
-/*	uint lvl=block_lvl;*/
-/*	*/
-/*	Match(T_NL);*/
-/*	if(block_lvl <= lvl) expected("indented block");*/
-/*	lvl=block_lvl;*/
-/*	printf("\t; starting block level %u\n", lvl);*/
-/*	*/
-/*	do {*/
-/*		Statement();*/
-/*	} while (token != T_EOF && block_lvl == lvl);*/
-/*	*/
-/*//	if(token == T_EOF && !lvl)*/
-/*//		error("End of File reached before end of current block");*/
-/*	if(block_lvl > lvl)*/
-/*		error("Unexpected nested block");*/
-/*	*/
-/*	printf("\t; end of block level %u\n", lvl);*/
-/*}*/
-
 
 
 void Statement (uint lvl){ // any single line. always ends with NL
@@ -117,10 +138,12 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			do {
 				Statement(lvl);
 			} while (token != T_EOF && block_lvl == lvl);
+			if(block_lvl > lvl) error("Unexpected nested block");
 			fprintf(outfile, "\t; END block level %u\n", lvl);
 		}
 	}
-	else {
+	else if (token <= T_UINTM && token >= T_INT8) Declaration();
+	else
 		switch (token){
 		case T_LBL:   Label(   ); break;
 		case T_JMP:   Jump (   ); break;
@@ -129,7 +152,6 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		default:
 			Assignment_statement();
 		}
-	}
 }
 
 

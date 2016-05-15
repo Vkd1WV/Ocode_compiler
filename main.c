@@ -7,32 +7,13 @@
 /******************************************************************************/
 
 
-/******************************************************************************/
-//                                 INCLUDES
-/******************************************************************************/
-
-
-#include "parse.h"
-
-
-/******************************************************************************/
-//                        GLOBAL CONSTANTS & VARIABLES
-/******************************************************************************/
-
-
-token_t token; // global lookahead token
-FILE* outfile;
-mode_t x86_mode;
+#include "compiler.h"
 
 
 /******************************************************************************/
 //                             BASIC FUNCTIONS
 /******************************************************************************/
 
-
-static inline void init(void){
-	get_token();
-}
 
 // create and return a pointer to a unique label
 char* new_label(void){
@@ -168,16 +149,14 @@ void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize){
 	emit_cmd(output);
 }
 
-
-/******************************************************************************/
-//                            PUBLIC FUNCTIONS
-/******************************************************************************/
-
-
 int main (void){
+	
+	// initializations
 	outfile=stdout;
 	x86_mode=Long;
-	init();
+	get_token();
+	symbol_table=new_DS('l');
+	
 	
 	fprintf(outfile,"; a NASM object file created by the Omega Compiler\n");
 	fprintf(
@@ -195,7 +174,7 @@ int main (void){
 	} while (token != T_EOF);
 	
 	// constants
-	fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
+	//fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
 	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");
 	
 	return EXIT_SUCCESS;
