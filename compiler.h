@@ -3,15 +3,23 @@
 
 
 /******************************************************************************/
+//                            Arbitrary Limits
+/******************************************************************************/
+
+
+#define UNQ_LABEL_SZ 12 // string lngth limit for compiler generated labels
+#define NAME_MAX     64 // symbol name length limit. not enforced
+
+
+/******************************************************************************/
 //                            Type Definitions
 /******************************************************************************/
 
 
 #include <stdint.h>
-
-typedef uint16_t token_t;
 typedef unsigned long long umax;
 typedef unsigned int uint;
+
 typedef enum {Real, Protected, Virtual, SMM, Compatibility, Long} mode_t;
 typedef enum { void_t, byte, word, dword, qword } regsz_t;
 typedef enum{
@@ -28,18 +36,11 @@ typedef enum{
 	SP // stack pointer x86=R7, arm=R13
 } reg_t;
 typedef struct {
-	char * name;
-	uint64_t type;
+	char name[NAME_MAX];
+	umax initial_value;
+	regsz_t size;
+	uint8_t flags;
 }sym_entry;
-
-
-/******************************************************************************/
-//                            Arbitrary Limits
-/******************************************************************************/
-
-
-#define UNQ_LABEL_SZ 12 // string lngth limit for compiler generated labels
-#define NAME_MAX     64 // symbol name length limit. not enforced
 
 
 /******************************************************************************/

@@ -7,8 +7,6 @@
 //
 /******************************************************************************/
 
-#define _SCANNER
-
 #include "compiler.h"
 #define YY_DECL token_t yylex(void)
 %}

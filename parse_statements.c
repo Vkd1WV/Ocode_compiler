@@ -119,6 +119,12 @@ void Declaration(void){
 	case T_UINT:
 		break;
 	}
+	Storage_class(new_symbol);
+	strncpy(new_symbol->name, get_name(), NAME_MAX);
+	
+	Assignment(); //??
+	
+	sort(symbol_table, new_symbol, new_symbol->name);
 }
 
 

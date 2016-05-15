@@ -19,10 +19,7 @@ EXTERN umax    yynumber;     // numbers passed to the parser by T_NUM
 
 
 // Global variables provided by the scanner
-//#ifndef _SCANNER
-
 extern int     yylineno;
 extern char *  yytext;
-//#endif
 
 #endif // _GLOBALS_H
