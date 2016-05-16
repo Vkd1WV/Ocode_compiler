@@ -42,6 +42,13 @@ typedef struct {
 	uint8_t flags;
 }sym_entry;
 
+#define S_FUNCT  ((uint8_t) (1<<0))
+#define S_SIGN   ((uint8_t) (1<<1))
+#define S_CONST  ((uint8_t) (1<<2))
+#define S_STATIC ((uint8_t) (1<<3))
+#define S_USED   ((uint8_t) (1<<4))
+#define S_TYPDEF ((uint8_t) (1<<5)) // symbol is a defined type
+
 
 /******************************************************************************/
 //                            Collected Headers

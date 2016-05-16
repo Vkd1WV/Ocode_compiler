@@ -8,12 +8,13 @@
 /******************************************************************************/
 
 
-void Label     (void);
-void Jump      (void);
-void If        (uint lvl); // only control statements need to know the block_lvl
-void While     (uint lvl);
+void Label (void    );
+void Jump  (void    );
+void If    (uint lvl); // only control statements need to know the block_lvl
+void While (uint lvl);
 
-void Declaration(void);
+void Declaration  (void);
+void Storage_class(sym_entry* new_symbol);
 
 
 /******************************************************************************/
@@ -90,41 +91,72 @@ void Jump(void){
 void Declaration(void){
 	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));
 	
-	if (new_symbol == NULL)
-		error("Out of memory");
+	if (new_symbol == NULL) error("Out of memory");
 	
 	switch (token){
 	case T_INT8:
+		new_symbol->size=byte;
+		new_symbol->sign=true;
 		break;
 	case T_INT16:
+		new_symbol->size=word;
+		new_symbol->sign=true;
 		break;
 	case T_INT32:
+		new_symbol->size=dword;
+		new_symbol->sign=true;
 		break;
 	case T_INT64:
+		if (x86_mode != Long)
+			error("64-bit variables only availible in IA-32e mode");
+		new_symbol->size=qword;
+		new_symbol->sign=true;
 		break;
-	case T_INTM:
+	case T_IMAX:
 		break;
 	case T_INT:
 		break;
 	case T_UINT8:
+		new_symbol->size=byte;
+		new_symbol->sign=false;
 		break;
 	case T_UINT16:
+		new_symbol->size=word;
+		new_symbol->sign=false;
 		break;
 	case T_UINT32:
+		new_symbol->size=dword;
+		new_symbol->sign=false;
 		break;
 	case T_UINT64:
+		if (x86_mode != Long)
+			error("64-bit variables only availible in IA-32e mode");
+		new_symbol->size=qword;
+		new_symbol->sign=false;
 		break;
-	case T_UINTM:
+	case T_UMAX:
 		break;
 	case T_UINT:
 		break;
 	}
+	get_token();
 	Storage_class(new_symbol);
-	strncpy(new_symbol->name, get_name(), NAME_MAX);
 	
-	Assignment(); //??
+	do{
+		strncpy(new_symbol->name, get_name(), NAME_MAX);
+		if(token == T)
+		Assignment(new_symbol);
+		sort(symbol_table, new_symbol, new_symbol->name);
+	} while (token != T_NL);
 	
-	sort(symbol_table, new_symbol, new_symbol->name);
+}
+
+void Storage_class(sym_entry* new_symbol){
+	if (token == T_STATIC)
+		new_symbol->type += S_STATIC;
+	else if (token == T_CONST)
+		new_symbol->type += S_CONST;
+	get_token();
 }
 
 
@@ -148,15 +180,14 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			fprintf(outfile, "\t; END block level %u\n", lvl);
 		}
 	}
-	else if (token <= T_UINTM && token >= T_INT8) Declaration();
+	else if (token <= T_UMAX && token >= T_INT8) Declaration();
 	else
 		switch (token){
-		case T_LBL:   Label(   ); break;
-		case T_JMP:   Jump (   ); break;
-		case T_IF:    If   (lvl); break;
-		case T_WHILE: While(lvl); break;
-		default:
-			Assignment_statement();
+			case T_LBL:   Label(   ); break;
+			case T_JMP:   Jump (   ); break;
+			case T_IF:    If   (lvl); break;
+			case T_WHILE: While(lvl); break;
+			default: Assignment_statement();
 		}
 }
 

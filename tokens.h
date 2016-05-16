@@ -25,37 +25,41 @@ typedef uint16_t token_t;
 // order of operations
 #define T_OPAR  (token_t)0x0010
 #define T_CPAR  (token_t)0x0011
+#define T_OBRC  (token_t)0x0012
+#define T_CBRC  (token_t)0x0013
+#define T_OBRK  (token_t)0x0014
+#define T_CBRK  (token_t)0x0015
 // unary
-#define T_DEC   (token_t)0x0012
-#define T_INC   (token_t)0x0013
-#define T_REF   (token_t)0x0014
-#define T_DREF  (token_t)0x0015
-#define T_NOT   (token_t)0x0016
-#define T_INV   (token_t)0x0017
+#define T_DEC   (token_t)0x0016
+#define T_INC   (token_t)0x0017
+#define T_REF   (token_t)0x0018
+#define T_DREF  (token_t)0x0019
+#define T_NOT   (token_t)0x001a
+#define T_INV   (token_t)0x001b
 // multiplicative
-#define T_TIMES (token_t)0x0018
-#define T_MODUL (token_t)0x0019
-#define T_DIV   (token_t)0x001a
-#define T_LSHFT (token_t)0x001b
-#define T_RSHFT (token_t)0x001c
+#define T_TIMES (token_t)0x001c
+#define T_MODUL (token_t)0x001d
+#define T_DIV   (token_t)0x001e
+#define T_LSHFT (token_t)0x001f
+#define T_RSHFT (token_t)0x0020
 // additive
-#define T_PLUS  (token_t)0x001d
-#define T_MINUS (token_t)0x001e
-#define T_BAND  (token_t)0x001f
-#define T_BOR   (token_t)0x0020
-#define T_BXOR  (token_t)0x0021
+#define T_PLUS  (token_t)0x0021
+#define T_MINUS (token_t)0x0022
+#define T_BAND  (token_t)0x0023
+#define T_BOR   (token_t)0x0024
+#define T_BXOR  (token_t)0x0025
 // comparative
-#define T_EQ    (token_t)0x0022
-#define T_NEQ   (token_t)0x0023
-#define T_LT    (token_t)0x0024
-#define T_GT    (token_t)0x0025
-#define T_LTE   (token_t)0x0026
-#define T_GTE   (token_t)0x0027
+#define T_EQ    (token_t)0x0026
+#define T_NEQ   (token_t)0x0027
+#define T_LT    (token_t)0x0028
+#define T_GT    (token_t)0x0029
+#define T_LTE   (token_t)0x002a
+#define T_GTE   (token_t)0x002b
 // boolean
-#define T_AND   (token_t)0x0028
-#define T_OR    (token_t)0x0029
+#define T_AND   (token_t)0x002c
+#define T_OR    (token_t)0x002d
 // assignment
-#define T_ASS  (token_t)0x002a
+#define T_ASS   (token_t)0x002e
 
 
 /******************************************************************************/
@@ -85,14 +89,14 @@ typedef uint16_t token_t;
 #define T_INT32 (token_t)0x0042
 #define T_INT64 (token_t)0x0043
 #define T_INT   (token_t)0x0044
-#define T_INTM  (token_t)0x0045
+#define T_IMAX  (token_t)0x0045
 
 #define T_UINT8  (token_t)0x0046
 #define T_UINT16 (token_t)0x0047
 #define T_UINT32 (token_t)0x0048
 #define T_UINT64 (token_t)0x0049
 #define T_UINT   (token_t)0x004a
-#define T_UINTM  (token_t)0x004b
+#define T_UMAX   (token_t)0x004b
 
 #define T_CH     (token_t)0x004c
 

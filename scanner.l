@@ -77,6 +77,11 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 
 \( return T_OPAR;
 \) return T_CPAR;
+\] return T_CBRK;
+\[ return T_OBRK;
+\{ return T_OBRC;
+\} return T_CBRC;
+
  /* Unary */
 \$   return T_REF;
 @    return T_DREF;
@@ -112,14 +117,18 @@ xor  return T_BXOR;
 :=  return T_ASS;
 
 
-
  /**************************** CONTROL KEYWORDS *******************************/
 
-label return T_LBL;
-jmp   return T_JMP;
-if    return T_IF;
-else  return T_ELSE;
-while return T_WHILE;
+label    return T_LBL;
+jmp      return T_JMP;
+if       return T_IF;
+else     return T_ELSE;
+switch   return T_SWTCH;
+default  return T_DFLT;
+while    return T_WHILE;
+do       return T_DO;
+break    return T_BRK;
+continue return T_CNTN;
 
  /***************************** DATA KEYWORDS *********************************/
 
