@@ -95,49 +95,34 @@ void Declaration(void){
 	
 	switch (token){
 	case T_INT8:
-		new_symbol->size=byte;
-		new_symbol->sign=true;
-		break;
 	case T_INT16:
-		new_symbol->size=word;
-		new_symbol->sign=true;
-		break;
 	case T_INT32:
-		new_symbol->size=dword;
-		new_symbol->sign=true;
-		break;
 	case T_INT64:
+		error(_e_noimp);
 		if (x86_mode != Long)
 			error("64-bit variables only availible in IA-32e mode");
 		new_symbol->size=qword;
-		new_symbol->sign=true;
+		new_symbol->flags |=S_SIGN;
 		break;
 	case T_IMAX:
-		break;
 	case T_INT:
+		if (x86_mode == Long) new_symbol->size = qword;
+		//else new_symbol->size = dword;
+		new_symbol->flags |= S_SIGN;
 		break;
 	case T_UINT8:
-		new_symbol->size=byte;
-		new_symbol->sign=false;
-		break;
 	case T_UINT16:
-		new_symbol->size=word;
-		new_symbol->sign=false;
-		break;
 	case T_UINT32:
-		new_symbol->size=dword;
-		new_symbol->sign=false;
-		break;
 	case T_UINT64:
+		error(_e_noimp);
 		if (x86_mode != Long)
 			error("64-bit variables only availible in IA-32e mode");
 		new_symbol->size=qword;
-		new_symbol->sign=false;
 		break;
 	case T_UMAX:
-		break;
 	case T_UINT:
-		break;
+		if (x86_mode == Long) new_symbol->size = qword;
+		//else new_symbol->size = dword;
 	}
 	get_token();
 	Storage_class(new_symbol);
@@ -153,9 +138,9 @@ void Declaration(void){
 
 void Storage_class(sym_entry* new_symbol){
 	if (token == T_STATIC)
-		new_symbol->type += S_STATIC;
+		new_symbol->type |= S_STATIC;
 	else if (token == T_CONST)
-		new_symbol->type += S_CONST;
+		new_symbol->type |= S_CONST;
 	get_token();
 }
 

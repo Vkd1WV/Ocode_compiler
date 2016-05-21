@@ -114,7 +114,9 @@ xor  return T_BXOR;
 \|  return T_OR;
 &   return T_AND;
 
-:=  return T_ASS;
+:   return T_ASS;
+
+\-\-\- error("ambiguous construct");
 
 
  /**************************** CONTROL KEYWORDS *******************************/
@@ -137,14 +139,14 @@ int16 return T_INT16;
 int32 return T_INT32;
 int64 return T_INT64;
 int   return T_INT;
-intm  return T_INTM;
+imax  return T_IMAX;
 
 uint8  return T_UINT8;
 uint16 return T_UINT16;
 uint32 return T_UINT32;
 uint64 return T_UINT64;
 uint   return T_UINT;
-uintm  return T_UINTM;
+umax   return T_UMAX;
 
 char   return T_CH;
 

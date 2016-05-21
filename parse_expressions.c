@@ -15,8 +15,9 @@
 
 
 // expressions in order of precedence
-void Primary   (void); // returns in rcx.
-void Unary     (void); // returns in rcx. uses rdx
+sym_entry* Primary   (void);
+
+sym_entry* Unary     (void); // returns in rcx. uses rdx
 
 void Term      (void); // returns in rax. uses rdx
 void Expression(void); // returns in rbx
@@ -31,26 +32,40 @@ void Assignment(void);
 /******************************************************************************/
 
 
-void Primary(void){
+sym_entry * Primary(void){
+	static sym_entry symbol;
+	sym_entry * sym_pt;
+	
 	switch (token){
-	case T_OPAR:
-		Match(T_OPAR);
-		emit_cmd("push rax\n\tpush rbx\n\tpush rsi\n\tpush rdi");
-		Boolean();
-		Move(C, qword, DI, qword);
-		Match(T_CPAR);
-		emit_cmd("pop rdi\n\tpop rsi\n\tpop rbx\n\tpop rax");
-		break;
+/*	case T_OPAR:*/
+/*		Match(T_OPAR);*/
+/*		emit_cmd("push rax\n\tpush rbx\n\tpush rsi\n\tpush rdi");*/
+/*		Boolean();*/
+/*		Move(C, qword, DI, qword);*/
+/*		Match(T_CPAR);*/
+/*		emit_cmd("pop rdi\n\tpop rsi\n\tpop rbx\n\tpop rax");*/
+/*		break;*/
 	case T_NUM:
-		fprintf(outfile, "\tmov rcx, 0%xh\n", get_num());
+		strncpy(symbol.name, "", NAME_MAX);
+		symbol.value  = get_num();
+		symbol.size   = qword;
+		symbol.flags  = 0;
+		symbol.flags += S_IMEDT;
+		symbol.flags += S_SIGN;
+		symbol.dref   = NULL;
 		break;
 	case T_CHAR:
-		fprintf(outfile, "\tmov rcx, 0%xh\n", get_char());
+		strncpy(symbol.name, "", NAME_MAX);
+		symbol.value  = get_char();
+		symbol.size   = byte;
+		symbol.flags  = 0;
+		symbol.flags += S_IMEDT;
+		symbol.dref   = NULL;
 		break;
 	case T_NAME:
-		fprintf(outfile, "\tmov rcx, %s\n", get_name());
-		// FIXME: need a symbol table
-		break;
+		if((sym_pt=iview(symbol_table,get_name())) == NULL)
+			error("Undeclared symbol");
+		return sym_pt;
 	default:
 		printf(
 			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
@@ -59,45 +74,91 @@ void Primary(void){
 		);
 		exit(EXIT_FAILURE);
 	}
+	
+	return &symbol;
 }
 
-void Unary(void){
+sym_entry* Unary(void){ // value in rcx
+	sym_entry* sym_pt;
+	
 	switch (token){
+	// inc and dec get sticky because they have implicit assignment
 	case T_INC:
 		get_token();
-		Primary();
-		emit_cmd("inc rcx");
-		break;
+		sym_pt=Unary();
+		
+		if (sym_pt == NULL)
+			error("Cannot increment a void data type. You probably used too many dereferences or need to use a cast.");
+		if(sym_pt->flags & S_CONST) error("Cannot increment constant");
+		
+		if(sym_pt->flags & S_IMEDT) sym_pt->value++;
+		// if it's not a constant or immediate, then it is a variable in memory
+		else fprintf(outfile, "\tinc [%s]\n", sym_pt->name);
+		// if type is a pointer should multiply by the sizeof
+		
+		return sym_pt;
 	case T_DEC:
 		get_token();
-		Primary();
-		emit_cmd("dec rcx");
-		break;
+		sym_pt=Unary();
+		
+		if (sym_pt == NULL)
+			error("Cannot decrement a void data type. You probably used too many dereferences or need to use a cast.");
+		if(sym_pt->flags & S_CONST) error("Cannot decrement constant");
+		
+		if(sym_pt->flags & S_IMEDT) sym_pt->value--;
+		// if it's not a constant or immediate, then it is a variable in memory
+		else fprintf(outfile, "\tdec [%s]\n", sym_pt->name);
+		
+		return sym_pt;
 	case T_DREF:
 		get_token();
-		Primary();
-		Move(D, qword, C, qword);
-		emit_cmd("mov rcx, [rdx]");
-		break;
+		sym_pt=Unary();
+		
+		if (sym_pt == NULL || sym_pt->name = '\0'){ // pointers
+			Move(D, qword, C, qword);
+			emit_cmd("mov rcx, [rdx]");
+		}
+		else if (sym_pt->flags & S_CONST || sym_pt->flags & S_IMEDT) // consts
+			fprintf(outfile, "\tmov rcx, [0%xh]\n", sym_pt->value);
+		else {
+			fprintf(outfile, "\tmov rdx, [%s]\n", sym_pt->name); // vars
+			fprintf(outfile, "\tmov rcx, [rdx]\n");
+		}
+		
+		if (sym_pt == NULL)
+			return NULL;
+		return sym_pt->dref;
 	case T_REF:
 		get_token();
-		Primary();
-		emit_cmd("DO SOME THINGS");
-		break;
+		sym_pt=Unary();
+		
+		if(sym_pt->flags & S_IMEDT || sym_pt->flags & S_CONST)
+			error("cannot dereference constants");
+		
+		fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
+		
+		return NULL;
 	case T_NOT:
 		get_token();
-		Primary();
+		sym_pt=Unary();
+		
+		emit_cmd("cmp rcx, 0h");
 		emit_cmd("cmovz rcx, 01h");
 		emit_cmd("cmovnz rcx, 0h");
-		//FIXME: mov does not set flags
+		//FIXME: if larger than 1byte
 		break;
 	case T_INV:
 		get_token();
-		Primary();
+		sym_pt=Unary();
 		emit_cmd("not rcx");
 		break;
+	case T_MINUS:
+		get_token();
+		sym_pt=Unary();
+		emit_cmd("neg rcx");
+		break;
 	default:
-		Primary();
+		return Primary();
 	}
 }
 
@@ -112,7 +173,7 @@ void Term(void){ // leaves result in rax
 			Unary();
 			emit_cmd("imul rcx");
 			break;
-		case T_MODUL:
+		case T_MODUL: // signed modulo
 			get_token();
 			Unary();
 			emit_cmd("idiv rcx");
@@ -137,12 +198,7 @@ void Term(void){ // leaves result in rax
 }
 
 void Expression(void){ // leaves result in rbx
-	if (token == T_MINUS){ // handle negative numbers
-		Match(T_MINUS);
-		Term();
-		emit_cmd("neg rax");
-	}
-	else Term();
+	Term();
 	Move(B, qword, A, qword);
 	
 	while (token>=T_PLUS && token<=T_BXOR){
@@ -178,6 +234,46 @@ void Expression(void){ // leaves result in rbx
 void Equation(void){ // result in rsi
 	Expression();
 	Move(SI, qword, B, qword);
+	
+	while (token>=T_EQ && token<=T_GTE){
+		switch (token){
+		case T_EQ:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("cmovnz rsi 0h");
+			break;
+		case T_NEQ:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("cmovz rsi 0h");
+			break;
+		case T_LT:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("DO STUFF");
+			break;
+		case T_GT:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("DO STUFF");
+			break;
+		case T_LTE:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("DO STUFF");
+			break;
+		case T_GTE:
+			get_token();
+			Expression();
+			emit_cmd("cmp rsi, rbi");
+			emit_cmd("DO STUFF");
+		}
+	}
 }
 
 void Boolean(void){ // result in rdi

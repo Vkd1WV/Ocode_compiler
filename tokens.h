@@ -59,7 +59,7 @@ typedef uint16_t token_t;
 #define T_AND   (token_t)0x002c
 #define T_OR    (token_t)0x002d
 // assignment
-#define T_ASS   (token_t)0x002e
+#define T_ASS   (token_t)0x002e // assignments in function calls are pipes
 
 
 /******************************************************************************/
@@ -67,16 +67,16 @@ typedef uint16_t token_t;
 /******************************************************************************/
 
 
-#define T_LBL   (token_t)0x0030
-#define T_JMP   (token_t)0x0031
-#define T_IF    (token_t)0x0032
-#define T_ELSE  (token_t)0x0033
-#define T_SWTCH (token_t)0x0034
-#define T_DFLT  (token_t)0x0035
-#define T_WHILE (token_t)0x0036
-#define T_DO    (token_t)0x0037
-#define T_BRK   (token_t)0x0038
-#define T_CNTN  (token_t)0x0039
+#define T_LBL   (token_t)0x0040
+#define T_JMP   (token_t)0x0041
+#define T_IF    (token_t)0x0042
+#define T_ELSE  (token_t)0x0043
+#define T_SWTCH (token_t)0x0044
+#define T_DFLT  (token_t)0x0045
+#define T_WHILE (token_t)0x0046
+#define T_DO    (token_t)0x0047
+#define T_BRK   (token_t)0x0048
+#define T_CNTN  (token_t)0x0049
 
 
 /******************************************************************************/
@@ -84,23 +84,35 @@ typedef uint16_t token_t;
 /******************************************************************************/
 
 
-#define T_INT8  (token_t)0x0040
-#define T_INT16 (token_t)0x0041
-#define T_INT32 (token_t)0x0042
-#define T_INT64 (token_t)0x0043
-#define T_INT   (token_t)0x0044
-#define T_IMAX  (token_t)0x0045
+#define T_INT8  (token_t)0x0050
+#define T_INT16 (token_t)0x0051
+#define T_INT32 (token_t)0x0052
+#define T_INT64 (token_t)0x0053
+#define T_INT   (token_t)0x0054
+#define T_IMAX  (token_t)0x0055
 
-#define T_UINT8  (token_t)0x0046
-#define T_UINT16 (token_t)0x0047
-#define T_UINT32 (token_t)0x0048
-#define T_UINT64 (token_t)0x0049
-#define T_UINT   (token_t)0x004a
-#define T_UMAX   (token_t)0x004b
+#define T_UINT8  (token_t)0x0056
+#define T_UINT16 (token_t)0x0057
+#define T_UINT32 (token_t)0x0058
+#define T_UINT64 (token_t)0x0059
+#define T_UINT   (token_t)0x005a
+#define T_UMAX   (token_t)0x005b
 
-#define T_CH     (token_t)0x004c
+#define T_CH     (token_t)0x005c
 
-#define T_CONST  (token_t)0x004d
-#define T_STATIC (token_t)0x004e
+#define T_CONST  (token_t)0x005d
+#define T_STATIC (token_t)0x005e
+
+
+/******************************************************************************/
+//                            Control statements
+/******************************************************************************/
+
+
+#define T_FUN  (token_t)0x0070
+#define T_TRY  (token_t)0x0071
+#define T_THRW (token_t)0x0072
+#define T_CTCH (token_t)0x0073
+
 
 #endif // _TOKENS_H
