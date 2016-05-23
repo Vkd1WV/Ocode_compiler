@@ -122,7 +122,7 @@ xor  return T_BXOR;
  /**************************** CONTROL KEYWORDS *******************************/
 
 label    return T_LBL;
-jmp      return T_JMP;
+jump     return T_JMP;
 if       return T_IF;
 else     return T_ELSE;
 switch   return T_SWTCH;
@@ -134,21 +134,10 @@ continue return T_CNTN;
 
  /***************************** DATA KEYWORDS *********************************/
 
-int8  return T_INT8;
-int16 return T_INT16;
-int32 return T_INT32;
-int64 return T_INT64;
-int   return T_INT;
-imax  return T_IMAX;
-
-uint8  return T_UINT8;
-uint16 return T_UINT16;
-uint32 return T_UINT32;
-uint64 return T_UINT64;
-uint   return T_UINT;
-umax   return T_UMAX;
-
-char   return T_CH;
+byte  return T_8;
+word  return T_16;
+dword return T_32;
+qword return T_64;
 
 const  return T_CONST;
 static return T_STATIC;

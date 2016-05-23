@@ -94,35 +94,19 @@ void Declaration(void){
 	if (new_symbol == NULL) error("Out of memory");
 	
 	switch (token){
-	case T_INT8:
-	case T_INT16:
-	case T_INT32:
-	case T_INT64:
-		error(_e_noimp);
-		if (x86_mode != Long)
-			error("64-bit variables only availible in IA-32e mode");
-		new_symbol->size=qword;
-		new_symbol->flags |=S_SIGN;
-		break;
-	case T_IMAX:
-	case T_INT:
-		if (x86_mode == Long) new_symbol->size = qword;
-		//else new_symbol->size = dword;
-		new_symbol->flags |= S_SIGN;
-		break;
-	case T_UINT8:
-	case T_UINT16:
-	case T_UINT32:
-	case T_UINT64:
-		error(_e_noimp);
-		if (x86_mode != Long)
-			error("64-bit variables only availible in IA-32e mode");
-		new_symbol->size=qword;
-		break;
-	case T_UMAX:
-	case T_UINT:
-		if (x86_mode == Long) new_symbol->size = qword;
-		//else new_symbol->size = dword;
+		case T_8:
+			new_symbol->size=byte;
+			break;
+		case T_16:
+			new_symbol->size=word;
+			break;
+		case T_32:
+			new_symbol->size=dword;
+			break;
+		case T_64:
+			new_symbol->size=qword;
+			break;
+		default: error(_e_noimp);
 	}
 	get_token();
 	Storage_class(new_symbol);
@@ -151,6 +135,8 @@ void Storage_class(sym_entry* new_symbol){
 
 
 void Statement (uint lvl){ // any single line. always ends with NL
+	sym_entry* type_sym;
+	
 	if (token == T_NL){
 		Match(T_NL);
 		if(block_lvl <= lvl); // empty statement
@@ -165,15 +151,24 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			fprintf(outfile, "\t; END block level %u\n", lvl);
 		}
 	}
-	else if (token <= T_UMAX && token >= T_INT8) Declaration();
-	else
-		switch (token){
-			case T_LBL:   Label(   ); break;
-			case T_JMP:   Jump (   ); break;
-			case T_IF:    If   (lvl); break;
-			case T_WHILE: While(lvl); break;
-			default: Assignment_statement();
-		}
+	else switch (token){
+		case T_LBL:   Label      (   ); break;
+		case T_JMP:   Jump       (   ); break;
+		case T_IF:    If         (lvl); break;
+		case T_WHILE: While      (lvl); break;
+		case T_8:     Declaration(   ); break;
+		case T_16:    Declaration(   ); break;
+		case T_32:    Declaration(   ); break;
+		case T_64:    Declaration(   ); break;
+		case T_NAME:
+			if ((type_sym=iview(symbol_table, yytext))){
+				if(type_sym->flags&S_TYPDEF)
+					Declaration(); break;
+				
+			}
+			else error("undefined token");
+		default: Assignment_statement();
+	}
 }
 
 

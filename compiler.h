@@ -37,22 +37,15 @@ typedef enum{
 } reg_t;
 typedef struct {
 	char    name[NAME_MAX];
+	uint16_t flags; // defines the type
 	umax    value; // initialized value of variables, or value of constants
 	regsz_t size;
-	uint16_t flags;
-	sym_entry* dref; // if the symbol is a pointer, this is what it points to
+	uint dref; // if the symbol is a pointer, this is the count of dereferences
 }sym_entry;
 
-#define S_FUNCT  ((uint8_t) (1<<0))
-#define S_SIGN   ((uint8_t) (1<<1))
-#define S_STATIC ((uint8_t) (1<<2))
-#define S_CONST  ((uint8_t) (1<<3)) // a constant symbol must not be changed
-#define S_IMEDT  ((uint8_t) (1<<4)) // a immediate const can be changed because
-// it only occurs once.
-#define S_USED   ((uint8_t) (1<<5)) // unused symbols can be ignored
-#define S_TYPDEF ((uint8_t) (1<<6)) // symbol is a type definition
-#define S_USED   ((uint8_t) (1<<5)) // unused symbols can be ignored
-#define S_REG    ((uint8_t) (1<<7)) // The symbol refers to a register
+#define S_STATIC ((uint8_t) (1<<0))
+#define S_CONST  ((uint8_t) (1<<1)) // a constant symbol must not be changed
+#define S_IMEDT  ((uint8_t) (1<<2)) // a immediate const can be changed
 
 /*	Variable
 		assume zero initialization

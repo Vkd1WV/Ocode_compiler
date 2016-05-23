@@ -84,24 +84,14 @@ typedef uint16_t token_t;
 /******************************************************************************/
 
 
-#define T_INT8  (token_t)0x0050
-#define T_INT16 (token_t)0x0051
-#define T_INT32 (token_t)0x0052
-#define T_INT64 (token_t)0x0053
-#define T_INT   (token_t)0x0054
-#define T_IMAX  (token_t)0x0055
+// all other data types are defined classes
+#define T_8  (token_t)0x0050
+#define T_16 (token_t)0x0051
+#define T_32 (token_t)0x0052
+#define T_64 (token_t)0x0053
 
-#define T_UINT8  (token_t)0x0056
-#define T_UINT16 (token_t)0x0057
-#define T_UINT32 (token_t)0x0058
-#define T_UINT64 (token_t)0x0059
-#define T_UINT   (token_t)0x005a
-#define T_UMAX   (token_t)0x005b
-
-#define T_CH     (token_t)0x005c
-
-#define T_CONST  (token_t)0x005d
-#define T_STATIC (token_t)0x005e
+#define T_CONST  (token_t)0x0054
+#define T_STATIC (token_t)0x0055
 
 
 /******************************************************************************/
