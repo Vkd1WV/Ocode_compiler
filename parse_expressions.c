@@ -83,33 +83,33 @@ sym_entry* Unary(void){ // value in rcx
 	
 	switch (token){
 	// inc and dec get sticky because they have implicit assignment
-	case T_INC:
-		get_token();
-		sym_pt=Unary();
-		
-		if (sym_pt == NULL)
-			error("Cannot increment a void data type. You probably used too many dereferences or need to use a cast.");
-		if(sym_pt->flags & S_CONST) error("Cannot increment constant");
-		
-		if(sym_pt->flags & S_IMEDT) sym_pt->value++;
-		// if it's not a constant or immediate, then it is a variable in memory
-		else fprintf(outfile, "\tinc [%s]\n", sym_pt->name);
-		// if type is a pointer should multiply by the sizeof
-		
-		return sym_pt;
-	case T_DEC:
-		get_token();
-		sym_pt=Unary();
-		
-		if (sym_pt == NULL)
-			error("Cannot decrement a void data type. You probably used too many dereferences or need to use a cast.");
-		if(sym_pt->flags & S_CONST) error("Cannot decrement constant");
-		
-		if(sym_pt->flags & S_IMEDT) sym_pt->value--;
-		// if it's not a constant or immediate, then it is a variable in memory
-		else fprintf(outfile, "\tdec [%s]\n", sym_pt->name);
-		
-		return sym_pt;
+/*	case T_INC:*/
+/*		get_token();*/
+/*		sym_pt=Unary();*/
+/*		*/
+/*		if (sym_pt == NULL)*/
+/*			error("Cannot increment a void data type. You probably used too many dereferences or need to use a cast.");*/
+/*		if(sym_pt->flags & S_CONST) error("Cannot increment constant");*/
+/*		*/
+/*		if(sym_pt->flags & S_IMEDT) sym_pt->value++;*/
+/*		// if it's not a constant or immediate, then it is a variable in memory*/
+/*		else fprintf(outfile, "\tinc [%s]\n", sym_pt->name);*/
+/*		// if type is a pointer should multiply by the sizeof*/
+/*		*/
+/*		return sym_pt;*/
+/*	case T_DEC:*/
+/*		get_token();*/
+/*		sym_pt=Unary();*/
+/*		*/
+/*		if (sym_pt == NULL)*/
+/*			error("Cannot decrement a void data type. You probably used too many dereferences or need to use a cast.");*/
+/*		if(sym_pt->flags & S_CONST) error("Cannot decrement constant");*/
+/*		*/
+/*		if(sym_pt->flags & S_IMEDT) sym_pt->value--;*/
+/*		// if it's not a constant or immediate, then it is a variable in memory*/
+/*		else fprintf(outfile, "\tdec [%s]\n", sym_pt->name);*/
+/*		*/
+/*		return sym_pt;*/
 	case T_DREF:
 		get_token();
 		sym_pt=Unary();
@@ -168,22 +168,22 @@ void Term(void){ // leaves result in rax
 	
 	while(token >= T_TIMES && token <= T_RSHFT){
 		switch(token){
-		case T_TIMES:
-			get_token();
-			Unary();
-			emit_cmd("imul rcx");
-			break;
-		case T_MODUL: // signed modulo
-			get_token();
-			Unary();
-			emit_cmd("idiv rcx");
-			Move(A, qword, D, qword); // remainder to acumulator
-			break;
-		case T_DIV:
-			get_token();
-			Unary();
-			emit_cmd("div rcx");
-			break;
+/*		case T_TIMES:*/
+/*			get_token();*/
+/*			Unary();*/
+/*			emit_cmd("imul rcx");*/
+/*			break;*/
+/*		case T_MODUL: // signed modulo*/
+/*			get_token();*/
+/*			Unary();*/
+/*			emit_cmd("idiv rcx");*/
+/*			Move(A, qword, D, qword); // remainder to acumulator*/
+/*			break;*/
+/*		case T_DIV:*/
+/*			get_token();*/
+/*			Unary();*/
+/*			emit_cmd("div rcx");*/
+/*			break;*/
 		case T_LSHFT:
 			get_token();
 			Unary();

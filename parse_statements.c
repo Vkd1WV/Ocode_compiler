@@ -160,13 +160,13 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_16:    Declaration(   ); break;
 		case T_32:    Declaration(   ); break;
 		case T_64:    Declaration(   ); break;
-		case T_NAME:
-			if ((type_sym=iview(symbol_table, yytext))){
-				if(type_sym->flags&S_TYPDEF)
-					Declaration(); break;
-				
-			}
-			else error("undefined token");
+/*		case T_NAME:*/
+/*			if ((type_sym=iview(symbol_table, yytext))){*/
+/*				if(type_sym->flags&S_TYPDEF)*/
+/*					Declaration(); break;*/
+/*				*/
+/*			}*/
+/*			else error("undefined token");*/
 		default: Assignment_statement();
 	}
 }
