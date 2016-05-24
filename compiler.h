@@ -35,12 +35,14 @@ typedef enum{
 	//IP, LR, PC,
 	SP // stack pointer x86=R7, arm=R13
 } reg_t;
-typedef struct {
+typedef enum {x86} arch_t;
+
+typedef struct sym {
 	char    name[NAME_MAX];
-	uint16_t flags; // defines the type
+	uint16_t type; // defines the type
 	umax    value; // initialized value of variables, or value of constants
 	regsz_t size;
-	uint dref; // if the symbol is a pointer, this is the count of dereferences
+	struct sym* dref; // if the symbol is a pointer, this is what it points to
 }sym_entry;
 
 #define S_STATIC ((uint8_t) (1<<0))

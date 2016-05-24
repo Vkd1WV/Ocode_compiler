@@ -51,7 +51,6 @@ sym_entry * Primary(void){
 		symbol.size   = qword;
 		symbol.flags  = 0;
 		symbol.flags += S_IMEDT;
-		symbol.flags += S_SIGN;
 		symbol.dref   = NULL;
 		break;
 	case T_CHAR:
@@ -114,12 +113,12 @@ sym_entry* Unary(void){ // value in rcx
 		get_token();
 		sym_pt=Unary();
 		
-		if (sym_pt == NULL || sym_pt->name = '\0'){ // pointers
+		if (sym_pt == NULL || *sym_pt->name == '\0'){ // pointers
 			Move(D, qword, C, qword);
 			emit_cmd("mov rcx, [rdx]");
 		}
 		else if (sym_pt->flags & S_CONST || sym_pt->flags & S_IMEDT) // consts
-			fprintf(outfile, "\tmov rcx, [0%xh]\n", sym_pt->value);
+			fprintf(outfile, "\tmov rcx, [0%lxh]\n", sym_pt->value);
 		else {
 			fprintf(outfile, "\tmov rdx, [%s]\n", sym_pt->name); // vars
 			fprintf(outfile, "\tmov rcx, [rdx]\n");

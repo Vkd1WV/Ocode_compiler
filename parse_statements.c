@@ -113,7 +113,7 @@ void Declaration(void){
 	
 	do{
 		strncpy(new_symbol->name, get_name(), NAME_MAX);
-		if(token == T)
+		if(token == T_ASS)
 		Assignment(new_symbol);
 		sort(symbol_table, new_symbol, new_symbol->name);
 	} while (token != T_NL);

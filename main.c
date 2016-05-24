@@ -153,6 +153,7 @@ int main (void){
 	
 	// initializations
 	outfile=stdout;
+	arch=x86;
 	x86_mode=Long;
 	get_token();
 	symbol_table=new_DS('l');

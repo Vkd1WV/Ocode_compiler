@@ -4,4 +4,4 @@
 
 
 // initialized constants
-const char* _e_noimp="Feature Not yet Implemented"
+//const char* _e_noimp="Feature Not yet Implemented";

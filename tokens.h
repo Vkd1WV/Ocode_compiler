@@ -105,4 +105,33 @@ typedef uint16_t token_t;
 #define T_CTCH (token_t)0x0073
 
 
+/******************************************************************************/
+//                                Registers
+/******************************************************************************/
+
+
+#define T_R0  (token_t)0x0080
+#define T_R1  (token_t)0x0081
+#define T_R2  (token_t)0x0082
+#define T_R3  (token_t)0x0083
+#define T_R4  (token_t)0x0084
+#define T_R5  (token_t)0x0085
+#define T_R6  (token_t)0x0086
+#define T_R7  (token_t)0x0087
+#define T_R8  (token_t)0x0088
+#define T_R9  (token_t)0x0089
+#define T_R10 (token_t)0x008a
+#define T_R11 (token_t)0x008b
+#define T_R12 (token_t)0x008c
+#define T_R13 (token_t)0x008d
+#define T_R14 (token_t)0x008e
+#define T_R15 (token_t)0x008f
+
+
+/******************************************************************************/
+//                       Machine Independent Assembler
+/******************************************************************************/
+
+
+
 #endif // _TOKENS_H
