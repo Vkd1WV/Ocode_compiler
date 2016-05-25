@@ -47,19 +47,19 @@ sym_entry * Primary(void){
 /*		break;*/
 	case T_NUM:
 		strncpy(symbol.name, "", NAME_MAX);
-		symbol.value  = get_num();
-		symbol.size   = qword;
-		symbol.flags  = 0;
-		symbol.flags += S_IMEDT;
-		symbol.dref   = NULL;
+		symbol.value = get_num();
+		symbol.size  = qword;
+		symbol.type  = 0;
+		symbol.type += S_IMEDT;
+		symbol.dref  = NULL;
 		break;
 	case T_CHAR:
 		strncpy(symbol.name, "", NAME_MAX);
-		symbol.value  = get_char();
-		symbol.size   = byte;
-		symbol.flags  = 0;
-		symbol.flags += S_IMEDT;
-		symbol.dref   = NULL;
+		symbol.value = get_char();
+		symbol.size  = byte;
+		symbol.type  = 0;
+		symbol.type += S_IMEDT;
+		symbol.dref  = NULL;
 		break;
 	case T_NAME:
 		if((sym_pt=iview(symbol_table,get_name())) == NULL)

@@ -12,6 +12,7 @@ the only fundamental operations are
 	label / jump
 	if / else
 
+operators would be much easier to deal with if there were no order of operations, then each operator could simply act on the accumulator left to right.
 
 ###### DATA TYPES
 

@@ -14,7 +14,6 @@ void If    (uint lvl); // only control statements need to know the block_lvl
 void While (uint lvl);
 
 void Declaration  (void);
-void Storage_class(sym_entry* new_symbol);
 
 
 /******************************************************************************/
@@ -109,23 +108,26 @@ void Declaration(void){
 		default: error(_e_noimp);
 	}
 	get_token();
-	Storage_class(new_symbol);
 	
-	do{
-		strncpy(new_symbol->name, get_name(), NAME_MAX);
-		if(token == T_ASS)
-		Assignment(new_symbol);
-		sort(symbol_table, new_symbol, new_symbol->name);
-	} while (token != T_NL);
-	
-}
-
-void Storage_class(sym_entry* new_symbol){
-	if (token == T_STATIC)
+	// storage class
+	if (token == T_STATIC){
 		new_symbol->type |= S_STATIC;
-	else if (token == T_CONST)
+		get_token();
+	}
+	else if (token == T_CONST){
 		new_symbol->type |= S_CONST;
-	get_token();
+		get_token();
+	}
+	
+	
+	//do{
+		strncpy(new_symbol->name, get_name(), NAME_MAX);
+		Match(T_NL);
+		//if(token == T_ASS)
+		//Assignment(new_symbol);
+		sort(symbol_table, new_symbol, new_symbol->name);
+	//} while (token != T_NL);
+	
 }
 
 
