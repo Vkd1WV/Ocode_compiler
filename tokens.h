@@ -36,18 +36,22 @@ typedef uint16_t token_t;
 #define T_DREF  (token_t)0x0019
 #define T_NOT   (token_t)0x001a
 #define T_INV   (token_t)0x001b
+
+// basic
+#define T_PLUS  (token_t)0x001c
+#define T_MINUS (token_t)0x001d
+#define T_BAND  (token_t)0x001e
+#define T_BOR   (token_t)0x001f
+#define T_BXOR  (token_t)0x0020
+#define T_LSHFT (token_t)0x0021
+#define T_RSHFT (token_t)0x0022
+
 // multiplicative
-#define T_TIMES (token_t)0x001c
-#define T_MODUL (token_t)0x001d
-#define T_DIV   (token_t)0x001e
-#define T_LSHFT (token_t)0x001f
-#define T_RSHFT (token_t)0x0020
-// additive
-#define T_PLUS  (token_t)0x0021
-#define T_MINUS (token_t)0x0022
-#define T_BAND  (token_t)0x0023
-#define T_BOR   (token_t)0x0024
-#define T_BXOR  (token_t)0x0025
+#define T_TIMES (token_t)0x0023
+#define T_MODUL (token_t)0x0024
+#define T_DIV   (token_t)0x0025
+
+
 // comparative
 #define T_EQ    (token_t)0x0026
 #define T_NEQ   (token_t)0x0027
