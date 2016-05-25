@@ -48,6 +48,7 @@ typedef struct sym {
 #define S_STATIC ((uint8_t) (1<<0))
 #define S_CONST  ((uint8_t) (1<<1)) // a constant symbol must not be changed
 #define S_IMEDT  ((uint8_t) (1<<2)) // a immediate const can be changed
+#define S_REF    ((uint8_t) (1<<3)) // a reference to the given type
 
 /*	Variable
 		assume zero initialization

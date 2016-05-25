@@ -32,39 +32,35 @@ void Assignment(void);
 /******************************************************************************/
 
 
+// Makes no changes to the output file
 sym_entry * Primary(void){
 	static sym_entry symbol;
 	sym_entry * sym_pt;
 	
 	switch (token){
-/*	case T_OPAR:*/
-/*		Match(T_OPAR);*/
-/*		emit_cmd("push rax\n\tpush rbx\n\tpush rsi\n\tpush rdi");*/
-/*		Boolean();*/
-/*		Move(C, qword, DI, qword);*/
-/*		Match(T_CPAR);*/
-/*		emit_cmd("pop rdi\n\tpop rsi\n\tpop rbx\n\tpop rax");*/
-/*		break;*/
 	case T_NUM:
 		strncpy(symbol.name, "", NAME_MAX);
 		symbol.value  = get_num();
 		symbol.size   = qword;
-		symbol.flags  = 0;
-		symbol.flags += S_IMEDT;
+		symbol.type  = 0;
+		symbol.type += S_IMEDT;
 		symbol.dref   = NULL;
 		break;
 	case T_CHAR:
 		strncpy(symbol.name, "", NAME_MAX);
 		symbol.value  = get_char();
 		symbol.size   = byte;
-		symbol.flags  = 0;
-		symbol.flags += S_IMEDT;
+		symbol.type  = 0;
+		symbol.type += S_IMEDT;
 		symbol.dref   = NULL;
 		break;
 	case T_NAME:
 		if((sym_pt=iview(symbol_table,get_name())) == NULL)
 			error("Undeclared symbol");
-		return sym_pt;
+		
+		// if it's a constant we make a local copy we can change.
+		if(sym_pt->type & S_CONST) memcpy(&symbol, sym_pt, sizeof(sym_entry));
+		else return sym_pt;
 	default:
 		printf(
 			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
@@ -77,49 +73,28 @@ sym_entry * Primary(void){
 	return &symbol;
 }
 
-sym_entry* Unary(void){ // value in rcx
+sym_entry* Unary(void){ // value in rbx
 	sym_entry* sym_pt;
 	
 	switch (token){
-	// inc and dec get sticky because they have implicit assignment
-/*	case T_INC:*/
-/*		get_token();*/
-/*		sym_pt=Unary();*/
-/*		*/
-/*		if (sym_pt == NULL)*/
-/*			error("Cannot increment a void data type. You probably used too many dereferences or need to use a cast.");*/
-/*		if(sym_pt->flags & S_CONST) error("Cannot increment constant");*/
-/*		*/
-/*		if(sym_pt->flags & S_IMEDT) sym_pt->value++;*/
-/*		// if it's not a constant or immediate, then it is a variable in memory*/
-/*		else fprintf(outfile, "\tinc [%s]\n", sym_pt->name);*/
-/*		// if type is a pointer should multiply by the sizeof*/
-/*		*/
-/*		return sym_pt;*/
-/*	case T_DEC:*/
-/*		get_token();*/
-/*		sym_pt=Unary();*/
-/*		*/
-/*		if (sym_pt == NULL)*/
-/*			error("Cannot decrement a void data type. You probably used too many dereferences or need to use a cast.");*/
-/*		if(sym_pt->flags & S_CONST) error("Cannot decrement constant");*/
-/*		*/
-/*		if(sym_pt->flags & S_IMEDT) sym_pt->value--;*/
-/*		// if it's not a constant or immediate, then it is a variable in memory*/
-/*		else fprintf(outfile, "\tdec [%s]\n", sym_pt->name);*/
-/*		*/
-/*		return sym_pt;*/
+/*	case T_OPAR:*/
+/*		Match(T_OPAR);*/
+/*		emit_cmd("push rax\n\tpush rbx\n\tpush rsi\n\tpush rdi");*/
+/*		Boolean();*/
+/*		Move(C, qword, DI, qword);*/
+/*		Match(T_CPAR);*/
+/*		emit_cmd("pop rdi\n\tpop rsi\n\tpop rbx\n\tpop rax");*/
+/*		break;*/
 	case T_DREF:
 		get_token();
 		sym_pt=Unary();
 		
-		if (sym_pt == NULL || *sym_pt->name == '\0'){ // pointers
-			Move(D, qword, C, qword);
-			emit_cmd("mov rcx, [rdx]");
+		if (sym_pt->type & S_IMEDT)
+			fprintf(outfile, "\tmov rbx, [0%lxh]\n", sym_pt->value);
+		else if(sym_pt->dref == NULL) {
+			comment("WARNING: dereferencing unknown pointer type");
 		}
-		else if (sym_pt->flags & S_CONST || sym_pt->flags & S_IMEDT) // consts
-			fprintf(outfile, "\tmov rcx, [0%lxh]\n", sym_pt->value);
-		else {
+		else
 			fprintf(outfile, "\tmov rdx, [%s]\n", sym_pt->name); // vars
 			fprintf(outfile, "\tmov rcx, [rdx]\n");
 		}
@@ -129,17 +104,25 @@ sym_entry* Unary(void){ // value in rcx
 		return sym_pt->dref;
 	case T_REF:
 		get_token();
-		sym_pt=Unary();
+		sym_pt=Primary();
 		
-		if(sym_pt->flags & S_IMEDT || sym_pt->flags & S_CONST)
-			error("cannot dereference constants");
+		if(sym_pt->type & S_IMEDT || sym_pt->type & S_CONST)
+			error("cannot create references to constants");
+		if(sym_pt->type & S_REF)
+			error("cannot create a double reference. References are stored as immediates, or constants until they are assigned.");
 		
-		fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
+		sym_pt->type |= S_REF;
+		fprintf(outfile, "\tmov rbx, %s\n", sym_pt->name);
 		
-		return NULL;
+		return sym_pt;
 	case T_NOT:
 		get_token();
 		sym_pt=Unary();
+		
+		if(sym_pt->type & S_IMEDT || sym_pt->type & S_CONST){
+			sym_pt->value = !(sym_pt->value);
+			return sym_pt;
+		}
 		
 		emit_cmd("cmp rcx, 0h");
 		emit_cmd("cmovz rcx, 01h");
@@ -151,81 +134,33 @@ sym_entry* Unary(void){ // value in rcx
 		sym_pt=Unary();
 		emit_cmd("not rcx");
 		break;
-	case T_MINUS:
-		get_token();
-		sym_pt=Unary();
-		emit_cmd("neg rcx");
-		break;
 	default:
 		return Primary();
 	}
 }
 
-void Term(void){ // leaves result in rax
+void Expression(void){ // leaves result in accumulator
 	Unary();
-	Move(A, qword, C, qword);
+	Move(A, qword, B, qword);
 	
-	while(token >= T_TIMES && token <= T_RSHFT){
-		switch(token){
-/*		case T_TIMES:*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("imul rcx");*/
-/*			break;*/
-/*		case T_MODUL: // signed modulo*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("idiv rcx");*/
-/*			Move(A, qword, D, qword); // remainder to acumulator*/
-/*			break;*/
-/*		case T_DIV:*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("div rcx");*/
-/*			break;*/
+	while (token>=T_PLUS && token<=T_RSHFT){
+		token_t temp_token=token;
+		get_token();
+		Unary();
+		
+		switch (temp_token){
+		case T_PLUS:  emit_cmd("add rax, rbx"); break;
+		case T_MINUS: emit_cmd("sub rax, rbx"); break;
+		case T_BAND:  emit_cmd("and rax, rbx"); break;
+		case T_BOR:   emit_cmd("or  rax, rbx"); break;
+		case T_BXOR:  emit_cmd("xor rax, rbx"); break;
 		case T_LSHFT:
-			get_token();
-			Unary();
-			fprintf(outfile, "\tDO SOME THINGS\n");
+			Move(C, byte, B, byte);
+			emit_cmd("shl rax");
 			break;
 		case T_RSHFT:
-			get_token();
-			Unary();
-			fprintf(outfile, "\tDO SOME THINGS\n");
-		}
-	}
-}
-
-void Expression(void){ // leaves result in rbx
-	Term();
-	Move(B, qword, A, qword);
-	
-	while (token>=T_PLUS && token<=T_BXOR){
-		switch (token){
-		case T_PLUS:
-			get_token();
-			Term();
-			emit_cmd("add rbx, rax");
-			break;
-		case T_MINUS:
-			get_token();
-			Term();
-			emit_cmd("sub rbx, rax");
-			break;
-		case T_BAND:
-			get_token();
-			Term();
-			emit_cmd("and rbx, rax");
-			break;
-		case T_BOR:
-			get_token();
-			Term();
-			emit_cmd("or rbx, rax");
-			break;
-		case T_BXOR:
-			get_token();
-			Term();
-			emit_cmd("xor rbx, rax");
+			Move(C, byte, B, byte);
+			emit_cmd("shr rax");
 		}
 	}
 }
