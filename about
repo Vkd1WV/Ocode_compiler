@@ -1,4 +1,5 @@
 What if all declared types were classes
+	could there be implicit member selection if there is only one member?
 
 the only fundamental operations are
 	declarations
@@ -13,28 +14,9 @@ the only fundamental operations are
 	if / else
 
 
-###### DATA TYPES
+for simplicity we need to assume only one data type: unsigned qword
 
-.sx:	secC code file
-.mi:	machine independent assembler
-.mix:	machine independent assembler with ppp directives
-.mih:	huffman encoded machine independent assembler with ppp directives
-.pkg:	archive of signed .mih files sutible for distribution.
-
-
-###### COMPONENTS
-
-sxy.h:   header for public function calls
-scanner.l:  lexer
-parser.c: parser
-
-sxy.c : parser/lexer		creates .mi & .mix assembler
-
-
-lexer -> one token ata time -> parser -> .mih -> assembler -> object code
-the lexer produces the binary encoded stage1_buf
-
-stage1_buf has two classes of tokens: keywords and indicators that the next values are some kind of data.
-There is a reverse index of the token_buf coding contained in an array. It is used for troubleshooting and in read_token_buf()
-
-There is no need for a preprocessor once we have good constant folding. only includes and comments are left and we can probably deal with them in the lexer
+First:
+	variable declarations (one type)
+	assignments
+	expressions

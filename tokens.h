@@ -43,13 +43,13 @@ typedef uint16_t token_t;
 #define T_BAND  (token_t)0x001e
 #define T_BOR   (token_t)0x001f
 #define T_BXOR  (token_t)0x0020
-#define T_LSHFT (token_t)0x0021
-#define T_RSHFT (token_t)0x0022
 
 // multiplicative
-#define T_TIMES (token_t)0x0023
-#define T_MODUL (token_t)0x0024
-#define T_DIV   (token_t)0x0025
+#define T_TIMES (token_t)0x0021
+#define T_MODUL (token_t)0x0022
+#define T_DIV   (token_t)0x0023
+#define T_LSHFT (token_t)0x0024
+#define T_RSHFT (token_t)0x0025
 
 
 // comparative

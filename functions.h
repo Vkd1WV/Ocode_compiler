@@ -62,7 +62,7 @@ static inline char* get_name(void){
 	return temp;
 }
 
-static inline uint get_char(void){
+static inline umax get_char(void){
 	static char temp;
 	
 	if (token != T_CHAR) expected("a character");
@@ -71,7 +71,7 @@ static inline uint get_char(void){
 	return temp;
 }
 
-static inline int get_num(void){
+static inline umax get_num(void){
 	umax temp;
 	
 	if(token != T_NUM) expected("a number");

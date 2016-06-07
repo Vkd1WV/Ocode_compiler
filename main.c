@@ -149,10 +149,12 @@ void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize){
 	emit_cmd(output);
 }
 
-int main (void){
+int main (int argc, const char** argv){
+	sym_entry* sym_pt;
 	
 	// initializations
-	outfile=stdout;
+	if (argc > 1) outfile=fopen(argv[1], "w");
+	else outfile=stdout;
 	arch=x86;
 	x86_mode=Long;
 	get_token();
@@ -178,5 +180,11 @@ int main (void){
 	//fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
 	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");
 	
+	pview(symbol_table, 0);
+	while((sym_pt=view_next(symbol_table))){
+		fprintf(outfile, "%s: resq\n", sym_pt->name);
+	}
+	
+	fclose(outfile);
 	return EXIT_SUCCESS;
 }

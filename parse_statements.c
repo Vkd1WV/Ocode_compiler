@@ -91,32 +91,26 @@ void Jump(void){
 void Declaration(void){
 	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));
 	
-	if (new_symbol == NULL) error("Out of memory");
+	if (!new_symbol) error("Out of memory");
+	emit_cmnt("A variable Declaration");
 	
 	switch (token){
-		case T_8:
-			new_symbol->size=byte;
-			break;
-		case T_16:
-			new_symbol->size=word;
-			break;
-		case T_32:
-			new_symbol->size=dword;
-			break;
 		case T_64:
 			new_symbol->size=qword;
 			break;
-		default: error(_e_noimp);
+		case T_8:
+		case T_16:
+		case T_32:
+		default: Abort("Feature not implemented");
 	}
 	get_token();
-	Storage_class(new_symbol);
+	//Storage_class(new_symbol);
 	
-	do{
+	//do{
 		strncpy(new_symbol->name, get_name(), NAME_MAX);
-		if(token == T_ASS)
-		Assignment(new_symbol);
+		//if(token == T_ASS) Assignment(new_symbol);
 		sort(symbol_table, new_symbol, new_symbol->name);
-	} while (token != T_NL);
+	//} while (token != T_NL);
 	
 }
 
@@ -135,7 +129,7 @@ void Storage_class(sym_entry* new_symbol){
 
 
 void Statement (uint lvl){ // any single line. always ends with NL
-	sym_entry* type_sym;
+	//sym_entry* type_sym;
 	
 	if (token == T_NL){
 		Match(T_NL);
