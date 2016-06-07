@@ -179,10 +179,11 @@ int main (int argc, const char** argv){
 	// constants
 	//fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
 	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");
+	fprintf(outfile,"align 8\n");
 	
 	pview(symbol_table, 0);
 	while((sym_pt=view_next(symbol_table))){
-		fprintf(outfile, "%s: resq\n", sym_pt->name);
+		fprintf(outfile, "%s: resq 1\n", sym_pt->name);
 	}
 	
 	fclose(outfile);

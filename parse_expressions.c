@@ -122,12 +122,12 @@ void Term(void){ // returns in rax. uses rdx,rcx
 		case T_LSHFT:
 			get_token();
 			Unary();
-			emit_cmd("shl rax"); // second op in CL implicit
+			emit_cmd("shl rax, cl");
 			break;
 		case T_RSHFT:
 			get_token();
 			Unary();
-			emit_cmd("shr rax"); // second op in CL implicit
+			emit_cmd("shr rax, cl");
 		}
 	}
 }
@@ -139,14 +139,14 @@ void Expression(void){ // returns in rbx
 	while (token>=T_PLUS && token<=T_RSHFT){
 		token_t temp_token=token;
 		get_token();
-		Unary();
+		Term();
 		
 		switch (temp_token){
-		case T_PLUS:  emit_cmd("add rax, rcx"); break;
-		case T_MINUS: emit_cmd("sub rax, rcx"); break;
-		case T_BAND:  emit_cmd("and rax, rcx"); break;
-		case T_BOR:   emit_cmd("or  rax, rcx"); break;
-		case T_BXOR:  emit_cmd("xor rax, rcx"); break;
+		case T_PLUS:  emit_cmd("add rbx, rax"); break;
+		case T_MINUS: emit_cmd("sub rbx, rax"); break;
+		case T_BAND:  emit_cmd("and rbx, rax"); break;
+		case T_BOR:   emit_cmd("or  rbx, rax"); break;
+		case T_BXOR:  emit_cmd("xor rbx, rax"); break;
 		
 		}
 	}
@@ -208,19 +208,19 @@ void Boolean(void){ // result in rsi
 	while(token == T_AND || token == T_OR){
 		switch(token){
 		case T_AND:
-			emit_cmd("cmp rsi 0h");
+			emit_cmd("cmp rsi, 0h");
 			fprintf(outfile, "\tjz %s\n", short_circ);
 			get_token();
 			Equation();
-			emit_cmd("cmp rsi 0h");
+			emit_cmd("cmp rsi, 0h");
 			fprintf(outfile, "\tjz %s\n", short_circ);
 			break;
 		case T_OR:
-			emit_cmd("cmp rsi 0h");
+			emit_cmd("cmp rsi, 0h");
 			fprintf(outfile, "\tjnz %s\n", short_circ);
 			get_token();
 			Equation();
-			emit_cmd("cmp rsi 0h");
+			emit_cmd("cmp rsi, 0h");
 			fprintf(outfile, "\tjnz %s\n", short_circ);
 		}
 	}
