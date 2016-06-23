@@ -15,7 +15,7 @@
 
 
 // expressions in order of precedence
-void Primary   (void); // rcx
+const sym_entry * Primary   (void);
 
 void Unary     (void); // returns in rcx. uses rdx
 
@@ -24,7 +24,7 @@ void Expression(void); // returns in rbx
 void Equation  (void); // rsi
 void Boolean   (void); // rsi
 
-void Assignment(void);
+void Assign    (void);
 
 
 /******************************************************************************/
@@ -32,23 +32,41 @@ void Assignment(void);
 /******************************************************************************/
 
 
-// Makes no changes to the output file
-void Primary(void){
+/*	If we implicitly dereference symbols we will need reference and dereference operators. Primary() will not be able to directly write the the output file because we may have to reference the label. We will not be able to decide to call a function name until Term().
+*/
+
+/*	In Omnicode Variable names are label names using them directly returns the address where the data is stored. Assignments require that address to be able change the data at that location. However, all other uses tend to need the data rather than its location and so should be dereferenced. The labels themselves obviously cannot be modifed.
+
+@A + @B : C
+
+*/
+
+/*	Whatever the syntax, unary will need information about the type of symbol, 
+	therefore Primary must make no changes to the registers and return only a 
+	symbol entry.
+*/
+
+const sym_entry * Primary(void){
+	static sym_entry symbol;
 	sym_entry * sym_pt;
+	
+	symbol.name[0]   = '\0';
+	symbol.code      = false;
+	symbol.immediate = true;
+	symbol.size      = void_t;
 	
 	switch (token){
 	case T_NUM:
-		fprintf(outfile, "\tmov rcx, 0%llxh\n", get_num());
-		break;
+		symbol.value = get_num();
+		return &symbol;
 	case T_CHAR:
-		fprintf(outfile, "\tmov rcx, 0%llxh\n", get_char());
-		break;
+		symbol.value = get_char();
+		return &symbol;
 	case T_NAME:
 		if(!( sym_pt=iview(symbol_table,get_name()) ))
 			error("Undeclared symbol");
 		
-		fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
-		break;
+		return sym_pt;
 	default:
 		printf(
 			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
@@ -57,11 +75,15 @@ void Primary(void){
 		);
 		exit(EXIT_FAILURE);
 	}
-	
-	//return &symbol;
 }
 
+/*	Since multible unaries can be stacked each should know the type of the
+	subordinate operation.
+*/
+
 void Unary(void){ // value in rcx
+	sym_entry * sym_pt;
+
 	switch (token){
 	case T_OPAR:
 		Match(T_OPAR);
@@ -77,24 +99,53 @@ void Unary(void){ // value in rcx
 		break;
 	case T_DREF:
 		get_token();
-		Unary();
+		
+		sym_pt = Primary();
+		if (sym_pt->code) error("cannot dereference a function");
+		if (sym_pt->immediate) error("cannot dereference an immediate value");
+		if (!sym_pt->dref) error("cannot dereference a void pointer");
+		
 		emit_cmd("mov rdx, rcx");
 		emit_cmd("mov rcx, [rdx]");
-		break;
+	
+	break;
 	case T_NOT:
+	
 		get_token();
-		Unary();
+		
+		sym_pt = Primary();
+		if (sym_pt->code) error("cannot logical invert a function");
+		
+		if (sym_pt->immediate)
+			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
+		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
+		
 		emit_cmd("cmp   rcx, 0");
 		emit_cmd("movz  rcx, 1");
 		emit_cmd("movnz rcx, 0");
-		break;
+	
+	break;
 	case T_INV:
+	
 		get_token();
-		Unary();
+		
+		sym_pt = Primary();
+		if (sym_pt->code) error("cannot binary invert a function");
+		
+		if (sym_pt->immediate)
+			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
+		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
+		
 		emit_cmd("not rcx");
-		break;
+	
+	break;
 	default:
-		Primary();
+	
+		sym_pt = Primary();
+		
+		if (sym_pt->immediate)
+			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
+		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
 	}
 }
 
@@ -108,22 +159,28 @@ void Term(void){ // returns in rax. uses rdx,rcx
 			get_token();
 			Unary();
 			emit_cmd("mul rcx");
-			break;
+		break;
 		case T_DIV:
 			get_token();
 			Unary();
 			emit_cmd("div rcx");
-			break;
-		case T_MODUL:
+		break;
+		case T_MOD:
 			get_token();
 			Unary();
 			emit_cmd("div rcx");
 			emit_cmd("mov rax, rdx");
+		break;
+		case T_EXP:
+			get_token();
+			Unary();
+			emit_cmd("DO SOME THINGS");
+		break;
 		case T_LSHFT:
 			get_token();
 			Unary();
 			emit_cmd("shl rax, cl");
-			break;
+		break;
 		case T_RSHFT:
 			get_token();
 			Unary();
@@ -133,10 +190,16 @@ void Term(void){ // returns in rax. uses rdx,rcx
 }
 
 void Expression(void){ // returns in rbx
-	Term();
+	if(token == T_MINUS){
+		get_token();
+		Term();
+		emit_cmd("neg rax");
+	}
+	else Term();
+	
 	emit_cmd("mov rbx, rax");
 	
-	while (token>=T_PLUS && token<=T_RSHFT){
+	while (token>=T_PLUS && token<=T_BXOR){
 		token_t temp_token=token;
 		get_token();
 		Term();
@@ -147,8 +210,8 @@ void Expression(void){ // returns in rbx
 		case T_BAND:  emit_cmd("and rbx, rax"); break;
 		case T_BOR:   emit_cmd("or  rbx, rax"); break;
 		case T_BXOR:  emit_cmd("xor rbx, rax"); break;
-		
 		}
+		
 	}
 }
 
@@ -161,40 +224,44 @@ void Equation(void){ // rsi
 		case T_EQ:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("cmovnz rsi 0h");
-			emit_cmd("cmovz rsi 1h");
+			emit_cmd("cmp    rsi, rbx");
+			emit_cmd("cmove  rsi, 1h");
+			emit_cmd("cmovne rsi, 0h");
 			break;
 		case T_NEQ:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("cmovnz rsi 1h");
-			emit_cmd("cmovz rsi 0h");
+			emit_cmd("cmp    rsi, rbx");
+			emit_cmd("cmovne rsi, 1h");
+			emit_cmd("cmove  rsi, 0h");
 			break;
 		case T_LT:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("DO STUFF");
+			emit_cmd("cmp    rsi, rbx");
+			emit_cmd("cmovl  rsi, 1h");
+			emit_cmd("cmovnl rsi, 0h");
 			break;
 		case T_GT:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("DO STUFF");
+			emit_cmd("cmp    rsi, rbx");
+			emit_cmd("cmovg  rsi, 1h");
+			emit_cmd("cmovng rsi, 0h");
 			break;
 		case T_LTE:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("DO STUFF");
+			emit_cmd("cmp     rsi, rbx");
+			emit_cmd("cmovle  rsi, 1h");
+			emit_cmd("cmovnle rsi, 0h");
 			break;
 		case T_GTE:
 			get_token();
 			Expression();
-			emit_cmd("cmp rsi, rbx");
-			emit_cmd("DO STUFF");
+			emit_cmd("cmp     rsi, rbx");
+			emit_cmd("cmovge  rsi, 1h");
+			emit_cmd("cmovnge rsi, 0h");
 		}
 	}
 }
@@ -209,37 +276,28 @@ void Boolean(void){ // result in rsi
 		switch(token){
 		case T_AND:
 			emit_cmd("cmp rsi, 0h");
-			fprintf(outfile, "\tjz %s\n", short_circ);
+			fprintf(outfile, "\tje %s\n", short_circ); // rsi = 0
 			get_token();
 			Equation();
 			emit_cmd("cmp rsi, 0h");
-			fprintf(outfile, "\tjz %s\n", short_circ);
+			fprintf(outfile, "\tjz %s\n", short_circ); // else rsi != 0
 			break;
 		case T_OR:
 			emit_cmd("cmp rsi, 0h");
-			fprintf(outfile, "\tjnz %s\n", short_circ);
+			fprintf(outfile, "\tjne %s\n", short_circ);
 			get_token();
 			Equation();
 			emit_cmd("cmp rsi, 0h");
-			fprintf(outfile, "\tjnz %s\n", short_circ);
+			fprintf(outfile, "\tjne %s\n", short_circ);
 		}
 	}
 	emit_lbl(short_circ);
 }
 
-void Assignment(void){
-	
-	do {
-		switch (token) {
-		case T_ASS:
-			get_token();
-			Unary();
-			emit_cmd("mov [rcx], rsi");
-			break;
-		default:
-			expected("an assignment");
-		}
-	} while (token == T_ASS);
+void Assign(void){
+	get_token();
+	Unary();
+	emit_cmd("mov [rcx], rsi");
 }
 
 
@@ -248,16 +306,10 @@ void Assignment(void){
 /******************************************************************************/
 
 
-void Result(void){
-	Boolean();
-	if(token == T_ASS) Assignment();
-}
-
-void Assignment_statement(void){ // result in rcx
+void Assignment_Statement(void){ // result in rcx
 	emit_cmnt("An assignment Statement");
 	Boolean();
-	Assignment();
-	Match(T_NL);
+	while (token == T_ASS) Assign();
 }
 
 

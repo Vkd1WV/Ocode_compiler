@@ -9,21 +9,6 @@
 
 #include "compiler.h"
 
-
-/******************************************************************************/
-//                             BASIC FUNCTIONS
-/******************************************************************************/
-
-
-// create and return a pointer to a unique label
-char* new_label(void){
-	static int i;
-	static char label[UNQ_LABEL_SZ];
-	
-	sprintf(label, "__%04d", i++); // use __ to prevent collisions
-	return label;
-}
-
 void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize){
 	char output[22] = "mov     x,   x";
 	
@@ -149,24 +134,40 @@ void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize){
 	emit_cmd(output);
 }
 
+
+
 int main (int argc, const char** argv){
-	sym_entry* sym_pt;
+	sym_entry* sym_pt; // the symbol table
 	
-	// initializations
+	
+	/*************************** INITIALIZATIONS ******************************/
+	
+	
+	// The output file
 	if (argc > 1) outfile=fopen(argv[1], "w");
 	else outfile=stdout;
+	
+	// The build architecture and mode
 	arch=x86;
 	x86_mode=Long;
+	
+	// Initialize the lookahead token
 	get_token();
+	
+	// Initialize the symbol table
 	symbol_table=new_DS('l');
 	
-	
+	// boilerplate in the output
 	fprintf(outfile,"; a NASM object file created by the Omega Compiler\n");
 	fprintf(
 		outfile,
 		"BITS 64 ; tell nasm that we are building for 64-bit\n"
 	);
 	fprintf(outfile,"global\t_start\n");
+	
+	
+	/***************************** COMPILATION ********************************/
+	
 	
 	// executable code
 	fprintf(outfile,"\nsection .text\t; Program code\n");
@@ -176,7 +177,10 @@ int main (int argc, const char** argv){
 		Statement(0);
 	} while (token != T_EOF);
 	
-	// constants
+	
+	/**************************** DATA SECTIONS *******************************/
+	
+	
 	//fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
 	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");
 	fprintf(outfile,"align 8\n");
@@ -185,6 +189,10 @@ int main (int argc, const char** argv){
 	while((sym_pt=view_next(symbol_table))){
 		fprintf(outfile, "%s: resq 1\n", sym_pt->name);
 	}
+	
+	
+	/******************************* Cleanup **********************************/
+	
 	
 	fclose(outfile);
 	return EXIT_SUCCESS;

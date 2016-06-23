@@ -17,6 +17,7 @@
 
 
 #include <stdint.h>
+#include <stdbool.h>
 typedef unsigned long long umax;
 typedef unsigned int uint;
 
@@ -39,16 +40,12 @@ typedef enum {x86} arch_t;
 
 typedef struct sym {
 	char    name[NAME_MAX];
-	uint16_t type; // defines the type
+	bool    code;		// exe or data?
+	bool    immediate;
 	umax    value; // initialized value of variables, or value of constants
 	regsz_t size;
-	struct sym* dref; // if the symbol is a pointer, this is what it points to
+	struct sym* dref; // if this is a pointer, what does it point to?
 }sym_entry;
-
-#define S_STATIC ((uint8_t) (1<<0))
-#define S_CONST  ((uint8_t) (1<<1)) // a constant symbol must not be changed
-#define S_IMEDT  ((uint8_t) (1<<2)) // a immediate const can be changed
-#define S_REF    ((uint8_t) (1<<3)) // a reference to the given type
 
 /*	Variable
 		assume zero initialization

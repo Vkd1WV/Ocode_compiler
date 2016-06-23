@@ -46,24 +46,25 @@ typedef uint16_t token_t;
 
 // multiplicative
 #define T_TIMES (token_t)0x0021
-#define T_MODUL (token_t)0x0022
+#define T_MOD   (token_t)0x0022
 #define T_DIV   (token_t)0x0023
-#define T_LSHFT (token_t)0x0024
-#define T_RSHFT (token_t)0x0025
+#define T_EXP   (token_t)0x0024
+#define T_LSHFT (token_t)0x0025
+#define T_RSHFT (token_t)0x0026
 
 
 // comparative
-#define T_EQ    (token_t)0x0026
-#define T_NEQ   (token_t)0x0027
-#define T_LT    (token_t)0x0028
-#define T_GT    (token_t)0x0029
-#define T_LTE   (token_t)0x002a
-#define T_GTE   (token_t)0x002b
+#define T_EQ    (token_t)0x0027
+#define T_NEQ   (token_t)0x0028
+#define T_LT    (token_t)0x0029
+#define T_GT    (token_t)0x002a
+#define T_LTE   (token_t)0x002b
+#define T_GTE   (token_t)0x002c
 // boolean
-#define T_AND   (token_t)0x002c
-#define T_OR    (token_t)0x002d
+#define T_AND   (token_t)0x002d
+#define T_OR    (token_t)0x002e
 // assignment
-#define T_ASS   (token_t)0x002e // assignments in function calls are pipes
+#define T_ASS   (token_t)0x002f // assignments in function calls are pipes
 
 
 /******************************************************************************/

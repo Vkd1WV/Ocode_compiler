@@ -18,6 +18,21 @@ void Storage_class(sym_entry* new_symbol);
 
 
 /******************************************************************************/
+//                           HELPER FUNCTIONS
+/******************************************************************************/
+
+
+// create and return a pointer to a unique label
+char* new_label(void){
+	static int i;
+	static char label[UNQ_LABEL_SZ];
+	
+	sprintf(label, "__%04d", i++); // use __ to prevent collisions
+	return label;
+}
+
+
+/******************************************************************************/
 //                           CONTROL STATEMENTS
 /******************************************************************************/
 
@@ -30,7 +45,7 @@ void If(uint lvl){
 	emit_cmnt("start of IF statement");
 	strcpy(if_label, new_label());
 	
-	Result();
+	Assignment_Statement();
 	fprintf(outfile, "\tjz %s\n", if_label);
 	
 	Statement(lvl);
@@ -60,7 +75,7 @@ void While(uint lvl){
 	strcpy(skip_label  , new_label());
 	
 	fprintf(outfile, "%s: ; repeat label\n", repeat_label);
-	Result();
+	Assignment_Statement();
 	fprintf(outfile, "\tjz %s ; skip jump\n", skip_label);
 	
 	Statement(lvl);
@@ -101,7 +116,7 @@ void Declaration(void){
 		case T_8:
 		case T_16:
 		case T_32:
-		default: Abort("Feature not implemented");
+		default: error("Feature not implemented");
 	}
 	get_token();
 	//Storage_class(new_symbol);
@@ -114,13 +129,13 @@ void Declaration(void){
 	
 }
 
-void Storage_class(sym_entry* new_symbol){
-	if (token == T_STATIC)
-		new_symbol->type |= S_STATIC;
-	else if (token == T_CONST)
-		new_symbol->type |= S_CONST;
-	get_token();
-}
+/*void Storage_class(sym_entry* new_symbol){*/
+/*	if (token == T_STATIC)*/
+/*		new_symbol->type |= S_STATIC;*/
+/*	else if (token == T_CONST)*/
+/*		new_symbol->type |= S_CONST;*/
+/*	get_token();*/
+/*}*/
 
 
 /******************************************************************************/
@@ -161,7 +176,9 @@ void Statement (uint lvl){ // any single line. always ends with NL
 /*				*/
 /*			}*/
 /*			else error("undefined token");*/
-		default: Assignment_statement();
+		default:
+			Assignment_Statement();
+			Match(T_NL);
 	}
 }
 

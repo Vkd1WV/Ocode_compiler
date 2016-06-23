@@ -87,32 +87,33 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 @    return T_DREF;
 \+\+ return T_INC;
 \-\- return T_DEC;
-!    return T_NOT;
-inv  return T_INV; // binary inversion
+not  return T_NOT;
+~    return T_INV; // binary inversion
  /* Additive */
 \+   return T_PLUS;
 \-   return T_MINUS;
  /* Multiplicative */
 \*   return T_TIMES;
-\%   return T_MODUL;
+mod  return T_MOD;
 \/   return T_DIV;
+\*\* return T_EXP;
 \<\< return T_LSHFT;
 \>\> return T_RSHFT;
  /* Binary */
-and  return T_BAND;
-or   return T_BOR;
-xor  return T_BXOR;
+&    return T_BAND;
+\|   return T_BOR;
+\|\| return T_BXOR;
  /* Comparative */
 =   return T_EQ;
 !=  return T_NEQ;
 \<  return T_LT;
 \>  return T_GT;
-=\< return T_LTE;
-=\> return T_GTE;
+\<= return T_LTE;
+\>= return T_GTE;
 
  /* Boolean */
-\|  return T_OR;
-&   return T_AND;
+or  return T_OR;
+and return T_AND;
 
 :   return T_ASS;
 
@@ -245,7 +246,7 @@ SP {
 	// yytext is where the matched text from the scanner is stored
 	
 	if (max-(unsigned)2 > sizeof(umax)*2) // subtracting 2 for the '0x'
-		Abort("constant number too large");
+		error("constant number too large");
 	
 	for(int i=2; i<max; i++){ // we start at 2 to skip the '0x'
 		if     (yytext[i]>='0' && yytext[i]<='9')
@@ -257,7 +258,7 @@ SP {
 		else if(yytext[i]>='A' && yytext[i]<='F') // upper case
 			yynumber= (yynumber<<4) | (yytext[i] - 'A' + 10);
 		
-		else Abort("internal compiler error in scanner {HEX}");
+		else error("internal compiler error in scanner {HEX}");
 		// this should be impossible
 	}
 	
@@ -354,7 +355,7 @@ SP {
  /* This needs to be the last thing */
 <*>. {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
-	Abort("unknown token");
+	error("unknown token");
 }
 
 

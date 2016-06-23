@@ -5,7 +5,7 @@
 token_t yylex(void);
 
 // From parse_expressions.c
-void Assignment_statement(void);
+void Assignment_Statement(void);
 void Result    (void);
 
 void Statement (uint lvl); // from parse_statements.c
@@ -24,17 +24,13 @@ char* new_label(void);
 
 static inline void error(const char* message){
 	printf("ERROR: %s, on line %d\n", message, yylineno);
-}
-
-static inline void Abort(const char* message){
-	error(message);
 	exit(EXIT_FAILURE);
 }
 
 static inline void expected(const char* thing){
 	char temp_array[TMP_ARR_SZE];
 	sprintf(temp_array, "Expected %s, found 0x%x", thing, token);
-	Abort(temp_array);
+	error(temp_array);
 }
 
 static inline void emit_cmnt(const char* message){
@@ -92,5 +88,6 @@ static inline void Match(token_t t){
 		exit(EXIT_FAILURE);
 	}
 }
+
 
 #endif // _FUNCTIIONS_H
