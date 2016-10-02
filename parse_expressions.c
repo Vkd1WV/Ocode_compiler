@@ -96,7 +96,8 @@ void Unary(void){ // value in rcx
 		emit_cmd("pop rsi");
 		emit_cmd("pop rbx");
 		emit_cmd("pop rax");
-		break;
+		return;
+	
 	case T_DREF:
 		get_token();
 		
@@ -107,10 +108,9 @@ void Unary(void){ // value in rcx
 		
 		emit_cmd("mov rdx, rcx");
 		emit_cmd("mov rcx, [rdx]");
+		return;
 	
-	break;
 	case T_NOT:
-	
 		get_token();
 		
 		sym_pt = Primary();
@@ -118,13 +118,13 @@ void Unary(void){ // value in rcx
 		
 		if (sym_pt->immediate)
 			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
-		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
+		else fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
 		
 		emit_cmd("cmp   rcx, 0");
 		emit_cmd("movz  rcx, 1");
 		emit_cmd("movnz rcx, 0");
+		return;
 	
-	break;
 	case T_INV:
 	
 		get_token();
@@ -134,18 +134,20 @@ void Unary(void){ // value in rcx
 		
 		if (sym_pt->immediate)
 			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
-		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
+		else fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
 		
 		emit_cmd("not rcx");
+		return;
 	
-	break;
 	default:
 	
 		sym_pt = Primary();
 		
 		if (sym_pt->immediate)
 			fprintf(outfile, "\tmov rcx, %llu\n", sym_pt->value);
-		else fprintf(outfile, "\tmov rcx, [%s]\n", sym_pt->name);
+		else fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
+		
+		return;
 	}
 }
 
