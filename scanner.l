@@ -62,6 +62,8 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 	}
 }
 
+#[^\n]* {} // comments
+
 <INITIAL><<EOF>> {
 	// if this file was an include, will return to
 	// previous point. pops and delete's buffer. see <INCLUDE>
@@ -83,23 +85,21 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 \} return T_CBRC;
 
  /* Unary */
-\$   return T_REF;
 @    return T_DREF;
 \+\+ return T_INC;
 \-\- return T_DEC;
 not  return T_NOT;
-~    return T_INV; // binary inversion
- /* Additive */
-\+   return T_PLUS;
-\-   return T_MINUS;
+inv  return T_INV; // binary inversion
  /* Multiplicative */
 \*   return T_TIMES;
 mod  return T_MOD;
 \/   return T_DIV;
-\*\* return T_EXP;
+\^   return T_EXP;
 \<\< return T_LSHFT;
 \>\> return T_RSHFT;
- /* Binary */
+ /* Additive */
+\+   return T_PLUS;
+\-   return T_MINUS;
 &    return T_BAND;
 \|   return T_BOR;
 \|\| return T_BXOR;
@@ -266,52 +266,50 @@ SP {
 }
 
 {DIGIT}+ yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
-{NAME}   return T_NAME;
+{NAME}   {
+	if(strlen(yytext)-1 > NAME_MAX) error("name is too long");
+	return T_NAME;
+}
 
 
 
 \' { BEGIN(CHAR); }
 <CHAR>(\\.|[^'])\' { // an escaped anything \\. or a non-quote [^']
 	int len = strlen(yytext);
-	BEGIN(0);
 	
-	yytext[len-1] = '\0'; // get rid of the trailing '
-	
-	if (len == 2) return (T_CHAR);
-	
-	switch (yytext[1]){
-	case 'n':
-		yytext[0]='\n';
-		yytext[1]='\0';
-		break;
-	case 'r':
-		yytext[0]='\r';
-		yytext[1]='\0';
-		break;
-	case '\\':
-		yytext[0]='\\';
-		yytext[1]='\0';
-		break;
-	case '0':
-		yytext[0]='\0';
-		yytext[1]='\0';
-		break;
-	case 't':
-		yytext[0]='\t';
-		yytext[1]='\0';
-		break;
-	case '\'':
-		yytext[0]='\'';
-		yytext[1]='\0';
-		break;
-	default:
-		printf(
-			"ERROR: Invalid character constant: '%s' on line %d.\n",
-			yytext,
-			yylineno
-		);
+	if (len == 2){
+		yynumber = yytext[0];
 	}
-	return(T_CHAR);
+	
+	else switch (yytext[1]){
+		case 'n':
+			yynumber = '\n';
+			break;
+		case 'r':
+			yynumber = '\r';
+			break;
+		case '\\':
+			yynumber = '\\';
+			break;
+		case '0':
+			yynumber = '\0';
+			break;
+		case 't':
+			yynumber = '\t';
+			break;
+		case '\'':
+			yynumber = '\'';
+			break;
+		default:
+			printf(
+				"ERROR: Invalid character constant: '%s' on line %d.\n",
+				yytext,
+				yylineno
+			);
+	}
+	
+	BEGIN(0);
+	return (T_NUM);
 }
 
 

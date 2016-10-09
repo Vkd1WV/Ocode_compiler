@@ -12,10 +12,11 @@
 
 EXTERN token_t token;        // global lookahead token
 EXTERN FILE*   outfile;      // parser output file
-EXTERN DS      symbol_table;
+EXTERN DS      global_symbols; // symbol table for global symbols
 EXTERN mode_t  x86_mode;     // the proccessor mode we are compiling for
 EXTERN arch_t  arch;         // the target architecture
-EXTERN uint    block_lvl;    // no. of leading tabs on the current line
+EXTERN uint    block_lvl;    // no. of leading tabs on the current line.
+// block_lvl is controlled entirely from scanner.l
 EXTERN umax    yynumber;     // numbers passed to the parser by T_NUM
 
 // defined in globals.c

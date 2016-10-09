@@ -21,7 +21,7 @@ primary
 	| T_NAME
 	;
 
-unary
+factor
 	: T_INC   primary
 	| T_DEC   primary
 	| T_REF   primary
