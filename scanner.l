@@ -110,11 +110,10 @@ mod  return T_MOD;
 \>  return T_GT;
 \<= return T_LTE;
 \>= return T_GTE;
-
  /* Boolean */
 or  return T_OR;
 and return T_AND;
-
+ /* Assignments */
 :   return T_ASS;
 
 \-\-\- error("ambiguous construct");
@@ -133,6 +132,10 @@ while    return T_WHILE;
 do       return T_DO;
 break    return T_BRK;
 continue return T_CNTN;
+try      return T_TRY;
+throw    return T_THRW;
+catch    return T_CTCH;
+for      return T_FOR;
 
  /***************************** DATA KEYWORDS *********************************/
 
@@ -143,6 +146,10 @@ qword return T_64;
 
 const  return T_CONST;
 static return T_STATIC;
+
+sub     return T_SUB;
+end     return T_END;
+typedef return T_TYPE;
 
  /******************************* REGISTERS ***********************************/
 

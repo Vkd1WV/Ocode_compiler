@@ -8,7 +8,7 @@ token_t yylex(void);
 const sym_entry * Assignment_Statement(void);
 
 // from parse_statements.c
-void Statement (uint lvl);
+void Statement   (uint lvl);
 
 // from functions.c
 const char* new_label(void);

@@ -41,7 +41,7 @@ typedef enum { void_t, byte, word, dword, qword } regsz_t;
 
 typedef struct sym {
 	char    name[NAME_MAX];
-	bool    func;		// exe or data?
+	bool    exe;		// exe or data?
 	bool    constant;
 	bool    stat_var;
 	bool    type_def;

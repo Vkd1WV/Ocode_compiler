@@ -2,11 +2,10 @@
 
 	### Declarations
 
-qword var1
+qword const var1
 qword var2
 qword var3
 
-0 : var1
 1 : var2
 
 	### Unary Ops
@@ -20,10 +19,10 @@ not var1
 
 	### multipilicative ops
 
-3*5
-var1/2
+3*12
+var1/130
 var2 mod var1
-3<<2
+3<<257
 var2>>1
 
 	### additive ops
@@ -36,6 +35,23 @@ var1|var2
 var2 || var3
 
 	### comparators
+
+var1 = var3
+var2 > var1
+var3 < var1
+var3 != var1
+3 >= 3
+4 <= 5
+
+	### Booleans
+
+4 and 0
+0 or 0
+
+	### Assignments
+
+(4 : var2) * var2 : var3
+var3 << 4 + 0xf : var2
 
 
 

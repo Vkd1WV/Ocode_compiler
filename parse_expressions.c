@@ -45,8 +45,8 @@ void Assign(const sym_entry * in);
 */
 
 const sym_entry * Primary(void){
-	static sym_entry symbol;
 	const sym_entry * sym_pt;
+	sym_entry * symbol;
 	
 	switch (token){
 	case T_OPAR:
@@ -55,9 +55,10 @@ const sym_entry * Primary(void){
 		Match(T_CPAR);
 		return sym_pt;
 	case T_NUM:
-		symbol.constant = true;
-		symbol.value    = get_num();
-		return &symbol;
+		symbol = new_var();
+		symbol->constant = true;
+		symbol->value    = get_num();
+		return symbol;
 	case T_NAME:
 		if(!( sym_pt=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
@@ -218,7 +219,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("and", result, arg1, arg2);
+			emit_quad("&", result, arg1, arg2);
 		break;
 		
 		case T_BOR:
@@ -226,7 +227,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("or", result, arg1, arg2);
+			emit_quad("|", result, arg1, arg2);
 		break;
 		
 		case T_BXOR:
@@ -269,14 +270,14 @@ const sym_entry * Equation(void){
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("lt", result, arg1, arg2);
+			emit_quad("<", result, arg1, arg2);
 			break;
 		case T_GT:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("gt", result, arg1, arg2);
+			emit_quad(">", result, arg1, arg2);
 			break;
 		case T_LTE:
 			get_token();
@@ -310,14 +311,14 @@ const sym_entry * Boolean(void){
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad("&", result, arg1, arg2);
+			emit_quad("and", result, arg1, arg2);
 			break;
 		case T_OR:
 			get_token();
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad("|", result, arg1, arg2);
+			emit_quad("or", result, arg1, arg2);
 		}
 		arg1 = result;
 	}
@@ -329,6 +330,10 @@ void Assign(const sym_entry * in){
 	
 	get_token();
 	out = Unary();
+	
+	// symantic checks
+	if(out->constant) error("Cannot make an assignment to a constant");
+	
 	emit_triple(":", out, in);
 }
 

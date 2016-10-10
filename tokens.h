@@ -15,6 +15,7 @@ typedef uint16_t token_t;
 #define T_NAME (token_t)0x0003 // sets yytext
 #define T_STR  (token_t)0x0004 // sets yytext
 //#define T_CHAR (token_t)0x0005 // sets yytext
+// char will eventually be a variable width encoding, but for now it is just byte
 
 
 /******************************************************************************/
@@ -82,32 +83,29 @@ typedef uint16_t token_t;
 #define T_DO    (token_t)0x0047
 #define T_BRK   (token_t)0x0048
 #define T_CNTN  (token_t)0x0049
+#define T_TRY   (token_t)0x004a
+#define T_THRW  (token_t)0x004b
+#define T_CTCH  (token_t)0x004c
+#define T_FOR   (token_t)0x004d
 
 
 /******************************************************************************/
-//                               Data types
+//                               Declarations
 /******************************************************************************/
 
 
 // all other data types are defined classes
-#define T_8  (token_t)0x0050
-#define T_16 (token_t)0x0051
-#define T_32 (token_t)0x0052
-#define T_64 (token_t)0x0053
+#define T_8  (token_t)0x0060
+#define T_16 (token_t)0x0061
+#define T_32 (token_t)0x0062
+#define T_64 (token_t)0x0063
 
-#define T_CONST  (token_t)0x0054
-#define T_STATIC (token_t)0x0055
+#define T_CONST  (token_t)0x0064
+#define T_STATIC (token_t)0x0065
 
-
-/******************************************************************************/
-//                            Control statements
-/******************************************************************************/
-
-
-#define T_FUN  (token_t)0x0070
-#define T_TRY  (token_t)0x0071
-#define T_THRW (token_t)0x0072
-#define T_CTCH (token_t)0x0073
+#define T_SUB  (token_t)0x0066 // Subroutine
+#define T_END  (token_t)0x0067 // End of Subroutine
+#define T_TYPE (token_t)0x0068 // Type Definitions
 
 
 /******************************************************************************/
