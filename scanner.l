@@ -86,6 +86,7 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 
  /* Unary */
 @    return T_DREF;
+ref  return T_REF;
 \+\+ return T_INC;
 \-\- return T_DEC;
 not  return T_NOT;
@@ -136,8 +137,9 @@ try      return T_TRY;
 throw    return T_THRW;
 catch    return T_CTCH;
 for      return T_FOR;
+return   return T_RTRN;
 
- /***************************** DATA KEYWORDS *********************************/
+ /****************************** DECLARATIONS *********************************/
 
 byte  return T_8;
 word  return T_16;
@@ -148,8 +150,12 @@ const  return T_CONST;
 static return T_STATIC;
 
 sub     return T_SUB;
+fun     return T_FUN;
+asm     return T_ASM;
 end     return T_END;
-typedef return T_TYPE;
+
+typedef  return T_TYPE;
+operator return T_OPR;
 
  /******************************* REGISTERS ***********************************/
 

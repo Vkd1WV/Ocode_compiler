@@ -25,6 +25,9 @@ sym_entry* new_var(void){
 	// insert it into the symbol table
 	sort(global_symbols, new_symbol, new_symbol->name);
 	
+	// Copy stuff
+	new_symbol->type = temp
+	
 	// and return it
 	return new_symbol;
 }

@@ -13,7 +13,7 @@ void Statement   (uint lvl);
 // from functions.c
 const char* new_label(void);
 const char* pointertt(const sym_entry * p);
-sym_entry * new_var  (void);
+sym_entry* new_var(void);
 void emit_triple(
 	const char* cmd,
 	const sym_entry* out,

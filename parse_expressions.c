@@ -30,40 +30,32 @@ void Assign(const sym_entry * in);
 /******************************************************************************/
 
 
-/*	If we implicitly dereference symbols we will need reference and dereference operators. Primary() will not be able to directly write the the output file because we may have to reference the label. We will not be able to decide to call a function name until Term().
-*/
-
-/*	In Omnicode Variable names are label names using them directly returns the address where the data is stored. Assignments require that address to be able to change the data at that location. However, all other uses tend to need the data rather than its location and so should be dereferenced. The labels themselves obviously cannot be modifed.
-
-@A + @B : C
-
-*/
-
-/*	Whatever the syntax, unary will need information about the type of symbol, 
-	therefore Primary must make no changes to the registers and return only a 
-	symbol entry.
+/*	Variables must be implicitly dereferenced.
+	Constants must have their value inserted.
+	Functions must be implicitly called and their return value substituted in.
 */
 
 const sym_entry * Primary(void){
-	const sym_entry * sym_pt;
-	sym_entry * symbol;
+	const sym_entry * in;
+	sym_entry * out;
 	
 	switch (token){
 	case T_OPAR:
 		Match(T_OPAR);
-		sym_pt=Assignment_Statement();
+		in=Assignment_Statement();
 		Match(T_CPAR);
-		return sym_pt;
+		return in;
 	case T_NUM:
-		symbol = new_var();
-		symbol->constant = true;
-		symbol->value    = get_num();
-		return symbol;
+		out = new_var();
+		out->type  = literal;
+		out->value = get_num();
+		return out;
 	case T_NAME:
-		if(!( sym_pt=iview(global_symbols,get_name()) ))
+		/* Symbols cannot be implicitly derefernced here because then the reference would not be avilible for assignments
+		*/
+		if(!( in=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
-		
-		return sym_pt;
+		return in;
 	default:
 		printf(
 			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
@@ -74,9 +66,6 @@ const sym_entry * Primary(void){
 	}
 }
 
-/*	Since multible unaries can be stacked each should know the type of the
-	subordinate operation.
-*/
 
 const sym_entry * Unary(void){
 	const sym_entry * arg;
@@ -86,21 +75,36 @@ const sym_entry * Unary(void){
 	case T_MINUS:
 		get_token();
 		arg = Unary();
-		result = new_var();
 		
 		// Symantic Checks
+		switch (arg->type){
+		case literal:
+		case variable: break;
+		case subroutine: error("Subroutine used in an expression");
+		case none:       error("Trying to negate a void data type");
+		case type_def:   error("Data type used in an expression");
+		default:         error("Internal Compiler Error at Unary(), T_MINUS");
+		}
+		
+		result = new_var();
 		
 		emit_triple("neg", result, arg);
 		return result;
 	
+	case T_REF:
+		get_token();
+		arg = Primary();
+		//FIXME: Do something
+		return arg;
+	
 	case T_DREF:
 		get_token();
 		arg = Unary();
-		result = new_var();
 		
 		// Symantic Checks
-		if (arg->constant) error("cannot dereference a constant");
-		if (!arg->dref) error("cannot dereference a void pointer");
+		if(!arg->dref) error("Trying to dereference a void data type");
+		
+		result = arg->dref;
 		
 		emit_triple("@", result, arg);
 		return result;
@@ -131,12 +135,12 @@ const sym_entry * Unary(void){
 	}
 }
 
+
 const sym_entry * Term(void){
 	const sym_entry *arg1, *arg2;
 	const sym_entry * result;
 	
 	arg1=Unary();
-	//FIXME: what if arg1 is a constant?
 	
 	while(token>=T_TIMES && token<=T_RSHFT){
 		switch(token){

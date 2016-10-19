@@ -2,8 +2,6 @@
 #define _TOKENS_H
 
 
-typedef uint16_t token_t;
-
 /******************************************************************************/
 //                       Primary data and formatting
 /******************************************************************************/
@@ -87,6 +85,7 @@ typedef uint16_t token_t;
 #define T_THRW  (token_t)0x004b
 #define T_CTCH  (token_t)0x004c
 #define T_FOR   (token_t)0x004d
+#define T_RTRN  (token_t)0x004e
 
 
 /******************************************************************************/
@@ -104,8 +103,11 @@ typedef uint16_t token_t;
 #define T_STATIC (token_t)0x0065
 
 #define T_SUB  (token_t)0x0066 // Subroutine
-#define T_END  (token_t)0x0067 // End of Subroutine
-#define T_TYPE (token_t)0x0068 // Type Definitions
+#define T_FUN  (token_t)0x0067 // Function
+#define T_ASM  (token_t)0x0068 // Assembler Routine
+#define T_END  (token_t)0x0069 // End of Subroutine
+#define T_OPR  (token_t)0x006a // Operator Overload Declaration
+#define T_TYPE (token_t)0x006b // Type Definitions
 
 
 /******************************************************************************/
@@ -136,5 +138,5 @@ typedef uint16_t token_t;
 /******************************************************************************/
 
 
-
 #endif // _TOKENS_H
+

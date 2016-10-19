@@ -20,8 +20,8 @@ int main (int argc, const char** argv){
 	else outfile=stdout;
 	
 	// The build architecture and mode
-/*	arch=x86;*/
-/*	x86_mode=Long;*/
+	arch=x86;
+	x86_mode=Long;
 	
 	// Initialize the lookahead token
 	get_token();
@@ -68,7 +68,7 @@ int main (int argc, const char** argv){
 	
 	pview(global_symbols, 0);
 	while((sym_pt=view_next(global_symbols))){
-		if(!sym_pt->constant)
+		if(!( sym_pt->type == constant ))
 			fprintf(outfile, "%p: %s\n", (void*)sym_pt, sym_pt->name);
 	}
 	

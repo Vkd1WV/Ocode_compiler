@@ -14,9 +14,11 @@ void If    (uint lvl); // only control statements need to know the block_lvl
 void While (uint lvl);
 //void For   (uint lvl); for <range statement>
 
-void Decl_var  (void);
-void Decl_Sub  (uint lvl);
-void Decl_Type (void);
+void Decl_var (void);
+void Decl_Type(void);
+void Decl_Sub (uint lvl);
+void Decl_Fun (uint lvl);
+void Decl_Asm (uint lvl);
 
 
 /******************************************************************************/
@@ -93,6 +95,7 @@ void While(uint lvl){
 /******************************************************************************/
 
 
+// Declare a Variable
 void Decl_var(void){
 	sym_entry* new_symbol;
 	
@@ -119,18 +122,23 @@ void Decl_var(void){
 	
 	if (token == T_STATIC){
 		new_symbol->stat_var = true;
+		new_symbol->type = variable;
 		get_token();
 	}
 	else if (token == T_CONST){
-		new_symbol->constant = true;
+		new_symbol->type = constant;
 		get_token();
 	}
+	else new_symbol->type = variable;
 	
 	strncpy(new_symbol->name, get_name(), NAME_MAX);
 	sort(global_symbols, new_symbol, new_symbol->name);
 	//if(token == T_EQ) Assignment(new_symbol);
 	Match(T_NL);
 }
+
+// Define a Datatype
+void Decl_Type (void){}
 
 // Declare a Subroutine
 void Decl_Sub(uint lvl){
@@ -144,8 +152,10 @@ void Decl_Sub(uint lvl){
 	if (!subroutine) error("Out of memory");
 	lcl_scope = new_DS('l');
 	
-	// Name
 	get_token();
+	if(token == T_ASM); // TODO: Do some things
+	
+	// Name
 	strncpy(subroutine->name, get_name(), NAME_MAX);
 	subroutine->exe = true;
 	
@@ -162,7 +172,35 @@ void Decl_Sub(uint lvl){
 	Match(T_NL);
 }
 
-void Decl_Type (void){}
+// Declare a Function
+void Decl_Fun (uint lvl){
+	sym_entry* function;
+	DS lcl_scope;
+	
+	// Initializations
+	function=calloc(1, sizeof(sym_entry));
+	if (!function) error("Out of memory");
+	lcl_scope = new_DS('l');
+	
+	get_token();
+	if(token == T_ASM); // TODO: Do some things
+	
+	// Name
+	strncpy(function->name, get_name(), NAME_MAX);
+	function->exe = true;
+	
+	sort(global_symbols, function, function->name);
+	
+	// Parameter & Return Declarations
+	
+	Statement(lvl);
+	
+	// End statement
+	Match(T_END);
+	if (strcmp( subroutine->name, get_name() ))
+		error("Miss-matched end statement");
+	Match(T_NL);
+}
 
 
 /******************************************************************************/
@@ -194,6 +232,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_32:
 		case T_64:    Decl_var(   ); break;
 		case T_SUB:   Decl_Sub(lvl); break;
+		case T_FUN:   Decl_Fun(lvl); break;
 		case T_LBL:   Label   (   ); break;
 		case T_JMP:   Jump    (   ); break;
 		case T_IF:    If      (lvl); break;
