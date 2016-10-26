@@ -2,8 +2,6 @@
 #define _TOKENS_H
 
 
-typedef uint16_t token_t;
-
 /******************************************************************************/
 //                       Primary data and formatting
 /******************************************************************************/
@@ -14,7 +12,8 @@ typedef uint16_t token_t;
 #define T_NUM  (token_t)0x0002 // sets yynumber
 #define T_NAME (token_t)0x0003 // sets yytext
 #define T_STR  (token_t)0x0004 // sets yytext
-#define T_CHAR (token_t)0x0005 // sets yytext
+//#define T_CHAR (token_t)0x0005 // sets yytext
+// char will eventually be a variable width encoding, but for now it is just byte
 
 
 /******************************************************************************/
@@ -36,30 +35,35 @@ typedef uint16_t token_t;
 #define T_DREF  (token_t)0x0019
 #define T_NOT   (token_t)0x001a
 #define T_INV   (token_t)0x001b
+
+// basic
+#define T_PLUS  (token_t)0x001c
+#define T_MINUS (token_t)0x001d
+#define T_BAND  (token_t)0x001e
+#define T_BOR   (token_t)0x001f
+#define T_BXOR  (token_t)0x0020
+
 // multiplicative
-#define T_TIMES (token_t)0x001c
-#define T_MODUL (token_t)0x001d
-#define T_DIV   (token_t)0x001e
-#define T_LSHFT (token_t)0x001f
-#define T_RSHFT (token_t)0x0020
-// additive
-#define T_PLUS  (token_t)0x0021
-#define T_MINUS (token_t)0x0022
-#define T_BAND  (token_t)0x0023
-#define T_BOR   (token_t)0x0024
-#define T_BXOR  (token_t)0x0025
+#define T_TIMES (token_t)0x0021
+#define T_MOD   (token_t)0x0022
+#define T_DIV   (token_t)0x0023
+#define T_EXP   (token_t)0x0024
+#define T_LSHFT (token_t)0x0025
+#define T_RSHFT (token_t)0x0026
+
+
 // comparative
-#define T_EQ    (token_t)0x0026
-#define T_NEQ   (token_t)0x0027
-#define T_LT    (token_t)0x0028
-#define T_GT    (token_t)0x0029
-#define T_LTE   (token_t)0x002a
-#define T_GTE   (token_t)0x002b
+#define T_EQ    (token_t)0x0027
+#define T_NEQ   (token_t)0x0028
+#define T_LT    (token_t)0x0029
+#define T_GT    (token_t)0x002a
+#define T_LTE   (token_t)0x002b
+#define T_GTE   (token_t)0x002c
 // boolean
-#define T_AND   (token_t)0x002c
-#define T_OR    (token_t)0x002d
+#define T_AND   (token_t)0x002d
+#define T_OR    (token_t)0x002e
 // assignment
-#define T_ASS   (token_t)0x002e // assignments in function calls are pipes
+#define T_ASS   (token_t)0x002f // assignments in function calls are pipes
 
 
 /******************************************************************************/
@@ -77,33 +81,36 @@ typedef uint16_t token_t;
 #define T_DO    (token_t)0x0047
 #define T_BRK   (token_t)0x0048
 #define T_CNTN  (token_t)0x0049
+#define T_TRY   (token_t)0x004a
+#define T_THRW  (token_t)0x004b
+#define T_CTCH  (token_t)0x004c
+#define T_FOR   (token_t)0x004d
+#define T_RTRN  (token_t)0x004e
 
 
 /******************************************************************************/
-//                               Data types
+//                               Declarations
 /******************************************************************************/
 
 
 // all other data types are defined classes
-#define T_8  (token_t)0x0050
-#define T_16 (token_t)0x0051
-#define T_32 (token_t)0x0052
-#define T_64 (token_t)0x0053
+#define T_8    (token_t)0x0060
+#define T_16   (token_t)0x0061
+#define T_32   (token_t)0x0062
+#define T_64   (token_t)0x0063
+#define T_WORD (token_t)0x0064
+#define T_MAX  (token_t)0x0065
 
-#define T_CONST  (token_t)0x0054
-#define T_STATIC (token_t)0x0055
+#define T_SUB  (token_t)0x0066 // Subroutine
+#define T_FUN  (token_t)0x0067 // Function
+#define T_END  (token_t)0x0068 // End of Subroutine
+#define T_OPR  (token_t)0x0069 // Operator Overload Declaration
+#define T_TYPE (token_t)0x006a // Type Definitions
 
-
-/******************************************************************************/
-//                            Control statements
-/******************************************************************************/
-
-
-#define T_FUN  (token_t)0x0070
-#define T_TRY  (token_t)0x0071
-#define T_THRW (token_t)0x0072
-#define T_CTCH (token_t)0x0073
-
+// Modifiers
+#define T_CONST  (token_t)0x0070
+#define T_STATIC (token_t)0x0071
+#define T_ASM    (token_t)0x0072 // Assembler Routine
 
 /******************************************************************************/
 //                                Registers
@@ -133,5 +140,5 @@ typedef uint16_t token_t;
 /******************************************************************************/
 
 
-
 #endif // _TOKENS_H
+

@@ -21,7 +21,7 @@ primary
 	| T_NAME
 	;
 
-unary
+factor
 	: T_INC   primary
 	| T_DEC   primary
 	| T_REF   primary
@@ -88,15 +88,21 @@ if	: T_IF assignment statement T_NL
 	| T_IF assignment T_NL block T_ELSE block
 	;
 
-declaration
-	: data_type
+declaration: T_NAME ;
+
+base_data_type
+	: T_8
+	| T_16
+	| T_32
+	| T_64
+	;
 
 statement  //each must terminate with NL
 	: if
 	| T_LBL T_NAME T_NL
 	| T_JMP T_NAME T_NL
 	| T_WHILE assignment
-	| declaration
+	| base_data_type declaration
 	| assignment T_NL
 	;
 

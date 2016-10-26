@@ -62,6 +62,8 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 	}
 }
 
+#[^\n]* {} // comments
+
 <INITIAL><<EOF>> {
 	// if this file was an include, will return to
 	// previous point. pops and delete's buffer. see <INCLUDE>
@@ -83,37 +85,36 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 \} return T_CBRC;
 
  /* Unary */
-\$   return T_REF;
 @    return T_DREF;
+ref  return T_REF;
 \+\+ return T_INC;
 \-\- return T_DEC;
-!    return T_NOT;
+not  return T_NOT;
 inv  return T_INV; // binary inversion
+ /* Multiplicative */
+\*   return T_TIMES;
+mod  return T_MOD;
+\/   return T_DIV;
+\^   return T_EXP;
+\<\< return T_LSHFT;
+\>\> return T_RSHFT;
  /* Additive */
 \+   return T_PLUS;
 \-   return T_MINUS;
- /* Multiplicative */
-\*   return T_TIMES;
-\%   return T_MODUL;
-\/   return T_DIV;
-\<\< return T_LSHFT;
-\>\> return T_RSHFT;
- /* Binary */
-and  return T_BAND;
-or   return T_BOR;
-xor  return T_BXOR;
+&    return T_BAND;
+\|   return T_BOR;
+\|\| return T_BXOR;
  /* Comparative */
 =   return T_EQ;
 !=  return T_NEQ;
 \<  return T_LT;
 \>  return T_GT;
-=\< return T_LTE;
-=\> return T_GTE;
-
+\<= return T_LTE;
+\>= return T_GTE;
  /* Boolean */
-\|  return T_OR;
-&   return T_AND;
-
+or  return T_OR;
+and return T_AND;
+ /* Assignments */
 :   return T_ASS;
 
 \-\-\- error("ambiguous construct");
@@ -132,8 +133,13 @@ while    return T_WHILE;
 do       return T_DO;
 break    return T_BRK;
 continue return T_CNTN;
+try      return T_TRY;
+throw    return T_THRW;
+catch    return T_CTCH;
+for      return T_FOR;
+return   return T_RTRN;
 
- /***************************** DATA KEYWORDS *********************************/
+ /****************************** DECLARATIONS *********************************/
 
 byte  return T_8;
 word  return T_16;
@@ -142,6 +148,14 @@ qword return T_64;
 
 const  return T_CONST;
 static return T_STATIC;
+
+sub     return T_SUB;
+fun     return T_FUN;
+asm     return T_ASM;
+end     return T_END;
+
+typedef  return T_TYPE;
+operator return T_OPR;
 
  /******************************* REGISTERS ***********************************/
 
@@ -245,7 +259,7 @@ SP {
 	// yytext is where the matched text from the scanner is stored
 	
 	if (max-(unsigned)2 > sizeof(umax)*2) // subtracting 2 for the '0x'
-		Abort("constant number too large");
+		error("constant number too large");
 	
 	for(int i=2; i<max; i++){ // we start at 2 to skip the '0x'
 		if     (yytext[i]>='0' && yytext[i]<='9')
@@ -257,7 +271,7 @@ SP {
 		else if(yytext[i]>='A' && yytext[i]<='F') // upper case
 			yynumber= (yynumber<<4) | (yytext[i] - 'A' + 10);
 		
-		else Abort("internal compiler error in scanner {HEX}");
+		else error("internal compiler error in scanner {HEX}");
 		// this should be impossible
 	}
 	
@@ -265,52 +279,50 @@ SP {
 }
 
 {DIGIT}+ yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
-{NAME}   return T_NAME;
+{NAME}   {
+	if(strlen(yytext)-1 > NAME_MAX) error("name is too long");
+	return T_NAME;
+}
 
 
 
 \' { BEGIN(CHAR); }
 <CHAR>(\\.|[^'])\' { // an escaped anything \\. or a non-quote [^']
 	int len = strlen(yytext);
-	BEGIN(0);
 	
-	yytext[len-1] = '\0'; // get rid of the trailing '
-	
-	if (len == 2) return (T_CHAR);
-	
-	switch (yytext[1]){
-	case 'n':
-		yytext[0]='\n';
-		yytext[1]='\0';
-		break;
-	case 'r':
-		yytext[0]='\r';
-		yytext[1]='\0';
-		break;
-	case '\\':
-		yytext[0]='\\';
-		yytext[1]='\0';
-		break;
-	case '0':
-		yytext[0]='\0';
-		yytext[1]='\0';
-		break;
-	case 't':
-		yytext[0]='\t';
-		yytext[1]='\0';
-		break;
-	case '\'':
-		yytext[0]='\'';
-		yytext[1]='\0';
-		break;
-	default:
-		printf(
-			"ERROR: Invalid character constant: '%s' on line %d.\n",
-			yytext,
-			yylineno
-		);
+	if (len == 2){
+		yynumber = yytext[0];
 	}
-	return(T_CHAR);
+	
+	else switch (yytext[1]){
+		case 'n':
+			yynumber = '\n';
+			break;
+		case 'r':
+			yynumber = '\r';
+			break;
+		case '\\':
+			yynumber = '\\';
+			break;
+		case '0':
+			yynumber = '\0';
+			break;
+		case 't':
+			yynumber = '\t';
+			break;
+		case '\'':
+			yynumber = '\'';
+			break;
+		default:
+			printf(
+				"ERROR: Invalid character constant: '%s' on line %d.\n",
+				yytext,
+				yylineno
+			);
+	}
+	
+	BEGIN(0);
+	return (T_NUM);
 }
 
 
@@ -354,7 +366,7 @@ SP {
  /* This needs to be the last thing */
 <*>. {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
-	Abort("unknown token");
+	error("unknown token");
 }
 
 

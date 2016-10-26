@@ -5,14 +5,28 @@
 token_t yylex(void);
 
 // From parse_expressions.c
-void Assignment_statement(void);
-void Result    (void);
+const sym_entry * Assignment_Statement(void);
 
-void Statement (uint lvl); // from parse_statements.c
+// from parse_statements.c
+void Statement   (uint lvl);
 
-// from parse.c
-void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize);
-char* new_label(void);
+// from functions.c
+const char* new_label(void);
+const char* pointertt(const sym_entry * p);
+sym_entry* new_var(void);
+void emit_triple(
+	const char* cmd,
+	const sym_entry* out,
+	const sym_entry* in
+);
+void emit_quad(
+	const char* cmd,
+	const sym_entry* out,
+	const sym_entry* left,
+	const sym_entry* right
+);
+
+//void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize);
 
 
 /******************************************************************************/
@@ -24,60 +38,63 @@ char* new_label(void);
 
 static inline void error(const char* message){
 	printf("ERROR: %s, on line %d\n", message, yylineno);
-}
-
-static inline void Abort(const char* message){
-	error(message);
 	exit(EXIT_FAILURE);
 }
 
 static inline void expected(const char* thing){
 	char temp_array[TMP_ARR_SZE];
 	sprintf(temp_array, "Expected %s, found 0x%x", thing, token);
-	Abort(temp_array);
+	error(temp_array);
 }
+
+/******************************** EMITTERS ************************************/
 
 static inline void emit_cmnt(const char* message){
-	fprintf(outfile, "\t; %s\n", message);
+	fprintf(outfile, "\t# %s\n", message);
 }
 
-static inline void emit_cmd(const char* cmd){
-	fprintf(outfile, "\t%s\n", cmd);
-}
+//static inline void emit_cmd(const char* cmd){
+//	fprintf(outfile, "\t%s\n", cmd);
+//}
+
+
 
 static inline void emit_lbl(char* lbl){
-	fprintf(outfile, "\n%s:\n", lbl);
+	fprintf(outfile, "\nlbl %s", lbl);
 }
+
+// Jump if true
+static inline void emit_jmp(char* lbl, const sym_entry* condition){
+	fprintf(outfile, "\tjmp\t%s\t%p\n", lbl, (void*)condition);
+}
+
+// Jump if false
+static inline void emit_skp(char* lbl, const sym_entry* condition){
+	fprintf(outfile, "\tskp\t%s\t%p\n", lbl, (void*)condition);
+}
+
+/********************************* GETTERS ************************************/
 
 static inline void get_token(void){
 	token=yylex();
 }
 
 static inline char* get_name(void){
-	static char temp[NAME_MAX+1];
+	static char name[NAME_MAX+1];
 	
 	if (token != T_NAME) expected("a name");
-	strncpy(temp, yytext, NAME_MAX);
+	strncpy(name, yytext, NAME_MAX);
 	get_token();
-	return temp;
+	return name;
 }
 
-static inline uint get_char(void){
-	static char temp;
-	
-	if (token != T_CHAR) expected("a character");
-	temp = yytext[0];
-	get_token();
-	return temp;
-}
-
-static inline int get_num(void){
-	umax temp;
+static inline umax get_num(void){
+	umax num;
 	
 	if(token != T_NUM) expected("a number");
-	temp=yynumber;
+	num=yynumber;
 	get_token();
-	return temp;
+	return num;
 }
 
 static inline void Match(token_t t){
@@ -92,5 +109,6 @@ static inline void Match(token_t t){
 		exit(EXIT_FAILURE);
 	}
 }
+
 
 #endif // _FUNCTIIONS_H

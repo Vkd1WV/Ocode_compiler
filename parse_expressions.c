@@ -15,16 +15,14 @@
 
 
 // expressions in order of precedence
-sym_entry* Primary   (void);
+const sym_entry * Primary   (void);
+const sym_entry * Unary     (void);
+const sym_entry * Term      (void);
+const sym_entry * Expression(void);
+const sym_entry * Equation  (void);
+const sym_entry * Boolean   (void);
 
-sym_entry* Unary     (void); // returns in rcx. uses rdx
-
-void Term      (void); // returns in rax. uses rdx
-void Expression(void); // returns in rbx
-void Equation  (void); // rsi
-void Boolean   (void); // rdi
-
-void Assignment(void);
+void Assign(const sym_entry * in);
 
 
 /******************************************************************************/
@@ -32,39 +30,32 @@ void Assignment(void);
 /******************************************************************************/
 
 
-sym_entry * Primary(void){
-	static sym_entry symbol;
-	sym_entry * sym_pt;
+/*	Variables must be implicitly dereferenced.
+	Constants must have their value inserted.
+	Functions must be implicitly called and their return value substituted in.
+*/
+
+const sym_entry * Primary(void){
+	const sym_entry * in;
+	sym_entry * out;
 	
 	switch (token){
-/*	case T_OPAR:*/
-/*		Match(T_OPAR);*/
-/*		emit_cmd("push rax\n\tpush rbx\n\tpush rsi\n\tpush rdi");*/
-/*		Boolean();*/
-/*		Move(C, qword, DI, qword);*/
-/*		Match(T_CPAR);*/
-/*		emit_cmd("pop rdi\n\tpop rsi\n\tpop rbx\n\tpop rax");*/
-/*		break;*/
+	case T_OPAR:
+		Match(T_OPAR);
+		in=Assignment_Statement();
+		Match(T_CPAR);
+		return in;
 	case T_NUM:
-		strncpy(symbol.name, "", NAME_MAX);
-		symbol.value = get_num();
-		symbol.size  = qword;
-		symbol.type  = 0;
-		symbol.type += S_IMEDT;
-		symbol.dref  = NULL;
-		break;
-	case T_CHAR:
-		strncpy(symbol.name, "", NAME_MAX);
-		symbol.value = get_char();
-		symbol.size  = byte;
-		symbol.type  = 0;
-		symbol.type += S_IMEDT;
-		symbol.dref  = NULL;
-		break;
+		out = new_var();
+		out->type  = literal;
+		out->value = get_num();
+		return out;
 	case T_NAME:
-		if((sym_pt=iview(symbol_table,get_name())) == NULL)
+		/* Symbols cannot be implicitly derefernced here because then the reference would not be avilible for assignments
+		*/
+		if(!( in=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
-		return sym_pt;
+		return in;
 	default:
 		printf(
 			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
@@ -73,245 +64,299 @@ sym_entry * Primary(void){
 		);
 		exit(EXIT_FAILURE);
 	}
-	
-	return &symbol;
 }
 
-sym_entry* Unary(void){ // value in rcx
-	sym_entry* sym_pt;
+
+const sym_entry * Unary(void){
+	const sym_entry * arg;
+	sym_entry * result;
 	
 	switch (token){
-	// inc and dec get sticky because they have implicit assignment
-/*	case T_INC:*/
-/*		get_token();*/
-/*		sym_pt=Unary();*/
-/*		*/
-/*		if (sym_pt == NULL)*/
-/*			error("Cannot increment a void data type. You probably used too many dereferences or need to use a cast.");*/
-/*		if(sym_pt->flags & S_CONST) error("Cannot increment constant");*/
-/*		*/
-/*		if(sym_pt->flags & S_IMEDT) sym_pt->value++;*/
-/*		// if it's not a constant or immediate, then it is a variable in memory*/
-/*		else fprintf(outfile, "\tinc [%s]\n", sym_pt->name);*/
-/*		// if type is a pointer should multiply by the sizeof*/
-/*		*/
-/*		return sym_pt;*/
-/*	case T_DEC:*/
-/*		get_token();*/
-/*		sym_pt=Unary();*/
-/*		*/
-/*		if (sym_pt == NULL)*/
-/*			error("Cannot decrement a void data type. You probably used too many dereferences or need to use a cast.");*/
-/*		if(sym_pt->flags & S_CONST) error("Cannot decrement constant");*/
-/*		*/
-/*		if(sym_pt->flags & S_IMEDT) sym_pt->value--;*/
-/*		// if it's not a constant or immediate, then it is a variable in memory*/
-/*		else fprintf(outfile, "\tdec [%s]\n", sym_pt->name);*/
-/*		*/
-/*		return sym_pt;*/
-	case T_DREF:
-		get_token();
-		sym_pt=Unary();
-		
-		if (sym_pt == NULL || *sym_pt->name == '\0'){ // pointers
-			Move(D, qword, C, qword);
-			emit_cmd("mov rcx, [rdx]");
-		}
-		else if (sym_pt->flags & S_CONST || sym_pt->flags & S_IMEDT) // consts
-			fprintf(outfile, "\tmov rcx, [0%lxh]\n", sym_pt->value);
-		else {
-			fprintf(outfile, "\tmov rdx, [%s]\n", sym_pt->name); // vars
-			fprintf(outfile, "\tmov rcx, [rdx]\n");
-		}
-		
-		if (sym_pt == NULL)
-			return NULL;
-		return sym_pt->dref;
-	case T_REF:
-		get_token();
-		sym_pt=Unary();
-		
-		if(sym_pt->flags & S_IMEDT || sym_pt->flags & S_CONST)
-			error("cannot dereference constants");
-		
-		fprintf(outfile, "\tmov rcx, %s\n", sym_pt->name);
-		
-		return NULL;
-	case T_NOT:
-		get_token();
-		sym_pt=Unary();
-		
-		emit_cmd("cmp rcx, 0h");
-		emit_cmd("cmovz rcx, 01h");
-		emit_cmd("cmovnz rcx, 0h");
-		//FIXME: if larger than 1byte
-		break;
-	case T_INV:
-		get_token();
-		sym_pt=Unary();
-		emit_cmd("not rcx");
-		break;
 	case T_MINUS:
 		get_token();
-		sym_pt=Unary();
-		emit_cmd("neg rcx");
-		break;
+		arg = Unary();
+		
+		// Symantic Checks
+		switch (arg->type){
+		case literal:
+		case data: break;
+		case subroutine: error("Subroutine used in an expression");
+		case none:       error("Trying to negate a void data type");
+		case type_def:   error("Data type used in an expression");
+		default:         error("Internal Compiler Error at Unary(), T_MINUS");
+		}
+		
+		result = new_var();
+		
+		emit_triple("neg", result, arg);
+		return result;
+	
+	case T_REF:
+		get_token();
+		arg = Primary();
+		result = new_var();
+		
+		// Symantic Checks
+		switch (arg->type){
+		case none: error("Symbol has no type");
+		case temp: error("Can only create a reference to a memory location");
+		case data:
+		case pointer:
+		case function:
+		case subroutine: break;
+		case literal: error("Can only create a reference to a memory location");
+		case type_def: error("Data type used in an expression");
+		default: error("Internal Compiler Error at Unary(), T_REF");
+		}
+		
+		result->type = pointer;
+		result->dref = arg;
+		
+		emit_triple("ref", result, arg);
+		return result;
+	
+	case T_DREF:
+		get_token();
+		arg = Unary();
+		
+		// Symantic Checks
+		if(!arg->dref) error("Trying to dereference a void data type");
+		
+		result = arg->dref;
+		
+		emit_triple("@", result, arg);
+		return result;
+	
+	case T_NOT:
+		get_token();
+		arg = Unary();
+		result = new_var();
+		
+		// Symantic Checks
+		
+		emit_triple("not", result, arg);
+		return result;
+	
+	case T_INV:
+		get_token();
+		arg = Unary();
+		result = new_var();
+		
+		// Symantic Checks
+		
+		emit_triple("inv", result, arg);
+		return result;
+	
 	default:
-		return Primary();
+		arg = Primary();
+		return arg;
 	}
 }
 
-void Term(void){ // leaves result in rax
-	Unary();
-	Move(A, qword, C, qword);
+
+const sym_entry * Term(void){
+	const sym_entry *arg1, *arg2;
+	sym_entry * result;
 	
-	while(token >= T_TIMES && token <= T_RSHFT){
+	arg1=Unary();
+	
+	while(token>=T_TIMES && token<=T_RSHFT){
 		switch(token){
-/*		case T_TIMES:*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("imul rcx");*/
-/*			break;*/
-/*		case T_MODUL: // signed modulo*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("idiv rcx");*/
-/*			Move(A, qword, D, qword); // remainder to acumulator*/
-/*			break;*/
-/*		case T_DIV:*/
-/*			get_token();*/
-/*			Unary();*/
-/*			emit_cmd("div rcx");*/
-/*			break;*/
+		case T_TIMES:
+			get_token();
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("*", result, arg1, arg2);
+		break;
+		
+		case T_DIV:
+			get_token();
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("/", result, arg1, arg2);
+		break;
+		
+		case T_MOD:
+			get_token();
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("mod", result, arg1, arg2);
+		break;
+		
+		case T_EXP:
+			get_token();
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("^", result, arg1, arg2);
+		break;
 		case T_LSHFT:
 			get_token();
-			Unary();
-			fprintf(outfile, "\tDO SOME THINGS\n");
-			break;
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("lsh", result, arg1, arg2);
+		break;
 		case T_RSHFT:
 			get_token();
-			Unary();
-			fprintf(outfile, "\tDO SOME THINGS\n");
+			arg2=Unary();
+			result = new_var();
+			
+			emit_quad("rsh", result, arg1, arg2);
 		}
+		arg1 = result;
 	}
+	return arg1;
 }
 
-void Expression(void){ // leaves result in rbx
-	Term();
-	Move(B, qword, A, qword);
+const sym_entry * Expression(void){
+	const sym_entry *arg1, *arg2;
+	sym_entry * result;
+	
+	arg1=Term();
 	
 	while (token>=T_PLUS && token<=T_BXOR){
 		switch (token){
 		case T_PLUS:
 			get_token();
-			Term();
-			emit_cmd("add rbx, rax");
-			break;
+			arg2=Term();
+			result = new_var();
+			
+			emit_quad("+", result, arg1, arg2);
+		break;
+		
 		case T_MINUS:
 			get_token();
-			Term();
-			emit_cmd("sub rbx, rax");
-			break;
+			arg2=Term();
+			result = new_var();
+			
+			emit_quad("-", result, arg1, arg2);
+		break;
+		
 		case T_BAND:
 			get_token();
-			Term();
-			emit_cmd("and rbx, rax");
-			break;
+			arg2=Term();
+			result = new_var();
+			
+			emit_quad("&", result, arg1, arg2);
+		break;
+		
 		case T_BOR:
 			get_token();
-			Term();
-			emit_cmd("or rbx, rax");
-			break;
+			arg2=Term();
+			result = new_var();
+			
+			emit_quad("|", result, arg1, arg2);
+		break;
+		
 		case T_BXOR:
 			get_token();
-			Term();
-			emit_cmd("xor rbx, rax");
+			arg2=Term();
+			result = new_var();
+			
+			emit_quad("xor", result, arg1, arg2);
+		break;
 		}
+		arg1 = result;
 	}
+	return arg1;
 }
 
-void Equation(void){ // result in rsi
-	Expression();
-	Move(SI, qword, B, qword);
+const sym_entry * Equation(void){
+	const sym_entry *arg1, *arg2;
+	sym_entry * result;
+	
+	arg1 = Expression();
 	
 	while (token>=T_EQ && token<=T_GTE){
 		switch (token){
 		case T_EQ:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("cmovnz rsi 0h");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad("=", result, arg1, arg2);
 			break;
 		case T_NEQ:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("cmovz rsi 0h");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad("neq", result, arg1, arg2);
 			break;
 		case T_LT:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("DO STUFF");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad("<", result, arg1, arg2);
 			break;
 		case T_GT:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("DO STUFF");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad(">", result, arg1, arg2);
 			break;
 		case T_LTE:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("DO STUFF");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad("lte", result, arg1, arg2);
 			break;
 		case T_GTE:
 			get_token();
-			Expression();
-			emit_cmd("cmp rsi, rbi");
-			emit_cmd("DO STUFF");
+			arg2=Expression();
+			result=new_var();
+			
+			emit_quad("gte", result, arg1, arg2);
 		}
+		arg1 = result;
 	}
+	return arg1;
 }
 
-void Boolean(void){ // result in rdi
-	char short_circ[UNQ_LABEL_SZ];
-	strcpy(short_circ, new_label()); // make a label for short circuiting
+const sym_entry * Boolean(void){
+	const sym_entry *arg1, *arg2;
+	sym_entry * result;
 	
-	Equation();
-	Move(DI, qword, SI, qword);
+	arg1 = Equation();
 	
 	while(token == T_AND || token == T_OR){
 		switch(token){
 		case T_AND:
 			get_token();
-			Equation();
-			fprintf(outfile, "\tDO SOME THINGS\n");
+			arg2=Equation();
+			result=new_var();
+			
+			emit_quad("and", result, arg1, arg2);
 			break;
 		case T_OR:
 			get_token();
-			Equation();
-			fprintf(outfile, "\tadd    rdi, rsi\n");
-			fprintf(outfile, "\tcmovnz rdi, 01h\n");
+			arg2=Equation();
+			result=new_var();
+			
+			emit_quad("or", result, arg1, arg2);
 		}
+		arg1 = result;
 	}
-	emit_lbl(short_circ);
+	return arg1;
 }
 
-void Assignment(void){
-	do {
-		switch (token) {
-		case T_ASS:
-			get_token();
-			Move(A, qword, DI, qword);
-			Unary();
-			emit_cmd("DO SOME THINGS");
-			break;
-		default:
-			expected("an assignment");
-		}
-	} while (token == T_ASS);
+void Assign(const sym_entry * in){
+	const sym_entry * out;
+	
+	get_token();
+	out = Unary();
+	
+	// symantic checks
+	if(out->constant) error("Cannot make an assignment to a constant");
+	
+	emit_triple(":", out, in);
 }
 
 
@@ -320,15 +365,13 @@ void Assignment(void){
 /******************************************************************************/
 
 
-void Result(void){
-	Boolean();
-	if(token == T_ASS) Assignment();
-}
-
-void Assignment_statement(void){ // result in rcx
-	Boolean();
-	Assignment();
-	Match(T_NL);
+const sym_entry * Assignment_Statement(void){
+	const sym_entry * result;
+	
+	//emit_cmnt("An assignment Statement");
+	result = Boolean();
+	while (token == T_ASS) Assign(result);
+	return result;
 }
 
 
