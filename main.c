@@ -68,7 +68,7 @@ int main (int argc, const char** argv){
 	
 	pview(global_symbols, 0);
 	while((sym_pt=view_next(global_symbols))){
-		if(!( sym_pt->type == constant ))
+		if(!( sym_pt->constant == true ))
 			fprintf(outfile, "%p: %s\n", (void*)sym_pt, sym_pt->name);
 	}
 	

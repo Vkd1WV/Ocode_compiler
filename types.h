@@ -76,20 +76,29 @@ COMPILE-TIME
 */
 
 typedef enum {
-	none,
-	temp,
+	word,		// natural unit for given processor
+	byte,		// 8 bits
+	double_b,	// 16 bits
+	triple_b,	// 24 bits
+	quad_b,		// 32 bits
+	octo_b,		// 64 bits
+	max_b		// the largest unit for given processor
+} width_t;
+
+typedef enum {
+	none,       // ? is this ever used?
+	temp,       // a place holder for a register
 	data,
-	pointer,
+	pointer,    // a pointer to the symbol contained in dref
 	function,
 	subroutine,
-	literal,
-	type_def
-	//defined type
+	literal,    // a literal number to be inserted directly
+	type_def    // defined type
 } symbol_t;
 
 //switch (sym_pt->type){
 //case none:
-//case psudo_reg:
+//case temp:
 //case data:
 //case pointer:
 //case function:
@@ -109,7 +118,7 @@ typedef struct sym {
 	bool init;     // Is the data location initialized
 	
 	// Data and temp
-	umax size; // size in bytes
+	width_t size;
 	
 	// Data, pointer, or literal
 	umax value; // Initialized value

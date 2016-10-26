@@ -20,13 +20,13 @@ sym_entry* new_var(void){
 	if (!new_symbol) error("Out of memory");
 	
 	// give it a unique name
-	sprintf(new_symbol->name, "__%04lld", i++);
+	sprintf(new_symbol->name, "%%%04lld", i++);
 	
 	// insert it into the symbol table
 	sort(global_symbols, new_symbol, new_symbol->name);
 	
 	// Copy stuff
-	new_symbol->type = temp
+	new_symbol->type = temp;
 	
 	// and return it
 	return new_symbol;
@@ -45,12 +45,12 @@ void emit_triple(
 	const sym_entry* out,
 	const sym_entry* in
 ){
-	char arg1[PT_SIZE];
+	char arg1[NAME_MAX];
 	
-	if (in->constant) sprintf(arg1, "# %16llx", in->value);
-	else              sprintf(arg1, "%18p", (void*) in);
+	if (in->constant) sprintf(arg1, "#%llx", in->value);
+	else              sprintf(arg1, "%s", in->name);
 	
-	fprintf(outfile, "%s\t%18p\t%s\n", cmd, (void*)out, arg1);
+	fprintf(outfile, "%s\t%s\t%s\n", cmd, out->name, arg1);
 }
 
 void emit_quad(
@@ -59,15 +59,15 @@ void emit_quad(
 	const sym_entry* left,
 	const sym_entry* right
 ){
-	char arg1[PT_SIZE], arg2[PT_SIZE];
+	char arg1[NAME_MAX], arg2[NAME_MAX];
 	
-	if (left->constant) sprintf(arg1, "# %16llx", left->value);
-	else                sprintf(arg1, "%18p", (void*) left);
+	if (left->constant) sprintf(arg1, "# %llx", left->value);
+	else                sprintf(arg1, "%s", left->name);
 	
-	if (right->constant) sprintf(arg2, "# %16llx", right->value);
-	else                 sprintf(arg2, "%18p", (void*) right);
+	if (right->constant) sprintf(arg2, "# %llx", right->value);
+	else                 sprintf(arg2, "%s", right->name);
 	
-	fprintf(outfile, "%s\t%18p\t%s\t%s\n", cmd, (void*)out, arg1, arg2);
+	fprintf(outfile, "%s\t%s\t%s\t%s\n", cmd, out->name, arg1, arg2);
 }
 
 /*void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize){*/

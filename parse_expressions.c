@@ -69,7 +69,7 @@ const sym_entry * Primary(void){
 
 const sym_entry * Unary(void){
 	const sym_entry * arg;
-	const sym_entry * result;
+	sym_entry * result;
 	
 	switch (token){
 	case T_MINUS:
@@ -79,7 +79,7 @@ const sym_entry * Unary(void){
 		// Symantic Checks
 		switch (arg->type){
 		case literal:
-		case variable: break;
+		case data: break;
 		case subroutine: error("Subroutine used in an expression");
 		case none:       error("Trying to negate a void data type");
 		case type_def:   error("Data type used in an expression");
@@ -94,8 +94,26 @@ const sym_entry * Unary(void){
 	case T_REF:
 		get_token();
 		arg = Primary();
-		//FIXME: Do something
-		return arg;
+		result = new_var();
+		
+		// Symantic Checks
+		switch (arg->type){
+		case none: error("Symbol has no type");
+		case temp: error("Can only create a reference to a memory location");
+		case data:
+		case pointer:
+		case function:
+		case subroutine: break;
+		case literal: error("Can only create a reference to a memory location");
+		case type_def: error("Data type used in an expression");
+		default: error("Internal Compiler Error at Unary(), T_REF");
+		}
+		
+		result->type = pointer;
+		result->dref = arg;
+		
+		emit_triple("ref", result, arg);
+		return result;
 	
 	case T_DREF:
 		get_token();
@@ -138,7 +156,7 @@ const sym_entry * Unary(void){
 
 const sym_entry * Term(void){
 	const sym_entry *arg1, *arg2;
-	const sym_entry * result;
+	sym_entry * result;
 	
 	arg1=Unary();
 	
@@ -196,7 +214,7 @@ const sym_entry * Term(void){
 
 const sym_entry * Expression(void){
 	const sym_entry *arg1, *arg2;
-	const sym_entry * result;
+	sym_entry * result;
 	
 	arg1=Term();
 	
@@ -249,7 +267,7 @@ const sym_entry * Expression(void){
 
 const sym_entry * Equation(void){
 	const sym_entry *arg1, *arg2;
-	const sym_entry * result;
+	sym_entry * result;
 	
 	arg1 = Expression();
 	
@@ -304,7 +322,7 @@ const sym_entry * Equation(void){
 
 const sym_entry * Boolean(void){
 	const sym_entry *arg1, *arg2;
-	const sym_entry * result;
+	sym_entry * result;
 	
 	arg1 = Equation();
 	

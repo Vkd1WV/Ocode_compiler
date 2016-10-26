@@ -14,11 +14,10 @@ void If    (uint lvl); // only control statements need to know the block_lvl
 void While (uint lvl);
 //void For   (uint lvl); for <range statement>
 
-void Decl_var (void);
+void Decl_word(void);
 void Decl_Type(void);
 void Decl_Sub (uint lvl);
 void Decl_Fun (uint lvl);
-void Decl_Asm (uint lvl);
 
 
 /******************************************************************************/
@@ -96,40 +95,40 @@ void While(uint lvl){
 
 
 // Declare a Variable
-void Decl_var(void){
+void Decl_word(void){
 	sym_entry* new_symbol;
 	
 	//Initializations
 	new_symbol=calloc(1, sizeof(sym_entry));
 	if (!new_symbol) error("Out of memory");
 	
+	new_symbol->type = data;
+	
 	switch (token){
 		case T_8:
 			new_symbol->size=byte;
 			break;
 		case T_16:
-			new_symbol->size=word;
+			new_symbol->size=double_b;
 			break;
 		case T_32:
-			new_symbol->size=dword;
+			new_symbol->size=quad_b;
 			break;
 		case T_64:
-			new_symbol->size=qword;
+			new_symbol->size=octo_b;
 			break;
 		default: error("Internal compiler error at Decl_var()");
 	}
-	get_token();
 	
+	get_token();
 	if (token == T_STATIC){
-		new_symbol->stat_var = true;
-		new_symbol->type = variable;
+		new_symbol->stat = true;
 		get_token();
 	}
 	else if (token == T_CONST){
-		new_symbol->type = constant;
+		new_symbol->constant = true;
 		get_token();
 	}
-	else new_symbol->type = variable;
 	
 	strncpy(new_symbol->name, get_name(), NAME_MAX);
 	sort(global_symbols, new_symbol, new_symbol->name);
@@ -142,24 +141,21 @@ void Decl_Type (void){}
 
 // Declare a Subroutine
 void Decl_Sub(uint lvl){
-	sym_entry* subroutine;
-	DS lcl_scope;
-	
-	// symantic checks
+	sym_entry* new_sub;
 	
 	// Initializations
-	subroutine=calloc(1, sizeof(sym_entry));
-	if (!subroutine) error("Out of memory");
-	lcl_scope = new_DS('l');
+	new_sub=calloc(1, sizeof(sym_entry));
+	if (!new_sub) error("Out of memory");
+	
+	new_sub->type  = subroutine;
+	new_sub->local = new_DS('l');
 	
 	get_token();
-	if(token == T_ASM); // TODO: Do some things
+	if(token == T_ASM) new_sub->assembler = true;
 	
 	// Name
-	strncpy(subroutine->name, get_name(), NAME_MAX);
-	subroutine->exe = true;
-	
-	sort(global_symbols, subroutine, subroutine->name);
+	strncpy(new_sub->name, get_name(), NAME_MAX);
+	sort(global_symbols, new_sub, new_sub->name);
 	
 	// Parameter & Return Declarations
 	
@@ -167,29 +163,28 @@ void Decl_Sub(uint lvl){
 	
 	// End statement
 	Match(T_END);
-	if (strcmp( subroutine->name, get_name() ))
+	if (strcmp( new_sub->name, get_name() ))
 		error("Miss-matched end statement");
 	Match(T_NL);
 }
 
 // Declare a Function
 void Decl_Fun (uint lvl){
-	sym_entry* function;
-	DS lcl_scope;
+	sym_entry* new_fun;
 	
 	// Initializations
-	function=calloc(1, sizeof(sym_entry));
-	if (!function) error("Out of memory");
-	lcl_scope = new_DS('l');
+	new_fun=calloc(1, sizeof(sym_entry));
+	if (!new_fun) error("Out of memory");
+	
+	new_fun->type  = function;
+	new_fun->local = new_DS('l');
 	
 	get_token();
-	if(token == T_ASM); // TODO: Do some things
+	if(token == T_ASM) new_fun->assembler = true;
 	
 	// Name
-	strncpy(function->name, get_name(), NAME_MAX);
-	function->exe = true;
-	
-	sort(global_symbols, function, function->name);
+	strncpy(new_fun->name, get_name(), NAME_MAX);
+	sort(global_symbols, new_fun, new_fun->name);
 	
 	// Parameter & Return Declarations
 	
@@ -197,7 +192,7 @@ void Decl_Fun (uint lvl){
 	
 	// End statement
 	Match(T_END);
-	if (strcmp( subroutine->name, get_name() ))
+	if (strcmp( new_fun->name, get_name() ))
 		error("Miss-matched end statement");
 	Match(T_NL);
 }
@@ -230,13 +225,13 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_8:
 		case T_16:
 		case T_32:
-		case T_64:    Decl_var(   ); break;
-		case T_SUB:   Decl_Sub(lvl); break;
-		case T_FUN:   Decl_Fun(lvl); break;
-		case T_LBL:   Label   (   ); break;
-		case T_JMP:   Jump    (   ); break;
-		case T_IF:    If      (lvl); break;
-		case T_WHILE: While   (lvl); break;
+		case T_64:    Decl_word(   ); break;
+		case T_SUB:   Decl_Sub (lvl); break;
+		case T_FUN:   Decl_Fun (lvl); break;
+		case T_LBL:   Label    (   ); break;
+		case T_JMP:   Jump     (   ); break;
+		case T_IF:    If       (lvl); break;
+		case T_WHILE: While    (lvl); break;
 		default:
 			Assignment_Statement();
 			Match(T_NL);

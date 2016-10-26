@@ -80,21 +80,21 @@ static inline void get_token(void){
 }
 
 static inline char* get_name(void){
-	static char temp[NAME_MAX+1];
+	static char name[NAME_MAX+1];
 	
 	if (token != T_NAME) expected("a name");
-	strncpy(temp, yytext, NAME_MAX);
+	strncpy(name, yytext, NAME_MAX);
 	get_token();
-	return temp;
+	return name;
 }
 
 static inline umax get_num(void){
-	umax temp;
+	umax num;
 	
 	if(token != T_NUM) expected("a number");
-	temp=yynumber;
+	num=yynumber;
 	get_token();
-	return temp;
+	return num;
 }
 
 static inline void Match(token_t t){

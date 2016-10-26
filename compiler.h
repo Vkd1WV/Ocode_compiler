@@ -9,7 +9,6 @@
 
 #define UNQ_LABEL_SZ 12 // string lngth limit for compiler generated labels
 #define NAME_MAX     64 // symbol name length limit. not enforced
-#define PT_SIZE      20 // arrays used in emmiters
 
 
 /******************************************************************************/
