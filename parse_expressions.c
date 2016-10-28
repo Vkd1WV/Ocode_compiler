@@ -55,6 +55,10 @@ const sym_entry * Primary(void){
 		*/
 		if(!( in=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
+		if(in->type == function  ); // get the function's return value
+		if(in->type == subroutine); // call the subroutine
+		if(in->type == type_def  ); // this is actually a declaration
+		
 		return in;
 	default:
 		printf(

@@ -65,6 +65,8 @@
 // assignment
 #define T_ASS   (token_t)0x002f // assignments in function calls are pipes
 
+#define T_LIST  (token_t)0x0030
+
 
 /******************************************************************************/
 //                            Control statements
@@ -86,6 +88,7 @@
 #define T_CTCH  (token_t)0x004c
 #define T_FOR   (token_t)0x004d
 #define T_RTRN  (token_t)0x004e
+#define T_END   (token_t)0x004f // End of Subroutine or function definition
 
 
 /******************************************************************************/
@@ -93,21 +96,26 @@
 /******************************************************************************/
 
 
-// all other data types are defined classes
-#define T_8    (token_t)0x0060
-#define T_16   (token_t)0x0061
-#define T_32   (token_t)0x0062
-#define T_64   (token_t)0x0063
-#define T_WORD (token_t)0x0064
-#define T_MAX  (token_t)0x0065
+#define T_OPR  (token_t)0x0060 // Operator Declaration
 
-#define T_SUB  (token_t)0x0066 // Subroutine
-#define T_FUN  (token_t)0x0067 // Function
-#define T_END  (token_t)0x0068 // End of Subroutine
-#define T_OPR  (token_t)0x0069 // Operator Overload Declaration
-#define T_TYPE (token_t)0x006a // Type Definitions
+// Word declarations
+#define T_8    (token_t)0x0061
+#define T_16   (token_t)0x0062
+#define T_24   (token_t)0x0063
+#define T_32   (token_t)0x0064
+#define T_64   (token_t)0x0065
+#define T_WORD (token_t)0x0066
+#define T_MAX  (token_t)0x0067
 
-// Modifiers
+// pointer declaration
+#define T_PTR (token_t)0x0068
+#define T_TO  (token_t)0x0069
+
+#define T_SUB  (token_t)0x006a // Subroutine
+#define T_FUN  (token_t)0x006b // Function
+#define T_TYPE (token_t)0x006c // Type Declaration
+
+// Qualifers
 #define T_CONST  (token_t)0x0070
 #define T_STATIC (token_t)0x0071
 #define T_ASM    (token_t)0x0072 // Assembler Routine

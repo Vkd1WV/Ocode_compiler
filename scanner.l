@@ -117,6 +117,8 @@ and return T_AND;
  /* Assignments */
 :   return T_ASS;
 
+,   return T_LIST;
+
 \-\-\- error("ambiguous construct");
 \+\+\+ error("ambiguous construct");
 
@@ -138,24 +140,30 @@ throw    return T_THRW;
 catch    return T_CTCH;
 for      return T_FOR;
 return   return T_RTRN;
+end      return T_END;
 
  /****************************** DECLARATIONS *********************************/
 
-byte  return T_8;
-word  return T_16;
-dword return T_32;
-qword return T_64;
-
-const  return T_CONST;
-static return T_STATIC;
+byte    return T_8;
+byte2   return T_16;
+byte3   return T_24;
+byte4   return T_32;
+byte8   return T_64;
+word    return T_WORD;
+max     return T_MAX;
 
 sub     return T_SUB;
 fun     return T_FUN;
-asm     return T_ASM;
-end     return T_END;
+typedef return T_TYPE;
 
-typedef  return T_TYPE;
+pointer return T_PTR;
+to      return T_TO;
+
 operator return T_OPR;
+
+const  return T_CONST;
+static return T_STATIC;
+asm    return T_ASM;
 
  /******************************* REGISTERS ***********************************/
 

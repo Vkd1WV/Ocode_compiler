@@ -2,11 +2,16 @@
 
 	### Declarations
 
-qword const var1
-qword var2
-qword var3
+word const                       var1 = 5
+word                             var2 = 1, var3
+#pointer const to word            pt = ref var2
+pointer to pointer const to word pt2
 
-1 : var2
+# type [qualifier-list] initialization-list
+# pointer [qualifier-list] to type initialization-list
+
+#pointer const pt to qword = ref var2
+#pointer pt2 to pointer const to qword
 
 	### Unary Ops
 

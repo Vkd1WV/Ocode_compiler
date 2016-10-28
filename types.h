@@ -76,13 +76,13 @@ COMPILE-TIME
 */
 
 typedef enum {
-	word,		// natural unit for given processor
-	byte,		// 8 bits
-	double_b,	// 16 bits
-	triple_b,	// 24 bits
-	quad_b,		// 32 bits
-	octo_b,		// 64 bits
-	max_b		// the largest unit for given processor
+	word,	// natural unit for given processor
+	byte,	// 8 bits
+	byte2,	// 16 bits
+	byte3,	// 24 bits
+	byte4,	// 32 bits
+	byte8,	// 64 bits
+	max_t	// the largest unit for given processor
 } width_t;
 
 typedef enum {

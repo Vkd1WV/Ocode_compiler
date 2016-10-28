@@ -47,7 +47,7 @@ void emit_triple(
 ){
 	char arg1[NAME_MAX];
 	
-	if (in->constant) sprintf(arg1, "#%llx", in->value);
+	if (in->constant) sprintf(arg1, "#%4llx", in->value);
 	else              sprintf(arg1, "%s", in->name);
 	
 	fprintf(outfile, "%s\t%s\t%s\n", cmd, out->name, arg1);
@@ -61,10 +61,10 @@ void emit_quad(
 ){
 	char arg1[NAME_MAX], arg2[NAME_MAX];
 	
-	if (left->constant) sprintf(arg1, "# %llx", left->value);
+	if (left->constant) sprintf(arg1, "#%4llx", left->value);
 	else                sprintf(arg1, "%s", left->name);
 	
-	if (right->constant) sprintf(arg2, "# %llx", right->value);
+	if (right->constant) sprintf(arg2, "#%4llx", right->value);
 	else                 sprintf(arg2, "%s", right->name);
 	
 	fprintf(outfile, "%s\t%s\t%s\t%s\n", cmd, out->name, arg1, arg2);

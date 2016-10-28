@@ -4,6 +4,10 @@
 // From Lexer
 token_t yylex(void);
 
+// From parse_declarations.c
+void Decl_Operator(void);
+void Decl_Symbol  (void);
+
 // From parse_expressions.c
 const sym_entry * Assignment_Statement(void);
 
