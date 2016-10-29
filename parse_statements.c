@@ -41,7 +41,7 @@ void If(uint lvl){
 	emit_cmnt("start of IF statement");
 	strcpy(if_label, new_label());
 	
-	condition = Assignment_Statement();
+	condition = Boolean();
 //	emit_jmp()
 	fprintf(outfile, "\tjz %s\n", if_label);
 	
@@ -73,7 +73,7 @@ void While(uint lvl){
 	strcpy(skip_label  , new_label());
 	
 	fprintf(outfile, "\nlbl %s # repeat label\n", repeat_label);
-	result = Assignment_Statement();
+	result = Boolean();
 	emit_skp(skip_label, result);
 	
 	Statement(lvl);
@@ -122,7 +122,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		
 		case T_NAME: // call sub or declare var of type_def
 		default:
-			Assignment_Statement();
+			Boolean();
 			Match(T_NL);
 	}
 }

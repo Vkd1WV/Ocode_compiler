@@ -28,6 +28,7 @@
 #define T_CBRC  (token_t)0x0013
 #define T_OBRK  (token_t)0x0014
 #define T_CBRK  (token_t)0x0015
+
 // unary
 #define T_DEC   (token_t)0x0016
 #define T_INC   (token_t)0x0017
@@ -44,13 +45,12 @@
 #define T_BXOR  (token_t)0x0020
 
 // multiplicative
-#define T_TIMES (token_t)0x0021
+#define T_MUL   (token_t)0x0021
 #define T_MOD   (token_t)0x0022
 #define T_DIV   (token_t)0x0023
 #define T_EXP   (token_t)0x0024
 #define T_LSHFT (token_t)0x0025
 #define T_RSHFT (token_t)0x0026
-
 
 // comparative
 #define T_EQ    (token_t)0x0027
@@ -59,13 +59,25 @@
 #define T_GT    (token_t)0x002a
 #define T_LTE   (token_t)0x002b
 #define T_GTE   (token_t)0x002c
+
 // boolean
 #define T_AND   (token_t)0x002d
 #define T_OR    (token_t)0x002e
+
 // assignment
 #define T_ASS   (token_t)0x002f // assignments in function calls are pipes
+#define T_LSH_A (token_t)0x0030
+#define T_RSH_A (token_t)0x0031
+#define T_ADD_A (token_t)0x0032
+#define T_SUB_A (token_t)0x0033
+#define T_MUL_A (token_t)0x0034
+#define T_DIV_A (token_t)0x0035
+#define T_MOD_A (token_t)0x0036
+#define T_AND_A (token_t)0x0037
+#define T_OR_A  (token_t)0x0038
+#define T_XOR_A (token_t)0x0039
 
-#define T_LIST  (token_t)0x0030
+#define T_LIST  (token_t)0x003a
 
 
 /******************************************************************************/

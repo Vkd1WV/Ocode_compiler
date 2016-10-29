@@ -9,7 +9,7 @@ void Decl_Operator(void);
 void Decl_Symbol  (void);
 
 // From parse_expressions.c
-const sym_entry * Assignment_Statement(void);
+const sym_entry * Boolean(void);
 
 // from parse_statements.c
 void Statement   (uint lvl);
@@ -41,7 +41,7 @@ void emit_quad(
 #define TMP_ARR_SZE 100
 
 static inline void error(const char* message){
-	printf("ERROR: %s, on line %d\n", message, yylineno);
+	printf("ERROR: %s, on line %d.\n", message, yylineno);
 	exit(EXIT_FAILURE);
 }
 

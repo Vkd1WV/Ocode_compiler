@@ -92,7 +92,7 @@ ref  return T_REF;
 not  return T_NOT;
 inv  return T_INV; // binary inversion
  /* Multiplicative */
-\*   return T_TIMES;
+\*   return T_MUL;
 mod  return T_MOD;
 \/   return T_DIV;
 \^   return T_EXP;
@@ -115,7 +115,17 @@ mod  return T_MOD;
 or  return T_OR;
 and return T_AND;
  /* Assignments */
-:   return T_ASS;
+:=    return T_ASS;
+:\<   return T_LSH_A;
+:\>   return T_RSH_A;
+:\+   return T_ADD_A;
+:\-   return T_SUB_A;
+:\*   return T_MUL_A;
+:\/   return T_DIV_A;
+:%    return T_MOD_A;
+:&    return T_AND_A;
+:\|   return T_OR_A;
+:\|\| return T_XOR_A;
 
 ,   return T_LIST;
 

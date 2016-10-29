@@ -64,12 +64,18 @@ int main (int argc, const char** argv){
 	
 	// Dump the symbol Table
 	
-	fprintf(outfile,"\n#Symbol Table\n");
+	fprintf(outfile,"\n#Table\tType\tconst\tInit\tDref\n");
 	
 	pview(global_symbols, 0);
 	while((sym_pt=view_next(global_symbols))){
-		if(!( sym_pt->constant == true ))
-			fprintf(outfile, "%p: %s\n", (void*)sym_pt, sym_pt->name);
+		if( sym_pt->type != literal )
+			fprintf(outfile, "%s:\t%d\t%d\t%d\t%p\n",
+				sym_pt->name,
+				sym_pt->type,
+				sym_pt->constant,
+				sym_pt->init,
+				(void*) sym_pt->dref
+			);
 	}
 	
 	

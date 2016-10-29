@@ -31,7 +31,7 @@ typedef enum {x86, arm} arch_t;
 /********************************* SYMBOLS ************************************/
 // Each symbol table entry contains all data related to named symbols in the 
 // program. Some symbols reprsent an address location. The symbol table entry
-// indicates what is at that location. 
+// indicates what is at that location.
 // Other symbols like typedefs or constants only exist at compile time.
 
 
@@ -76,6 +76,7 @@ COMPILE-TIME
 */
 
 typedef enum {
+	void_t,	// default value if unassigned
 	word,	// natural unit for given processor
 	byte,	// 8 bits
 	byte2,	// 16 bits
@@ -86,7 +87,7 @@ typedef enum {
 } width_t;
 
 typedef enum {
-	none,       // ? is this ever used?
+	none,       // default value if unassigned
 	temp,       // a place holder for a register
 	data,
 	pointer,    // a pointer to the symbol contained in dref
@@ -120,8 +121,8 @@ typedef struct sym {
 	// Data and temp
 	width_t size;
 	
-	// Data, pointer, or literal
-	umax value; // Initialized value
+	// literal
+	umax value;
 	
 	// function and subroutine
 	bool assembler; // Is this an assembler routine fun or sub

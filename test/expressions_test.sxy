@@ -2,9 +2,9 @@
 
 	### Declarations
 
-word const                       var1 = 5
-word                             var2 = 1, var3
-#pointer const to word            pt = ref var2
+word const                       var1 := 5
+word                             var2 := 1, var3
+pointer const to word             pt1 := ref var2
 pointer to pointer const to word pt2
 
 # type [qualifier-list] initialization-list
@@ -15,8 +15,8 @@ pointer to pointer const to word pt2
 
 	### Unary Ops
 
-#@var1
-#@var2
+#@pt1
+#@pt2
 
 not var1
  inv var2
@@ -55,8 +55,8 @@ var3 != var1
 
 	### Assignments
 
-(4 : var2) * var2 : var3
-var3 << 4 + 0xf : var2
+var3 := (var2 := 4) * var2
+var2 := var3 << 4 + 0xf
 
 
 

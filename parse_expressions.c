@@ -20,9 +20,10 @@ const sym_entry * Unary     (void);
 const sym_entry * Term      (void);
 const sym_entry * Expression(void);
 const sym_entry * Equation  (void);
-const sym_entry * Boolean   (void);
 
-void Assign(const sym_entry * in);
+
+sym_entry * Assign(sym_entry * target);
+//void Assign(const sym_entry * in);
 
 
 /******************************************************************************/
@@ -42,12 +43,13 @@ const sym_entry * Primary(void){
 	switch (token){
 	case T_OPAR:
 		Match(T_OPAR);
-		in=Assignment_Statement();
+		in=Boolean();
 		Match(T_CPAR);
 		return in;
 	case T_NUM:
 		out = new_var();
 		out->type  = literal;
+		out->init  = true;
 		out->value = get_num();
 		return out;
 	case T_NAME:
@@ -55,9 +57,9 @@ const sym_entry * Primary(void){
 		*/
 		if(!( in=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
-		if(in->type == function  ); // get the function's return value
-		if(in->type == subroutine); // call the subroutine
-		if(in->type == type_def  ); // this is actually a declaration
+		if(in->type == function  ){} // get the function's return value
+		if(in->type == subroutine){} // call the subroutine
+		if(in->type == type_def  ){} // this is actually a declaration
 		
 		return in;
 	default:
@@ -159,14 +161,17 @@ const sym_entry * Unary(void){
 
 
 const sym_entry * Term(void){
-	const sym_entry *arg1, *arg2;
-	sym_entry * result;
+	const sym_entry *arg2;
+	      sym_entry *arg1, *result;
 	
 	arg1=Unary();
 	
-	while(token>=T_TIMES && token<=T_RSHFT){
+	if (token >= T_ASS && token <= T_XOR_A)
+		arg1 = Assign(arg1);
+	
+	while(token>=T_MUL && token<=T_RSHFT){
 		switch(token){
-		case T_TIMES:
+		case T_MUL:
 			get_token();
 			arg2=Unary();
 			result = new_var();
@@ -324,6 +329,47 @@ const sym_entry * Equation(void){
 	return arg1;
 }
 
+
+sym_entry * Assign(sym_entry * target){
+	const sym_entry * result;
+	token_t op;
+	
+	if(target->type != data && target->type != pointer)
+		error("Invalid target of an assignment");
+	if(target->constant) error("cannot make an assignment to a constant");
+	
+	target->init = true;
+	
+	op=token;
+	get_token();
+	result=Boolean();
+	
+	//if (!result->init) error("Using an uninitialized value");
+	
+	switch (op){
+	case T_ASS: emit_triple(":=", target, result); break;
+	case T_LSH_A:
+	case T_RSH_A:
+	case T_ADD_A:
+	case T_SUB_A:
+	case T_MUL_A:
+	case T_DIV_A:
+	case T_MOD_A:
+	case T_AND_A:
+	case T_OR_A:
+	case T_XOR_A: error("Feature not implemented");
+	default: error("Internal Compiler Error at Assign()");
+	}
+	
+	return result;
+}
+
+
+/******************************************************************************/
+//                            PUBLIC FUNCTIONS
+/******************************************************************************/
+
+
 const sym_entry * Boolean(void){
 	const sym_entry *arg1, *arg2;
 	sym_entry * result;
@@ -349,33 +395,6 @@ const sym_entry * Boolean(void){
 		arg1 = result;
 	}
 	return arg1;
-}
-
-void Assign(const sym_entry * in){
-	const sym_entry * out;
-	
-	get_token();
-	out = Unary();
-	
-	// symantic checks
-	if(out->constant) error("Cannot make an assignment to a constant");
-	
-	emit_triple(":", out, in);
-}
-
-
-/******************************************************************************/
-//                            PUBLIC FUNCTIONS
-/******************************************************************************/
-
-
-const sym_entry * Assignment_Statement(void){
-	const sym_entry * result;
-	
-	//emit_cmnt("An assignment Statement");
-	result = Boolean();
-	while (token == T_ASS) Assign(result);
-	return result;
 }
 
 

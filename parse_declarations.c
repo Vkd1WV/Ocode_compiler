@@ -42,7 +42,8 @@ void Qualifier_list   (sym_entry* templt){
 }
 
 void Initializer_list (sym_entry* templt){
-	sym_entry* new_symbol;
+	      sym_entry * new_symbol;
+	const sym_entry * initializer;
 	
 	while (true) {
 		new_symbol=calloc(1, sizeof(sym_entry));
@@ -56,9 +57,17 @@ void Initializer_list (sym_entry* templt){
 		if(new_symbol->name[0] == '_' && new_symbol->name[1] == '_')
 			error("names begining with __ are reserved for internal compiler use.");
 		
-		if (token == T_EQ){ // Initialized value
+		if (token == T_ASS){ // Initialized value
 			get_token();
-			new_symbol->value = get_num();
+			
+			if(new_symbol->type != data && new_symbol->type != pointer)
+				error("Invalid target for initialization");
+			new_symbol->init = true;
+			
+			initializer=Boolean();
+			//if (!initializer->init) error("Using an uninitialized value");
+			
+			emit_triple(":=", new_symbol, initializer);
 		}
 		else if (new_symbol->constant)
 			error("No initialization for constant");
@@ -67,7 +76,6 @@ void Initializer_list (sym_entry* templt){
 		else if (token == T_NL  ) { Match(T_NL)  ; break   ; }
 		else    expected("a comma or newline");
 	};
-	
 }
 
 // Parameter lists for functions and subroutines
