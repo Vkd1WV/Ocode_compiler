@@ -140,6 +140,8 @@ typedef struct sym {
 	struct sym* dref;
 }sym_entry;
 
+typedef sym_entry* sym_pt;
+
 
 /*******************************  ************************************/
 

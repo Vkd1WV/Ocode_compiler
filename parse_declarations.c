@@ -8,11 +8,13 @@
 /******************************************************************************/
 
 
-void Decl_Word    (sym_entry* templt);
+void Decl_Word    (sym_pt templt);
 void Decl_Pointer (sym_entry* templt);
 void Decl_Type    (sym_entry* templt);
 void Decl_Sub     (sym_entry* new_sub);
 void Decl_Fun     (sym_entry* new_fun);
+
+void Type_specifier(sym_pt templt_pt);
 
 void Qualifier_list   (sym_entry* templt);
 void Initializer_list (sym_entry* templt);
@@ -139,8 +141,10 @@ void Decl_Fun (sym_entry* new_fun){
 }
 
 // Declare a Pointer
-void Decl_Pointer (sym_entry* templt){
-	sym_entry* target;
+void Decl_Pointer (sym_pt templt){
+	sym_pt target;
+	
+	templt->type = pointer;
 	
 	target=calloc(1, sizeof(sym_entry));
 	if (!target) error("Out of memory");
@@ -153,11 +157,11 @@ void Decl_Pointer (sym_entry* templt){
 	
 	Match(T_TO);
 	
-	// Call Decl_Symbol with target o algo asi
+	Type_specifier(target);
 }
 
 // Declare a Word
-void Decl_Word(sym_entry* templt){
+void Decl_Word(sym_pt templt){
 	templt->type = data;
 	
 	//puts("Decl_Word");
@@ -175,8 +179,17 @@ void Decl_Word(sym_entry* templt){
 	get_token();
 	
 	Qualifier_list(templt);
+}
+
+void Type_specifier(sym_pt templt_pt){
 	
-	Initializer_list(templt);
+	switch(token){
+		case T_PTR:  Decl_Pointer(templt_pt); break;
+		case T_TYPE: Decl_Type   (templt_pt); break;
+		case T_SUB:  Decl_Sub    (templt_pt); break;
+		case T_FUN:  Decl_Fun    (templt_pt); break;
+		default:     Decl_Word   (templt_pt); break;
+	}
 }
 
 
@@ -196,12 +209,10 @@ void Decl_Symbol  (void){
 	// Initialize the template
 	memset((void*) &templt, 0, sizeof(sym_entry));
 	
-	switch(token){
-		case T_PTR:  Decl_Pointer(&templt); break;
-		case T_TYPE: Decl_Type   (&templt); break;
-		case T_SUB:  Decl_Sub    (&templt); break;
-		case T_FUN:  Decl_Fun    (&templt); break;
-		default:     Decl_Word   (&templt); break;
-	}
+	Type_specifier(&templt);
+	
+	Initializer_list(&templt);
+	
 } // end Decl_Symbol
+
 
