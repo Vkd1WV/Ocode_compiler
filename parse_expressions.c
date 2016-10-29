@@ -54,8 +54,6 @@ const sym_entry * Primary(void){
 		out->value = get_num();
 		return out;
 	case T_NAME:
-		/* Symbols cannot be implicitly derefernced here because then the reference would not be avilible for assignments
-		*/
 		if(!( in=iview(global_symbols,get_name()) ))
 			error("Undeclared symbol");
 		if(in->type == function  ){} // get the function's return value
@@ -66,6 +64,7 @@ const sym_entry * Primary(void){
 	default:
 		sprintf(msg_arr, "Could not match token: '%s' to any rule", yytext);
 		error(msg_arr);
+		__builtin_unreachable ();
 	}
 }
 

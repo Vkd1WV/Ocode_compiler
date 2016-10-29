@@ -82,7 +82,7 @@ void Initializer_list (sym_entry* templt){
 
 // Parameter lists for functions and subroutines
 void Parameter_list   (sym_entry* templt){
-	
+	templt = templt;
 }
 
 
@@ -92,7 +92,9 @@ void Parameter_list   (sym_entry* templt){
 
 
 // Define a Datatype
-void Decl_Type (sym_entry* templt){}
+void Decl_Type (sym_entry* templt){
+	templt = templt;
+}
 
 // Declare a Subroutine
 void Decl_Sub(sym_entry* new_sub){

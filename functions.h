@@ -30,8 +30,8 @@ void emit_quad(
 	const sym_entry* right
 );
 
-static inline void error    (const char* message);
-static inline void expected (const char* thing  );
+static inline void error    (const char* message)__attribute__((noreturn));
+static inline void expected (const char* thing  )__attribute__((noreturn));
 static inline void get_token(void               );
 
 //void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize);

@@ -42,6 +42,7 @@ void If(uint lvl){
 	strcpy(if_label, new_label());
 	
 	condition = Boolean();
+	if(condition->type == literal){}
 //	emit_jmp()
 	fprintf(outfile, "\tjz %s\n", if_label);
 	
