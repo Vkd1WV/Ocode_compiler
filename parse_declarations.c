@@ -37,7 +37,7 @@ void Qualifier_list   (sym_entry* templt){
 	}
 	else if (token == T_ASM){
 		if (!( templt->type == function || templt->type == subroutine ))
-			error("invalid use of assembler qualifier in declaration");
+			error("Invalid use of assembler qualifier in declaration");
 		templt->assembler = true;
 		get_token();
 	}
@@ -57,7 +57,7 @@ void Initializer_list (sym_entry* templt){
 		sort(global_symbols, new_symbol, new_symbol->name);
 		
 		if(new_symbol->name[0] == '_' && new_symbol->name[1] == '_')
-			error("names begining with __ are reserved for internal compiler use.");
+			error("Names begining with __ are reserved for internal compiler use");
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();

@@ -1,0 +1,9 @@
+# Declaration errors
+byte8  const good
+undefined_symbol
+word asm not_a_function
+word const a_constant:=good:=5
+word __bad_name
+fun function:=bad_init
+
+

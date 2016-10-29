@@ -18,6 +18,7 @@ EXTERN arch_t  arch;         // the target architecture
 EXTERN uint    block_lvl;    // no. of leading tabs on the current line.
 // block_lvl is controlled entirely from scanner.l
 EXTERN umax    yynumber;     // numbers passed to the parser by T_NUM
+jmp_buf anewline; // to facilitate error recovery
 
 // defined in globals.c
 extern const char* _e_noimp;

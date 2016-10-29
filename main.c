@@ -11,7 +11,7 @@
 
 
 int main (int argc, const char** argv){
-	sym_entry* sym_pt;
+	sym_pt sym;
 	
 	/*************************** INITIALIZATIONS ******************************/
 	
@@ -50,6 +50,8 @@ int main (int argc, const char** argv){
 /*	fprintf(outfile,"\nsection .text\t; Program code\n");*/
 /*	fprintf(outfile,"_start:\n");*/
 	
+	setjmp(anewline);
+	
 	do {
 		Statement(0);
 	} while (token != T_EOF);
@@ -67,14 +69,14 @@ int main (int argc, const char** argv){
 	fprintf(outfile,"\n#Table\tType\tconst\tInit\tDref\n");
 	
 	pview(global_symbols, 0);
-	while((sym_pt=view_next(global_symbols))){
-		if( sym_pt->type != literal )
+	while((sym=view_next(global_symbols))){
+		if( sym->type != literal )
 			fprintf(outfile, "%s:\t%d\t%d\t%d\t%p\n",
-				sym_pt->name,
-				sym_pt->type,
-				sym_pt->constant,
-				sym_pt->init,
-				(void*) sym_pt->dref
+				sym->name,
+				sym->type,
+				sym->constant,
+				sym->init,
+				(void*) sym->dref
 			);
 	}
 	

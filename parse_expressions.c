@@ -39,6 +39,7 @@ sym_entry * Assign(sym_entry * target);
 const sym_entry * Primary(void){
 	const sym_entry * in;
 	sym_entry * out;
+	char msg_arr[30];
 	
 	switch (token){
 	case T_OPAR:
@@ -63,12 +64,8 @@ const sym_entry * Primary(void){
 		
 		return in;
 	default:
-		printf(
-			"ERROR: could not match token: '0x%02x' on line %d to any rule\n",
-			token,
-			yylineno
-		);
-		exit(EXIT_FAILURE);
+		sprintf(msg_arr, "Could not match token: '%s' to any rule", yytext);
+		error(msg_arr);
 	}
 }
 
@@ -344,7 +341,7 @@ sym_entry * Assign(sym_entry * target){
 	get_token();
 	result=Boolean();
 	
-	//if (!result->init) error("Using an uninitialized value");
+	if (!result->init) error("Using an uninitialized value");
 	
 	switch (op){
 	case T_ASS: emit_triple(":=", target, result); break;

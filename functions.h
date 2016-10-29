@@ -30,6 +30,10 @@ void emit_quad(
 	const sym_entry* right
 );
 
+static inline void error    (const char* message);
+static inline void expected (const char* thing  );
+static inline void get_token(void               );
+
 //void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize);
 
 
@@ -37,12 +41,16 @@ void emit_quad(
 //                             INLINE FUNCTIONS
 /******************************************************************************/
 
+/************************ ERROR REPORTING & RECOVERY **************************/
 
 #define TMP_ARR_SZE 100
 
 static inline void error(const char* message){
 	printf("ERROR: %s, on line %d.\n", message, yylineno);
-	exit(EXIT_FAILURE);
+	while(token != T_NL) get_token();
+	printf("continuing...\n");
+	longjmp(anewline, 0);
+	//exit(EXIT_FAILURE);
 }
 
 static inline void expected(const char* thing){
@@ -51,17 +59,12 @@ static inline void expected(const char* thing){
 	error(temp_array);
 }
 
+
 /******************************** EMITTERS ************************************/
 
 static inline void emit_cmnt(const char* message){
 	fprintf(outfile, "\t# %s\n", message);
 }
-
-//static inline void emit_cmd(const char* cmd){
-//	fprintf(outfile, "\t%s\n", cmd);
-//}
-
-
 
 static inline void emit_lbl(char* lbl){
 	fprintf(outfile, "\nlbl %s", lbl);
