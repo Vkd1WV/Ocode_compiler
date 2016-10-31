@@ -143,13 +143,66 @@ typedef struct sym {
 typedef sym_entry* sym_pt;
 
 
-/*******************************  ************************************/
+/*************************** INTERMEDIATE QUEUE *******************************/
+
+typedef enum {
+	I_NUL,
+
+	// Unary OPS (6)
+	I_ASS ,
+	I_REF ,
+	I_DREF,
+	I_NEG ,
+	I_NOT ,
+	I_INV ,
+
+	// Binary OPS (19)
+	I_MUL,
+	I_DIV,
+	I_MOD,
+	I_EXP,
+	I_LSH,
+	I_RSH,
+
+	I_ADD ,
+	I_SUB ,
+	I_BAND,
+	I_BOR ,
+	I_XOR ,
+
+	I_EQ ,
+	I_NEQ,
+	I_LT ,
+	I_GT ,
+	I_LTE,
+	I_GTE,
+
+	I_AND,
+	I_OR ,
+
+	// Flow Control (6)
+	I_JMP ,
+	I_JZ  ,
+	I_BLK ,
+	I_EBLK,
+	I_CALL,
+	I_RTRN,
+}byte_code;
+
+typedef union {
+	sym_pt symbol;
+	char * label;
+	umax   value;
+} intermediate_arg;
 
 typedef struct icode {
-	uint16_t cmd;
-	sym_entry* result;
-	sym_entry* arg1;
-	sym_entry* arg2;
+	byte_code        op;
+	bool             arg1_lit;
+	bool             arg2_lit;
+	char *           label;
+	sym_pt           result;
+	intermediate_arg arg1;
+	intermediate_arg arg2;
 } icmd;
 
 #endif // _TYPES_H

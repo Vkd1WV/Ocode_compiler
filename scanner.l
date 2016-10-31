@@ -129,8 +129,8 @@ and return T_AND;
 
 ,   return T_LIST;
 
-\-\-\- error("ambiguous construct");
-\+\+\+ error("ambiguous construct");
+\-\-\- parse_error("ambiguous construct");
+\+\+\+ parse_error("ambiguous construct");
 
 
  /**************************** CONTROL KEYWORDS *******************************/
@@ -188,42 +188,42 @@ R7  return T_R7; // DI
 
 R8  {
 	if (arch == x86 && x86_mode != Long)
-		error("R8 is only availible in Long mode");
+		parse_error("R8 is only availible in Long mode");
 	return T_R8;
 }
 R9  {
 	if (arch == x86 && x86_mode != Long)
-		error("R9 is only availible in Long mode");
+		parse_error("R9 is only availible in Long mode");
 	return T_R9;
 }
 R10 {
 	if (arch == x86 && x86_mode != Long)
-		error("R10 is only availible in Long mode");
+		parse_error("R10 is only availible in Long mode");
 	return T_R10;
 }
 R11 {
 	if (arch == x86 && x86_mode != Long)
-		error("R11 is only availible in Long mode");
+		parse_error("R11 is only availible in Long mode");
 	return T_R11;
 }
 R12 {
 	if (arch == x86 && x86_mode != Long)
-		error("R12 is only availible in Long mode");
+		parse_error("R12 is only availible in Long mode");
 	return T_R12;
 }
 R13 {
 	if (arch == x86 && x86_mode != Long)
-		error("R13 is only availible in Long mode");
+		parse_error("R13 is only availible in Long mode");
 	return T_R13;
 }
 R14 {
 	if (arch == x86 && x86_mode != Long)
-		error("R14 is only availible in Long mode");
+		parse_error("R14 is only availible in Long mode");
 	return T_R14;
 }
 R15 {
 	if (arch == x86 && x86_mode != Long)
-		error("R15 is only availible in Long mode");
+		parse_error("R15 is only availible in Long mode");
 	return T_R15;
 }
 
@@ -277,7 +277,7 @@ SP {
 	// yytext is where the matched text from the scanner is stored
 	
 	if (max-(unsigned)2 > sizeof(umax)*2) // subtracting 2 for the '0x'
-		error("constant number too large");
+		parse_error("constant number too large");
 	
 	for(int i=2; i<max; i++){ // we start at 2 to skip the '0x'
 		if     (yytext[i]>='0' && yytext[i]<='9')
@@ -289,7 +289,7 @@ SP {
 		else if(yytext[i]>='A' && yytext[i]<='F') // upper case
 			yynumber= (yynumber<<4) | (yytext[i] - 'A' + 10);
 		
-		else error("internal compiler error in scanner {HEX}");
+		else crit_error("internal compiler error in scanner {HEX}");
 		// this should be impossible
 	}
 	
@@ -298,7 +298,7 @@ SP {
 
 {DIGIT}+ yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
 {NAME}   {
-	if(strlen(yytext)-1 > NAME_MAX) error("name is too long");
+	if(strlen(yytext)-1 > NAME_MAX) parse_error("name is too long");
 	return T_NAME;
 }
 
@@ -384,7 +384,7 @@ SP {
  /* This needs to be the last thing */
 <*>. {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
-	error("unknown token");
+	parse_error("unknown token");
 }
 
 

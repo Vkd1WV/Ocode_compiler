@@ -7,8 +7,9 @@
 /******************************************************************************/
 
 
-#define UNQ_LABEL_SZ 12 // string lngth limit for compiler generated labels
-#define NAME_MAX     64 // symbol name length limit. not enforced
+#define UNQ_LABEL_SZ 18 // string length limit for compiler generated labels
+#define NAME_MAX     64 // symbol name length limit.
+#define ERR_ARR_SZ  100 // temp arrays used in error reporting
 
 
 /******************************************************************************/
@@ -26,6 +27,7 @@
 
 #include "types.h"
 #include "tokens.h"
+//#include "byte_codes.h"
 #include "globals.h"
 #include "functions.h"
 

@@ -1,7 +1,12 @@
 #ifndef _FUNCTIIONS_H
 #define _FUNCTIIONS_H
 
-// From Lexer
+/******************************************************************************/
+//                             GLOBAL PROTOTYPES
+/******************************************************************************/
+
+
+// From scanner.l
 token_t yylex(void);
 
 // From parse_declarations.c
@@ -14,27 +19,26 @@ const sym_entry * Boolean(void);
 // from parse_statements.c
 void Statement   (uint lvl);
 
-// from functions.c
-const char* new_label(void);
-const char* pointertt(const sym_entry * p);
-sym_entry* new_var(void);
-void emit_triple(
-	const char* cmd,
-	const sym_entry* out,
-	const sym_entry* in
-);
+// From intermediate.c
+const char * new_label              (void);
+sym_entry  * new_var                (void);
+void         Initialize_intermediate(void);
+void Dump_symbols(void);
+
+void emit_cmnt(const char* comment);
+void emit_lbl(char* lbl);
+
 void emit_quad(
-	const char* cmd,
+	byte_code op,
 	const sym_entry* out,
 	const sym_entry* left,
 	const sym_entry* right
 );
 
-static inline void error    (const char* message)__attribute__((noreturn));
-static inline void expected (const char* thing  )__attribute__((noreturn));
-static inline void get_token(void               );
 
-//void Move(reg_t dest, regsz_t dsize, reg_t src, regsz_t ssize);
+//static inline void error    (const char* message)__attribute__((noreturn));
+//static inline void expected (const char* thing  )__attribute__((noreturn));
+//static inline void get_token(void               );
 
 
 /******************************************************************************/
@@ -43,41 +47,22 @@ static inline void get_token(void               );
 
 /************************ ERROR REPORTING & RECOVERY **************************/
 
-#define TMP_ARR_SZE 100
-
-static inline void error(const char* message){
+static inline void parse_error(const char* message){
 	printf("ERROR: %s, on line %d.\n", message, yylineno);
-	while(token != T_NL) get_token();
+	while( (token = yylex()) != T_NL );
 	printf("continuing...\n");
-	longjmp(anewline, 0);
-	//exit(EXIT_FAILURE);
+	longjmp(anewline, 1);
 }
 
 static inline void expected(const char* thing){
-	char temp_array[TMP_ARR_SZE];
-	sprintf(temp_array, "Expected %s, found 0x%x", thing, token);
-	error(temp_array);
+	char temp_array[ERR_ARR_SZ];
+	sprintf(temp_array, "Expected %s, found %s", thing, yytext);
+	parse_error(temp_array);
 }
 
-
-/******************************** EMITTERS ************************************/
-
-static inline void emit_cmnt(const char* message){
-	fprintf(outfile, "\t# %s\n", message);
-}
-
-static inline void emit_lbl(char* lbl){
-	fprintf(outfile, "\nlbl %s", lbl);
-}
-
-// Jump if true
-static inline void emit_jmp(char* lbl, const sym_entry* condition){
-	fprintf(outfile, "\tjmp\t%s\t%p\n", lbl, (void*)condition);
-}
-
-// Jump if false
-static inline void emit_skp(char* lbl, const sym_entry* condition){
-	fprintf(outfile, "\tskp\t%s\t%p\n", lbl, (void*)condition);
+static inline void crit_error(const char* message){
+	printf("CRITICAL ERROR: %s, on line %d.\n", message, yylineno);
+	exit(EXIT_FAILURE);
 }
 
 /********************************* GETTERS ************************************/
@@ -107,15 +92,10 @@ static inline umax get_num(void){
 static inline void Match(token_t t){
 	if(token == t) get_token();
 	else{
-		printf(
-			"ERROR: Expected token: '0x%02x' but found token: '0x%02x' on line %d\n",
-			t,
-			token,
-			yylineno
-		);
-		exit(EXIT_FAILURE);
+		char temp_array[ERR_ARR_SZ];
+		sprintf(temp_array, "0x%x", t);
+		expected(temp_array);
 	}
 }
-
 
 #endif // _FUNCTIIONS_H

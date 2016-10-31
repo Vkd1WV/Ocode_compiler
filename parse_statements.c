@@ -28,7 +28,7 @@ void Label(void){
 
 void Jump(void){
 	Match(T_JMP);
-	fprintf(outfile, "\tjmp\t%s\t#1\n", get_name());
+	//fprintf(outfile, "\tjmp\t%s\t#1\n", get_name());
 	Match(T_NL);
 }
 
@@ -44,7 +44,7 @@ void If(uint lvl){
 	condition = Boolean();
 	if(condition->type == literal){}
 //	emit_jmp()
-	fprintf(outfile, "\tjz %s\n", if_label);
+	//fprintf(outfile, "\tjz %s\n", if_label);
 	
 	Statement(lvl);
 	
@@ -52,15 +52,15 @@ void If(uint lvl){
 		Match(T_ELSE);
 		emit_cmnt("start of ELSE statement");
 		strcpy(else_label, new_label());
-		fprintf(outfile, "\tjmp %s\n", else_label);
+		//fprintf(outfile, "\tjmp %s\n", else_label);
 		emit_lbl(if_label);
 		
 		Statement(lvl);
 		
-		fprintf(outfile, "%s: ; End of ELSE\n", else_label);
+		//fprintf(outfile, "%s: ; End of ELSE\n", else_label);
 	}
 	else
-		fprintf(outfile, "%s:\n", if_label);
+		//fprintf(outfile, "%s:\n", if_label);
 	emit_cmnt("End of IF Statement\n");
 }
 
@@ -73,14 +73,14 @@ void While(uint lvl){
 	strcpy(repeat_label, new_label());
 	strcpy(skip_label  , new_label());
 	
-	fprintf(outfile, "\nlbl %s # repeat label\n", repeat_label);
+	//fprintf(outfile, "\nlbl %s # repeat label\n", repeat_label);
 	result = Boolean();
-	emit_skp(skip_label, result);
+	//emit_skp(skip_label, result);
 	
 	Statement(lvl);
 	
-	fprintf(outfile, "\tjmp\t%s\t#1\n", repeat_label);
-	fprintf(outfile, "\nlbl %s # skip label\n" , skip_label);
+	//fprintf(outfile, "\tjmp\t%s\t#1\n", repeat_label);
+	//fprintf(outfile, "\nlbl %s # skip label\n" , skip_label);
 	emit_cmnt("End of WHILE loop\n");
 }
 
@@ -100,12 +100,12 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		
 		else { // subordinate block
 			lvl=block_lvl;
-			fprintf(outfile, "\t# START block level %u\n", lvl);
+			//fprintf(outfile, "\t# START block level %u\n", lvl);
 			do {
 				Statement(lvl);
 			} while (token != T_EOF && block_lvl == lvl);
-			if(block_lvl > lvl) error("Unexpected nested block");
-			fprintf(outfile, "\t# END block level %u\n", lvl);
+			if(block_lvl > lvl) parse_error("Unexpected nested block");
+			//fprintf(outfile, "\t# END block level %u\n", lvl);
 		}
 	}
 	

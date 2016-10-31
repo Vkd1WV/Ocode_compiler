@@ -37,7 +37,7 @@ void Qualifier_list   (sym_entry* templt){
 	}
 	else if (token == T_ASM){
 		if (!( templt->type == function || templt->type == subroutine ))
-			error("Invalid use of assembler qualifier in declaration");
+			parse_error("Invalid use of assembler qualifier in declaration");
 		templt->assembler = true;
 		get_token();
 	}
@@ -49,7 +49,7 @@ void Initializer_list (sym_entry* templt){
 	
 	while (true) {
 		new_symbol=calloc(1, sizeof(sym_entry));
-		if (!new_symbol) error("Out of memory");
+		if (!new_symbol) crit_error("Out of memory");
 		
 		memcpy((void*) new_symbol, (void*) templt, sizeof(sym_entry));
 		
@@ -57,22 +57,22 @@ void Initializer_list (sym_entry* templt){
 		sort(global_symbols, new_symbol, new_symbol->name);
 		
 		if(new_symbol->name[0] == '_' && new_symbol->name[1] == '_')
-			error("Names begining with __ are reserved for internal compiler use");
+			parse_error("Names begining with __ are reserved for internal compiler use");
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();
 			
 			if(new_symbol->type != data && new_symbol->type != pointer)
-				error("Invalid target for initialization");
+				parse_error("Invalid target for initialization");
 			new_symbol->init = true;
 			
 			initializer=Boolean();
 			//if (!initializer->init) error("Using an uninitialized value");
 			
-			emit_triple(":=", new_symbol, initializer);
+			emit_quad(I_ASS, new_symbol, initializer, NULL);
 		}
 		else if (new_symbol->constant)
-			error("No initialization for constant");
+			parse_error("No initialization for constant");
 		
 		if      (token == T_LIST) { Match(T_LIST); continue; }
 		else if (token == T_NL  ) { Match(T_NL)  ; break   ; }
@@ -115,7 +115,7 @@ void Decl_Sub(sym_entry* new_sub){
 	// End statement
 	Match(T_END);
 	if (strcmp( new_sub->name, get_name() ))
-		error("Miss-matched end statement");
+		parse_error("Miss-matched end statement");
 	Match(T_NL);
 }
 
@@ -138,7 +138,7 @@ void Decl_Fun (sym_entry* new_fun){
 	// End statement
 	Match(T_END);
 	if (strcmp( new_fun->name, get_name() ))
-		error("Miss-matched end statement");
+		parse_error("Miss-matched end statement");
 	Match(T_NL);
 }
 
@@ -149,7 +149,7 @@ void Decl_Pointer (sym_pt templt){
 	templt->type = pointer;
 	
 	target=calloc(1, sizeof(sym_entry));
-	if (!target) error("Out of memory");
+	if (!target) crit_error("Out of memory");
 	
 	templt->dref = target;
 	
@@ -176,7 +176,7 @@ void Decl_Word(sym_pt templt){
 		case T_64:   templt->size=byte8  ; break;
 		case T_WORD: templt->size=word   ; break;
 		case T_MAX:  templt->size=max_t  ; break;
-		default: error("Internal compiler error at Decl_word()");
+		default: crit_error("Internal compiler error at Decl_word()");
 	}
 	get_token();
 	

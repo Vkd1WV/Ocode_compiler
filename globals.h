@@ -2,29 +2,37 @@
 #define _GLOBALS_H
 
 #ifdef _GLOBALS_C
-#define EXTERN
-
+	#define EXTERN
 #else
-#define EXTERN extern
-
+	#define EXTERN extern
 #endif
 
+/*************************** PARSING / SCANNING *******************************/
 
-EXTERN token_t token;        // global lookahead token
-EXTERN FILE*   outfile;      // parser output file
-EXTERN DS      global_symbols; // symbol table for global symbols
-EXTERN mode_t  x86_mode;     // the proccessor mode we are compiling for
-EXTERN arch_t  arch;         // the target architecture
-EXTERN uint    block_lvl;    // no. of leading tabs on the current line.
-// block_lvl is controlled entirely from scanner.l
-EXTERN umax    yynumber;     // numbers passed to the parser by T_NUM
-jmp_buf anewline; // to facilitate error recovery
-
-// defined in globals.c
-extern const char* _e_noimp;
+EXTERN token_t token;     // global lookahead token
+EXTERN uint    block_lvl; // number of leading tabs on the current line
+EXTERN umax    yynumber;  // numbers passed to the parser by T_NUM
+EXTERN jmp_buf anewline;  // to facilitate error recovery
 
 // Global variables provided by the scanner
 extern int     yylineno;
 extern char *  yytext;
+extern FILE *  yyin;
+
+/**************************** INTERMEDIATE CODE *******************************/
+
+EXTERN DS    global_symbols; // symbol table for global symbols
+EXTERN DS    interm_q;       // a queue for intermediate code
+EXTERN FILE* debug_fd;       // contains a text representation of the interm_q
+EXTERN char* nxt_lbl;        // points to the label of the next icmd
+
+/***************************** CODE GENERATOR *********************************/
+
+EXTERN FILE*   out_fd;
+EXTERN mode_t  x86_mode; // the proccessor mode we are compiling for
+EXTERN arch_t  arch;     // the target architecture
+
+// defined in globals.c
+//extern const char* _e_noimp;
 
 #endif // _GLOBALS_H

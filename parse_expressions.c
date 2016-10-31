@@ -39,7 +39,7 @@ sym_entry * Assign(sym_entry * target);
 const sym_entry * Primary(void){
 	const sym_entry * in;
 	sym_entry * out;
-	char msg_arr[30];
+	char msg_arr[100];
 	
 	switch (token){
 	case T_OPAR:
@@ -55,7 +55,7 @@ const sym_entry * Primary(void){
 		return out;
 	case T_NAME:
 		if(!( in=iview(global_symbols,get_name()) ))
-			error("Undeclared symbol");
+			parse_error("Undeclared symbol");
 		if(in->type == function  ){} // get the function's return value
 		if(in->type == subroutine){} // call the subroutine
 		if(in->type == type_def  ){} // this is actually a declaration
@@ -63,7 +63,7 @@ const sym_entry * Primary(void){
 		return in;
 	default:
 		sprintf(msg_arr, "Could not match token: '%s' to any rule", yytext);
-		error(msg_arr);
+		parse_error(msg_arr);
 		__builtin_unreachable ();
 	}
 }
@@ -82,15 +82,15 @@ const sym_entry * Unary(void){
 		switch (arg->type){
 		case literal:
 		case data: break;
-		case subroutine: error("Subroutine used in an expression");
-		case none:       error("Trying to negate a void data type");
-		case type_def:   error("Data type used in an expression");
-		default:         error("Internal Compiler Error at Unary(), T_MINUS");
+		case subroutine: parse_error("Subroutine used in an expression");
+		case none:       parse_error("Trying to negate a void data type");
+		case type_def:   parse_error("Data type used in an expression");
+		default:     crit_error("Internal Compiler Error at Unary(), T_MINUS");
 		}
 		
 		result = new_var();
 		
-		emit_triple("neg", result, arg);
+		emit_quad(I_NEG, result, arg, NULL);
 		return result;
 	
 	case T_REF:
@@ -100,21 +100,21 @@ const sym_entry * Unary(void){
 		
 		// Symantic Checks
 		switch (arg->type){
-		case none: error("Symbol has no type");
-		case temp: error("Can only create a reference to a memory location");
+		case none: crit_error("Symbol has no type");
+		case temp: parse_error("Can only create a reference to a memory location");
 		case data:
 		case pointer:
 		case function:
 		case subroutine: break;
-		case literal: error("Can only create a reference to a memory location");
-		case type_def: error("Data type used in an expression");
-		default: error("Internal Compiler Error at Unary(), T_REF");
+		case literal: parse_error("Can only create a reference to a memory location");
+		case type_def: parse_error("Data type used in an expression");
+		default: crit_error("Internal Compiler Error at Unary(), T_REF");
 		}
 		
 		result->type = pointer;
 		result->dref = arg;
 		
-		emit_triple("ref", result, arg);
+		emit_quad(I_REF, result, arg, NULL);
 		return result;
 	
 	case T_DREF:
@@ -122,11 +122,11 @@ const sym_entry * Unary(void){
 		arg = Unary();
 		
 		// Symantic Checks
-		if(!arg->dref) error("Trying to dereference a void data type");
+		if(!arg->dref) parse_error("Trying to dereference a void data type");
 		
 		result = arg->dref;
 		
-		emit_triple("@", result, arg);
+		emit_quad(I_DREF, result, arg, NULL);
 		return result;
 	
 	case T_NOT:
@@ -136,7 +136,7 @@ const sym_entry * Unary(void){
 		
 		// Symantic Checks
 		
-		emit_triple("not", result, arg);
+		emit_quad(I_NOT, result, arg, NULL);
 		return result;
 	
 	case T_INV:
@@ -146,7 +146,7 @@ const sym_entry * Unary(void){
 		
 		// Symantic Checks
 		
-		emit_triple("inv", result, arg);
+		emit_quad(I_INV, result, arg, NULL);
 		return result;
 	
 	default:
@@ -172,7 +172,7 @@ const sym_entry * Term(void){
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("*", result, arg1, arg2);
+			emit_quad(I_MUL, result, arg1, arg2);
 		break;
 		
 		case T_DIV:
@@ -180,7 +180,7 @@ const sym_entry * Term(void){
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("/", result, arg1, arg2);
+			emit_quad(I_DIV, result, arg1, arg2);
 		break;
 		
 		case T_MOD:
@@ -188,7 +188,7 @@ const sym_entry * Term(void){
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("mod", result, arg1, arg2);
+			emit_quad(I_MOD, result, arg1, arg2);
 		break;
 		
 		case T_EXP:
@@ -196,21 +196,21 @@ const sym_entry * Term(void){
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("^", result, arg1, arg2);
+			emit_quad(I_EXP, result, arg1, arg2);
 		break;
 		case T_LSHFT:
 			get_token();
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("lsh", result, arg1, arg2);
+			emit_quad(I_LSH, result, arg1, arg2);
 		break;
 		case T_RSHFT:
 			get_token();
 			arg2=Unary();
 			result = new_var();
 			
-			emit_quad("rsh", result, arg1, arg2);
+			emit_quad(I_RSH, result, arg1, arg2);
 		}
 		arg1 = result;
 	}
@@ -230,7 +230,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("+", result, arg1, arg2);
+			emit_quad(I_ADD, result, arg1, arg2);
 		break;
 		
 		case T_MINUS:
@@ -238,7 +238,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("-", result, arg1, arg2);
+			emit_quad(I_SUB, result, arg1, arg2);
 		break;
 		
 		case T_BAND:
@@ -246,7 +246,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("&", result, arg1, arg2);
+			emit_quad(I_BAND, result, arg1, arg2);
 		break;
 		
 		case T_BOR:
@@ -254,7 +254,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("|", result, arg1, arg2);
+			emit_quad(I_BOR, result, arg1, arg2);
 		break;
 		
 		case T_BXOR:
@@ -262,7 +262,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad("xor", result, arg1, arg2);
+			emit_quad(I_XOR, result, arg1, arg2);
 		break;
 		}
 		arg1 = result;
@@ -283,42 +283,42 @@ const sym_entry * Equation(void){
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("=", result, arg1, arg2);
+			emit_quad(I_EQ, result, arg1, arg2);
 			break;
 		case T_NEQ:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("neq", result, arg1, arg2);
+			emit_quad(I_NEQ, result, arg1, arg2);
 			break;
 		case T_LT:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("<", result, arg1, arg2);
+			emit_quad(I_LT, result, arg1, arg2);
 			break;
 		case T_GT:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(">", result, arg1, arg2);
+			emit_quad(I_GT, result, arg1, arg2);
 			break;
 		case T_LTE:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("lte", result, arg1, arg2);
+			emit_quad(I_LTE, result, arg1, arg2);
 			break;
 		case T_GTE:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad("gte", result, arg1, arg2);
+			emit_quad(I_GTE, result, arg1, arg2);
 		}
 		arg1 = result;
 	}
@@ -331,8 +331,8 @@ sym_entry * Assign(sym_entry * target){
 	token_t op;
 	
 	if(target->type != data && target->type != pointer)
-		error("Invalid target of an assignment");
-	if(target->constant) error("cannot make an assignment to a constant");
+		parse_error("Invalid target of an assignment");
+	if(target->constant) parse_error("cannot make an assignment to a constant");
 	
 	target->init = true;
 	
@@ -340,10 +340,10 @@ sym_entry * Assign(sym_entry * target){
 	get_token();
 	result=Boolean();
 	
-	if (!result->init) error("Using an uninitialized value");
+	if (!result->init) parse_error("Using an uninitialized value");
 	
 	switch (op){
-	case T_ASS: emit_triple(":=", target, result); break;
+	case T_ASS: emit_quad(I_ASS, target, result, NULL); break;
 	case T_LSH_A:
 	case T_RSH_A:
 	case T_ADD_A:
@@ -353,8 +353,8 @@ sym_entry * Assign(sym_entry * target){
 	case T_MOD_A:
 	case T_AND_A:
 	case T_OR_A:
-	case T_XOR_A: error("Feature not implemented");
-	default: error("Internal Compiler Error at Assign()");
+	case T_XOR_A: parse_error("Feature not implemented");
+	default: crit_error("Internal Compiler Error at Assign()");
 	}
 	
 	return result;
@@ -379,14 +379,14 @@ const sym_entry * Boolean(void){
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad("and", result, arg1, arg2);
+			emit_quad(I_AND, result, arg1, arg2);
 			break;
 		case T_OR:
 			get_token();
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad("or", result, arg1, arg2);
+			emit_quad(I_OR, result, arg1, arg2);
 		}
 		arg1 = result;
 	}

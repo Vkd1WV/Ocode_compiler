@@ -11,79 +11,63 @@
 
 
 int main (int argc, const char** argv){
-	sym_pt sym;
+	char * outfile = NULL;
+	bool errors;
+	
+	/**************************** PARSE COMMAND *******************************/
+	
+	// occ [-d=debugfile] [-o=outfilename] infile.oc
+	for(int i=1; argv[i][0] == '-'; i++){
+		switch (argv[i][1]){
+			case 'd': debug_fd = fopen(argv[i]+3, "w"); break;
+			case 'o': outfile = argv[i]+3;              break;
+			default:
+				printf("Unrecognized parameter: '%s'.\n", argv[i]);
+				exit(EXIT_FAILURE);
+		}
+	}
+	
+	yyin = fopen(argv[argc], "r");
+	if (yyin == NULL){
+		printf("ERROR: file '%s' does not exist.\n", argv[argc]);
+		exit(EXIT_FAILURE);
+	}
+	
+	// set the default outfile name
+	if (!outfile) {
+		outfile=malloc(strlen(argv[argc])+5);
+		if (!outfile) exit(EXIT_FAILURE);
+		sprintf(outfile, "%s.asm", argv[argc]);
+	}
 	
 	/*************************** INITIALIZATIONS ******************************/
 	
-	// The output file
-	if (argc > 1) outfile=fopen(argv[1], "w");
-	else outfile=stdout;
-	
 	// The build architecture and mode
-	arch=x86;
-	x86_mode=Long;
+//	arch=x86;
+//	x86_mode=Long;
 	
-	// Initialize the lookahead token
-	get_token();
+	/***************** PARSING / INTERMEDIATE CODE GENERATION *****************/
 	
-	// Initialize the symbol table
-	global_symbols=new_DS('l');
+	Initialize_intermediate(); // Initialize the intermediate code generator
+	get_token(); // Initialize the lookahead token
 	
-	// Block_lvl is initialized in scanner.l
-	
-	// boilerplate in the output
-/*	fprintf(outfile,"; a NASM object file created by the Omega Compiler\n");*/
-/*	fprintf(*/
-/*		outfile,*/
-/*		"BITS 64 ; tell nasm that we are building for 64-bit\n"*/
-/*	);*/
-/*	fprintf(outfile,"global\t_start\n");*/
-	
-	
-	fprintf(outfile,"#Omnicode Intermidiate File\n");
-	
-	
-	/***************************** COMPILATION ********************************/
-	
-	
-	// executable code
-/*	fprintf(outfile,"\nsection .text\t; Program code\n");*/
-/*	fprintf(outfile,"_start:\n");*/
-	
-	setjmp(anewline);
+	errors=setjmp(anewline); // Save the program state for error recovery
 	
 	do {
 		Statement(0);
 	} while (token != T_EOF);
 	
+	fclose(debug_fd);
 	
-	/**************************** DATA SECTIONS *******************************/
-	
-	
-	//fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
-/*	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");*/
-/*	fprintf(outfile,"align 8\n");*/
-	
-	// Dump the symbol Table
-	
-	fprintf(outfile,"\n#Table\tType\tconst\tInit\tDref\n");
-	
-	pview(global_symbols, 0);
-	while((sym=view_next(global_symbols))){
-		if( sym->type != literal )
-			fprintf(outfile, "%s:\t%d\t%d\t%d\t%p\n",
-				sym->name,
-				sym->type,
-				sym->constant,
-				sym->init,
-				(void*) sym->dref
-			);
+	if(errors){
+		puts("Errors were found.");
+		exit(EXIT_FAILURE);
 	}
+	/***************************** OPTIMIZATION *******************************/
 	
+	/**************************** CODE GENERATION *****************************/
 	
 	/******************************* Cleanup **********************************/
 	
-	
-	fclose(outfile);
 	return EXIT_SUCCESS;
 }

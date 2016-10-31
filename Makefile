@@ -20,9 +20,9 @@ CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
 
-SRC    :=scanner.l parse.c parse_declarations.c parse_expressions.c parse_statements.c globals.c functions.c
+SRC    :=scanner.l parse.c parse_declarations.c parse_expressions.c parse_statements.c globals.c functions.c intermediate.c #x86-64.c
 HEADERS:=compiler.h functions.h globals.h tokens.h
-OBJECTS:=main.o scanner.o parse_declarations.o parse_expressions.o parse_statements.o globals.o functions.o
+OBJECTS:=main.o scanner.o parse_declarations.o parse_expressions.o parse_statements.o globals.o functions.o intermediate.o #x86-64.o
 LIBS   :=-ldata
 
 ALLFILES:= $(SRC) $(HEADERS)
