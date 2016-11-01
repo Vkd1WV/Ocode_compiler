@@ -63,9 +63,35 @@ icmd * New_iop(void){
 
 
 /******************************************************************************/
-//                    CREATE TEMPORARY LABELS AND SYMBOLS
+//                            PUBLIC FUNCTIONS
 /******************************************************************************/
 
+
+void Initialize_intermediate(void){
+	if(debug_fd) fprintf(debug_fd,"#Omnicode Intermidiate File\n");
+	global_symbols=new_DS('l'); // initialize the symbol table
+	interm_q      =new_DS('l'); // initialize the intermediate code queue
+	nxt_lbl       = NULL      ; // make sure the nxt_lbl is empty
+}
+
+// Dump the symbol Table
+void Dump_symbols(void){
+	sym_pt sym;
+	
+	fprintf(debug_fd,"\n#Table\tType\tconst\tInit\tDref\n");
+	
+	pview(global_symbols, 0);
+	while((sym=view_next(global_symbols))){
+		if( sym->type != literal )
+			fprintf(debug_fd, "%s:\t%d\t%d\t%d\t%p\n",
+				sym->name,
+				sym->type,
+				sym->constant,
+				sym->init,
+				(void*) sym->dref
+			);
+	}
+}
 
 // create and return a pointer to a unique label
 const char* new_label(void){
@@ -99,36 +125,9 @@ sym_entry* new_var(void){
 	return new_symbol;
 }
 
-void Initialize_intermediate(void){
-	if(debug_fd) fprintf(debug_fd,"#Omnicode Intermidiate File\n");
-	global_symbols=new_DS('l'); // initialize the symbol table
-	interm_q      =new_DS('l'); // initialize the intermediate code queue
-	*nxt_lbl      = 0         ; // make sure the nxt_lbl is empty
-}
 
-// Dump the symbol Table
-void Dump_symbols(void){
-	sym_pt sym;
-	
-	fprintf(debug_fd,"\n#Table\tType\tconst\tInit\tDref\n");
-	
-	pview(global_symbols, 0);
-	while((sym=view_next(global_symbols))){
-		if( sym->type != literal )
-			fprintf(debug_fd, "%s:\t%d\t%d\t%d\t%p\n",
-				sym->name,
-				sym->type,
-				sym->constant,
-				sym->init,
-				(void*) sym->dref
-			);
-	}
-}
+/******************************** EMITTERS ************************************/
 
-
-/******************************************************************************/
-//                                EMITTERS
-/******************************************************************************/
 
 
 void emit_cmnt(const char* comment){
@@ -146,37 +145,6 @@ void emit_lbl(char* lbl){
 	strncpy(nxt_lbl, lbl, strlen(lbl)+1);
 	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", lbl);
 }
-
-/*void emit_triple(*/
-/*	byte_code cmd,*/
-/*	const sym_entry* out,*/
-/*	const sym_entry* in*/
-/*){*/
-/*	char arg1[NAME_MAX];*/
-/*	char err_array[ERR_ARR_SZ];*/
-/*	*/
-/*	switch (cmd){*/
-/*	case I_NUL:*/
-/*	case I_ASS:*/
-/*	case I_REF:*/
-/*	case I_DREF:*/
-/*	case I_NEG:*/
-/*	case I_NOT:*/
-/*	case I_INV:*/
-/*	default:*/
-/*		sprintf(err_array,*/
-/*			"Internal Compiler Error: emit_triple() called with cmd = %d",*/
-/*			cmd*/
-/*		);*/
-/*		crit_error(err_array);*/
-/*	}*/
-/*	*/
-/*	*/
-/*	if (in->type == literal) sprintf(arg1, "#%4llx", in->value);*/
-/*	else              sprintf(arg1, "%s", in->name);*/
-/*	*/
-/*	fprintf(outfile, "%s\t%s\t%s\n", cmd, out->name, arg1);*/
-/*}*/
 
 void emit_quad(
 	byte_code op,
@@ -263,10 +231,13 @@ void emit_quad(
 	
 	// Print to the text file if present
 	if (debug_fd)
-		fprintf(debug_fd, "%d\t%s\t%s\t%s\n", op, out->name, arg1, arg2);
+		fprintf(
+			debug_fd,
+			"%s\t%s\t%s\t%s\n",
+			byte_code_dex[op],
+			out->name,
+			arg1,
+			right? arg2 : ""
+		);
 }
-
-
-
-
 

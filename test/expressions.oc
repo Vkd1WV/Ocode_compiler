@@ -7,12 +7,6 @@ word                             var2 := 1, var3
 pointer const to word             pt1 := ref var2
 pointer to pointer const to word pt2
 
-# type [qualifier-list] initialization-list
-# pointer [qualifier-list] to type initialization-list
-
-#pointer const pt to qword = ref var2
-#pointer pt2 to pointer const to qword
-
 	### Unary Ops
 
 #@pt1
@@ -24,7 +18,7 @@ not var1
 
 	### multipilicative ops
 
-3*12
+3*12 * @pt1
 var1/130
 var2 mod var1
 3<<257

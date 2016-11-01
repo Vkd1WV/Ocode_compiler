@@ -1,8 +1,7 @@
 #!/bin/bash
 
-for file in test/*.sxy; do
+for file in test/*.oc; do
 	echo "running $file"
-	cat $file | ./compiler $file.out
-	
-	
+	./occ -d=$file.dbg $file
+	#cat $file | ./compiler $file.out
 done

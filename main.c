@@ -11,40 +11,55 @@
 
 
 int main (int argc, const char** argv){
-	char * outfile = NULL;
+	char * outfile = NULL, * infile = NULL;
+	char default_outfile[8] = "out.asm";
 	bool errors;
 	
 	/**************************** PARSE COMMAND *******************************/
 	
-	// occ [-d=debugfile] [-o=outfilename] infile.oc
-	for(int i=1; argv[i][0] == '-'; i++){
-		switch (argv[i][1]){
-			case 'd': debug_fd = fopen(argv[i]+3, "w"); break;
-			case 'o': outfile = argv[i]+3;              break;
-			default:
-				printf("Unrecognized parameter: '%s'.\n", argv[i]);
-				exit(EXIT_FAILURE);
+	// occ [-d=debugfile] [-o=outfilename] [infile.oc]
+	for(int i=1; i<argc; i++){
+		if(argv[i][0] == '-'){
+			switch (argv[i][1]){
+				case 'd': debug_fd = fopen(argv[i]+3, "w"); break;
+				case 'o': outfile = argv[i]+3;              break;
+				default:
+					printf("Unrecognized parameter: '%s'.\n", argv[i]);
+					exit(EXIT_FAILURE);
+			}
 		}
-	}
-	
-	yyin = fopen(argv[argc], "r");
-	if (yyin == NULL){
-		printf("ERROR: file '%s' does not exist.\n", argv[argc]);
-		exit(EXIT_FAILURE);
+		else if (i == argc-1) {
+			infile = argv[argc-1];
+			yyin = fopen(infile, "r");
+			// yyin defaults to stdin
+			if (yyin == NULL){
+				printf("ERROR: file '%s' does not exist.\n", argv[argc]);
+				exit(EXIT_FAILURE);
+			}
+		} 
+		else {
+			printf("ERROR: Unrecognized command-line option '%s'.\n", argv[i]);
+			exit(EXIT_FAILURE);
+		}
 	}
 	
 	// set the default outfile name
 	if (!outfile) {
-		outfile=malloc(strlen(argv[argc])+5);
-		if (!outfile) exit(EXIT_FAILURE);
-		sprintf(outfile, "%s.asm", argv[argc]);
+		if (infile){
+			outfile=malloc(strlen(infile)+5);
+			if (!outfile) crit_error("Out of memory");
+			sprintf(outfile, "%s.asm", infile);
+		}
+		else{ // use the default outfile
+			outfile = default_outfile;
+		}
 	}
 	
 	/*************************** INITIALIZATIONS ******************************/
 	
 	// The build architecture and mode
-//	arch=x86;
-//	x86_mode=Long;
+	arch=x86;
+	x86_mode=Long;
 	
 	/***************** PARSING / INTERMEDIATE CODE GENERATION *****************/
 	
@@ -57,7 +72,10 @@ int main (int argc, const char** argv){
 		Statement(0);
 	} while (token != T_EOF);
 	
-	fclose(debug_fd);
+	if (debug_fd){
+		Dump_symbols();
+		fclose(debug_fd);
+	}
 	
 	if(errors){
 		puts("Errors were found.");

@@ -190,19 +190,19 @@ typedef enum {
 }byte_code;
 
 typedef union {
-	sym_pt symbol;
-	char * label;
+	const sym_entry * symbol;
+	const char * label;
 	umax   value;
 } intermediate_arg;
 
 typedef struct icode {
-	byte_code        op;
-	bool             arg1_lit;
-	bool             arg2_lit;
-	char *           label;
-	sym_pt           result;
-	intermediate_arg arg1;
-	intermediate_arg arg2;
+	byte_code         op;
+	bool              arg1_lit;
+	bool              arg2_lit;
+	const char      * label;
+	const sym_entry * result;
+	intermediate_arg  arg1;
+	intermediate_arg  arg2;
 } icmd;
 
 #endif // _TYPES_H
