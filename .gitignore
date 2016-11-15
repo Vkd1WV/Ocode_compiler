@@ -1,0 +1,8 @@
+junk
+scanner.c
+
+# Object files
+*.o
+
+# Executables
+occ

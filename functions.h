@@ -36,14 +36,10 @@ void emit_quad(
 );
 
 
-//static inline void error    (const char* message)__attribute__((noreturn));
-//static inline void expected (const char* thing  )__attribute__((noreturn));
-//static inline void get_token(void               );
-
-
 /******************************************************************************/
 //                             INLINE FUNCTIONS
 /******************************************************************************/
+
 
 /************************ ERROR REPORTING & RECOVERY **************************/
 

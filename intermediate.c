@@ -39,7 +39,9 @@
 /******************************************************************************/
 
 
-icmd * New_iop(void);
+//icmd * New_iop(void);
+int cmp_sym    (const void * left, const void * right);
+int cmp_sym_key(const void * key , const void * symbol);
 
 
 /******************************************************************************/
@@ -47,18 +49,23 @@ icmd * New_iop(void);
 /******************************************************************************/
 
 
-icmd * New_iop(void){
-	icmd * new_op;
-	
-	new_op = calloc(1, sizeof(icmd));
-	if (!new_op) crit_error("out of memory");
-	
-	if (nxt_lbl) {
-		new_op->label = nxt_lbl;
-		nxt_lbl = NULL;
-	}
-	
-	return new_op;
+/*icmd * New_iop(void){*/
+/*	icmd * new_op;*/
+/*	*/
+/*	new_op = calloc(1, sizeof(icmd));*/
+/*	if (!new_op) crit_error("out of memory");*/
+/*	*/
+/*	*/
+/*	*/
+/*	return new_op;*/
+/*}*/
+
+int cmp_sym(const void * left, const void * right){
+	return strncmp( ((sym_pt)left)->name, ((sym_pt)right)->name, NAME_MAX);
+}
+
+int cmp_sym_key(const void * key, const void * symbol){
+	return strncmp((char*) key, ((sym_pt)symbol)->name, NAME_MAX);
 }
 
 
@@ -69,8 +76,24 @@ icmd * New_iop(void){
 
 void Initialize_intermediate(void){
 	if(debug_fd) fprintf(debug_fd,"#Omnicode Intermidiate File\n");
-	global_symbols=new_DS('l'); // initialize the symbol table
-	interm_q      =new_DS('l'); // initialize the intermediate code queue
+	
+	// initialize the symbol table
+	global_symbols = DS_new(
+		DS_bst,
+		sizeof(sym_entry),
+		false,
+		&cmp_sym,
+		&cmp_sym_key
+	);
+	
+	// initialize the intermediate code queue
+	interm_q = DS_new(
+		DS_list,
+		sizeof(icmd),
+		true,
+		NULL,
+		NULL
+	);
 	nxt_lbl       = NULL      ; // make sure the nxt_lbl is empty
 }
 
@@ -80,17 +103,17 @@ void Dump_symbols(void){
 	
 	fprintf(debug_fd,"\n#Table\tType\tconst\tInit\tDref\n");
 	
-	pview(global_symbols, 0);
-	while((sym=view_next(global_symbols))){
+	sym = DS_first(global_symbols);
+	do {
 		if( sym->type != literal )
-			fprintf(debug_fd, "%s:\t%d\t%d\t%d\t%p\n",
+			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
 				sym->name,
 				sym->type,
 				sym->constant,
 				sym->init,
 				(void*) sym->dref
 			);
-	}
+	} while(( sym = DS_next(global_symbols) ));
 }
 
 // create and return a pointer to a unique label
@@ -107,22 +130,27 @@ const char* new_label(void){
  */
 sym_entry* new_var(void){
 	static umax i;
+	sym_entry new_symbol;
+	sym_pt new_sym_pt = &new_symbol;
 	
+	memset(new_sym_pt, 0, sizeof(sym_entry));
 	// create a new symbol entry
-	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));
-	if (!new_symbol) crit_error("Out of memory");
-	
+/*	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));*/
+/*	if (!new_symbol) crit_error("Out of memory");*/
+/*	*/
 	// give it a unique name
-	sprintf(new_symbol->name, "%%%04lld", i++);
+	sprintf(new_symbol.name, "%%%04lld", i++);
 	
 	// insert it into the symbol table
-	sort(global_symbols, new_symbol, new_symbol->name);
+	DS_sort(global_symbols, new_sym_pt);
+	new_sym_pt = DS_current(global_symbols);
+	
 	
 	// Copy stuff
-	new_symbol->type = temp;
+	new_sym_pt->type = temp;
 	
 	// and return it
-	return new_symbol;
+	return new_sym_pt;
 }
 
 
@@ -154,9 +182,14 @@ void emit_quad(
 ){
 	char arg1[NAME_MAX], arg2[NAME_MAX];
 	char err_array[ERR_ARR_SZ];
-	icmd * iop;
+	icmd intermediate_cmd;
+	icmd * iop = &intermediate_cmd;
 	
-	iop = New_iop();
+	if (nxt_lbl) {
+		iop->label = nxt_lbl;
+		nxt_lbl = NULL;
+	}
+	
 	iop->op = op;
 	
 	switch (op){
@@ -227,13 +260,13 @@ void emit_quad(
 	}
 	
 	// queue up this operation
-	nq(interm_q, iop);
+	DS_nq(interm_q, iop);
 	
 	// Print to the text file if present
 	if (debug_fd)
 		fprintf(
 			debug_fd,
-			"%s\t%s\t%s\t%s\n",
+			"%s\t%5s\t%5s\t%s\n",
 			byte_code_dex[op],
 			out->name,
 			arg1,

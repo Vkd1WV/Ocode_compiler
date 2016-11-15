@@ -1,5 +1,34 @@
+# The OCode Compiler
 
-occ [-d=debugfile] [-o=outfilename] infile.oc
+I'm proving I can build my own programming language. I am not currently licencing this software in any way.
+
+Usage: `occ [-d=debugfile] [-o=outfilename] infile.oc`
+
+## OCode
+
+## Intermediate Code
+IC is one operation per line. Operator first. all arguments are in hex 0x
+
+Primary values are either constants prefixed with #, or pointers to the symbol table
+
+Binary Operators
+
+OP	RSLT	ARG1	ARG2
+
+Unary Operators
+
+OP	RSLT	ARG
+
+Flow Control
+
+LBL
+JMP
+CJMP	CND	LBL
+
+ # literal numbers
+ % temp variables / register place holders.
+
+## Other junk
 
 What if all declared types were classes
 	could there be implicit member selection if there is only one member?
@@ -40,31 +69,6 @@ REFERENCES
 		all variables need to be dereferenced to get their value
 		constants do not need to be dereferenced, but may for consistancy
 		passing anything to a function always passes the reference allows us to make explicit whether they are in or out.
-
-
-Omni Intermediate Code
-IC is one operation per line. Operator first. all arguments are in hex 0x
-
-Primary values are either constants prefixed with #, or pointers to the symbol table
-
-
-
-Binary Operators
-
-OP	RSLT	ARG1	ARG2
-
-Unary Operators
-
-OP	RSLT	ARG
-
-Flow Control
-
-LBL
-JMP
-CJMP	CND	LBL
-
-# literal numbers
-% temp variables / register place holders.
 
 Three adress code types:
 	parameter pass

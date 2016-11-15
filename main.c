@@ -15,7 +15,7 @@ int main (int argc, const char** argv){
 	char default_outfile[8] = "out.asm";
 	bool errors;
 	
-	/**************************** PARSE COMMAND *******************************/
+/*************************** PARSE COMMAND-LINE *******************************/
 	
 	// occ [-d=debugfile] [-o=outfilename] [infile.oc]
 	for(int i=1; i<argc; i++){

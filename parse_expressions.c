@@ -17,13 +17,13 @@
 // expressions in order of precedence
 const sym_entry * Primary   (void);
 const sym_entry * Unary     (void);
+const sym_entry * Postfix   (void);
 const sym_entry * Term      (void);
 const sym_entry * Expression(void);
 const sym_entry * Equation  (void);
 
 
 sym_entry * Assign(sym_entry * target);
-//void Assign(const sym_entry * in);
 
 
 /******************************************************************************/
@@ -54,7 +54,7 @@ const sym_entry * Primary(void){
 		out->value = get_num();
 		return out;
 	case T_NAME:
-		if(!( in=iview(global_symbols,get_name()) ))
+		if(!( in = DS_find(global_symbols,get_name()) ))
 			parse_error("Undeclared symbol");
 		if(in->type == function  ){} // get the function's return value
 		if(in->type == subroutine){} // call the subroutine
@@ -156,12 +156,31 @@ const sym_entry * Unary(void){
 }
 
 
+const sym_entry * Postfix(void){
+	const sym_entry * arg;
+	sym_entry * result;
+	
+	arg=Unary();
+	
+	// Make navigation operators '.' '[]' implicitly safe if the target is null
+	
+	while (false){
+		switch (token){
+		
+		}
+	}
+	
+	return arg;
+}
+
+
 const sym_entry * Term(void){
 	const sym_entry *arg2;
 	      sym_entry *arg1, *result;
 	
-	arg1=Unary();
+	arg1=Postfix();
 	
+	// Handle assignment statements
 	if (token >= T_ASS && token <= T_XOR_A)
 		arg1 = Assign(arg1);
 	
@@ -169,7 +188,7 @@ const sym_entry * Term(void){
 		switch(token){
 		case T_MUL:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_MUL, result, arg1, arg2);
@@ -177,7 +196,7 @@ const sym_entry * Term(void){
 		
 		case T_DIV:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_DIV, result, arg1, arg2);
@@ -185,7 +204,7 @@ const sym_entry * Term(void){
 		
 		case T_MOD:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_MOD, result, arg1, arg2);
@@ -193,21 +212,21 @@ const sym_entry * Term(void){
 		
 		case T_EXP:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_EXP, result, arg1, arg2);
 		break;
 		case T_LSHFT:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_LSH, result, arg1, arg2);
 		break;
 		case T_RSHFT:
 			get_token();
-			arg2=Unary();
+			arg2=Postfix();
 			result = new_var();
 			
 			emit_quad(I_RSH, result, arg1, arg2);

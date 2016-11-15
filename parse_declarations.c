@@ -48,16 +48,13 @@ void Initializer_list (sym_entry* templt){
 	const sym_entry * initializer;
 	
 	while (true) {
-		new_symbol=calloc(1, sizeof(sym_entry));
-		if (!new_symbol) crit_error("Out of memory");
-		
-		memcpy((void*) new_symbol, (void*) templt, sizeof(sym_entry));
-		
-		strncpy(new_symbol->name, get_name(), NAME_MAX);
-		sort(global_symbols, new_symbol, new_symbol->name);
-		
-		if(new_symbol->name[0] == '_' && new_symbol->name[1] == '_')
+		strncpy(templt->name, get_name(), NAME_MAX);
+		if(templt->name[0] == '_' && templt->name[1] == '_')
 			parse_error("Names begining with __ are reserved for internal compiler use");
+		
+		if( DS_sort(global_symbols, templt) )
+			parse_error("Duplicate symbol name");
+		new_symbol = DS_current(global_symbols);
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();
@@ -99,14 +96,15 @@ void Decl_Type (sym_entry* templt){
 // Declare a Subroutine
 void Decl_Sub(sym_entry* new_sub){
 	new_sub->type  = subroutine;
-	new_sub->local = new_DS('l');
+	//new_sub->local = new_DS('l');
 	
 	get_token();
 	if(token == T_ASM) new_sub->assembler = true;
 	
 	// Name
 	strncpy(new_sub->name, get_name(), NAME_MAX);
-	sort(global_symbols, new_sub, new_sub->name);
+	if( DS_sort(global_symbols, new_sub) )
+		parse_error("Duplicate symbol name");
 	
 	// Parameter & Return Declarations
 	
@@ -122,14 +120,15 @@ void Decl_Sub(sym_entry* new_sub){
 // Declare a Function
 void Decl_Fun (sym_entry* new_fun){
 	new_fun->type  = function;
-	new_fun->local = new_DS('l');
+	//new_fun->local = new_DS('l');
 	
 	get_token();
 	if(token == T_ASM) new_fun->assembler = true;
 	
 	// Name
 	strncpy(new_fun->name, get_name(), NAME_MAX);
-	sort(global_symbols, new_fun, new_fun->name);
+	if( DS_sort(global_symbols, new_fun) )
+		parse_error("Duplicate symbol name");
 	
 	// Parameter & Return Declarations
 	
