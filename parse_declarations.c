@@ -48,11 +48,9 @@ void Initializer_list (sym_entry* templt){
 	const sym_entry * initializer;
 	
 	while (true) {
-		strncpy(templt->name, get_name(), NAME_MAX);
-		if(templt->name[0] == '_' && templt->name[1] == '_')
-			parse_error("Names begining with __ are reserved for internal compiler use");
+		templt->name = add_name(get_name());
 		
-		if( DS_sort(global_symbols, templt) )
+		if( DS_sort(global_symbols, templt) == EXIT_FAILURE )
 			parse_error("Duplicate symbol name");
 		new_symbol = DS_current(global_symbols);
 		
@@ -66,7 +64,7 @@ void Initializer_list (sym_entry* templt){
 			initializer=Boolean();
 			//if (!initializer->init) error("Using an uninitialized value");
 			
-			emit_quad(I_ASS, new_symbol, initializer, NULL);
+			emit_iop(I_ASS, 0, new_symbol, initializer, NULL);
 		}
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");
@@ -102,7 +100,7 @@ void Decl_Sub(sym_entry* new_sub){
 	if(token == T_ASM) new_sub->assembler = true;
 	
 	// Name
-	strncpy(new_sub->name, get_name(), NAME_MAX);
+	new_sub->name = add_name(get_name());
 	if( DS_sort(global_symbols, new_sub) )
 		parse_error("Duplicate symbol name");
 	
@@ -112,8 +110,7 @@ void Decl_Sub(sym_entry* new_sub){
 	
 	// End statement
 	Match(T_END);
-	if (strcmp( new_sub->name, get_name() ))
-		parse_error("Miss-matched end statement");
+	Match_name(new_sub->name);
 	Match(T_NL);
 }
 
@@ -126,7 +123,7 @@ void Decl_Fun (sym_entry* new_fun){
 	if(token == T_ASM) new_fun->assembler = true;
 	
 	// Name
-	strncpy(new_fun->name, get_name(), NAME_MAX);
+	new_fun->name = add_name(get_name());
 	if( DS_sort(global_symbols, new_fun) )
 		parse_error("Duplicate symbol name");
 	
@@ -136,8 +133,7 @@ void Decl_Fun (sym_entry* new_fun){
 	
 	// End statement
 	Match(T_END);
-	if (strcmp( new_fun->name, get_name() ))
-		parse_error("Miss-matched end statement");
+	Match_name(new_fun->name);
 	Match(T_NL);
 }
 

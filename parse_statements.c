@@ -22,65 +22,66 @@ void While (uint lvl);
 
 void Label(void){
 	Match(T_LBL);
-	emit_lbl(get_name());
+	emit_lbl(   add_name( get_name() )   );
 	Match(T_NL);
 }
 
 void Jump(void){
 	Match(T_JMP);
-	//fprintf(outfile, "\tjmp\t%s\t#1\n", get_name());
+	emit_iop(I_JMP, add_name(get_name()), NULL, NULL, NULL);
 	Match(T_NL);
 }
 
 void If(uint lvl){
 	const sym_entry * condition;
-	char if_label[UNQ_LABEL_SZ];
-	char else_label[UNQ_LABEL_SZ];
+	name_dx if_label, else_label;
 	
 	Match(T_IF);
 	emit_cmnt("start of IF statement");
-	strcpy(if_label, new_label());
+	if_label = new_label();
 	
 	condition = Boolean();
 	if(condition->type == literal){}
-//	emit_jmp()
-	//fprintf(outfile, "\tjz %s\n", if_label);
+	emit_iop(I_JZ, if_label, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
 	if(token == T_ELSE){
 		Match(T_ELSE);
 		emit_cmnt("start of ELSE statement");
-		strcpy(else_label, new_label());
-		//fprintf(outfile, "\tjmp %s\n", else_label);
+		else_label = new_label();
+		emit_iop(I_JMP, else_label, NULL, NULL, NULL);
 		emit_lbl(if_label);
 		
 		Statement(lvl);
 		
-		//fprintf(outfile, "%s: ; End of ELSE\n", else_label);
+		emit_lbl(else_label);
+		emit_cmnt("End of ELSE");
 	}
-	else
-		//fprintf(outfile, "%s:\n", if_label);
+	else emit_lbl(if_label);
+	
 	emit_cmnt("End of IF Statement\n");
 }
 
 void While(uint lvl){
-	char repeat_label[UNQ_LABEL_SZ], skip_label[UNQ_LABEL_SZ];
+	name_dx repeat_label, skip_label;
 	const sym_entry * result;
 	
 	Match(T_WHILE);
 	emit_cmnt("Start of WHILE loop");
-	strcpy(repeat_label, new_label());
-	strcpy(skip_label  , new_label());
+	repeat_label = new_label();
+	skip_label   = new_label();
 	
-	//fprintf(outfile, "\nlbl %s # repeat label\n", repeat_label);
+	emit_lbl(repeat_label);
+	
 	result = Boolean();
-	//emit_skp(skip_label, result);
+	
+	emit_iop(I_JZ, skip_label, NULL, result, NULL);
 	
 	Statement(lvl);
 	
-	//fprintf(outfile, "\tjmp\t%s\t#1\n", repeat_label);
-	//fprintf(outfile, "\nlbl %s # skip label\n" , skip_label);
+	emit_iop(I_JMP, repeat_label, NULL, NULL, NULL);
+	emit_lbl(skip_label);
 	emit_cmnt("End of WHILE loop\n");
 }
 

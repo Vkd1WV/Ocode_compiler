@@ -8,6 +8,7 @@
 
 typedef unsigned long long umax;
 typedef unsigned int uint;
+typedef unsigned int name_dx; ///< indexes into the name_array
 
 typedef uint16_t token_t;
 
@@ -110,7 +111,7 @@ typedef enum {
 //}
 
 typedef struct sym {
-	char     name[NAME_MAX];
+	name_dx name;
 	symbol_t type;     // Symbol type
 	
 	// Data, Pointer
@@ -146,7 +147,7 @@ typedef sym_entry* sym_pt;
 /*************************** INTERMEDIATE QUEUE *******************************/
 
 typedef enum {
-	I_NUL,
+	I_NOP,
 
 	// Unary OPS (6)
 	I_ASS ,
@@ -190,19 +191,20 @@ typedef enum {
 }byte_code;
 
 typedef union {
-	const sym_entry * symbol;
-	const char * label;
-	umax   value;
-} intermediate_arg;
+	const sym_entry * symbol; ///< a variable
+	umax              value;  ///< a literal
+} intermed_arg;
+
 
 typedef struct icode {
-	byte_code         op;
-	bool              arg1_lit;
-	bool              arg2_lit;
-	const char      * label;
-	const sym_entry * result;
-	intermediate_arg  arg1;
-	intermediate_arg  arg2;
+	name_dx           label;    ///< The label, if any, for this operation
+	byte_code         op;       ///< The intermediate operator
+	name_dx           target;   ///< target of a jump
+	bool              arg1_lit; ///< whether arg1 is literal or a symbol
+	bool              arg2_lit; ///< whether arg2 is literal or a symbol
+	const sym_entry * result;   ///< result of the operation
+	intermed_arg      arg1;     ///< first argument
+	intermed_arg      arg2;     ///< second argument
 } icmd;
 
 #endif // _TYPES_H

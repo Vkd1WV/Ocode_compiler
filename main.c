@@ -73,6 +73,7 @@ int main (int argc, const char** argv){
 	} while (token != T_EOF);
 	
 	if (debug_fd){
+		fputs("\n\n", debug_fd);
 		Dump_symbols();
 		fclose(debug_fd);
 	}

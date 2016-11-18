@@ -6,10 +6,19 @@ Usage: `occ [-d=debugfile] [-o=outfilename] infile.oc`
 
 ## OCode
 
-## Intermediate Code
-IC is one operation per line. Operator first. all arguments are in hex 0x
+I want a type checking mode between one type, and void (any type), such that I can list the allowable types. particularly for function calls, so one parameter can be used to interpret what the others should be. Like a union without having to wrap each parameter in a union before passing it.
 
-Primary values are either constants prefixed with #, or pointers to the symbol table
+## Intermediate Code
+The intermetiate represetation consists of three parts:
+*	The name array
+*	The symbol table
+*	The op-code queue
+
+The name array is a dynamically sized array containing all the user and compiler defined names. I can also include all the program's string literals.
+
+The symbol table contains each variable's declaration information including types and sizes and an index into the name array.
+
+The op-code queue contains a series of three-address op-codes:
 
 Binary Operators
 

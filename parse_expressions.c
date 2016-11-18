@@ -37,35 +37,39 @@ sym_entry * Assign(sym_entry * target);
 */
 
 const sym_entry * Primary(void){
-	const sym_entry * in;
-	sym_entry * out;
-	char msg_arr[100];
+	sym_entry * sym;
+	char msg_arr[ERR_ARR_SZ];
 	
 	switch (token){
 	case T_OPAR:
 		Match(T_OPAR);
-		in=Boolean();
+		sym=Boolean();
 		Match(T_CPAR);
-		return in;
-	case T_NUM:
-		out = new_var();
-		out->type  = literal;
-		out->init  = true;
-		out->value = get_num();
-		return out;
-	case T_NAME:
-		if(!( in = DS_find(global_symbols,get_name()) ))
-			parse_error("Undeclared symbol");
-		if(in->type == function  ){} // get the function's return value
-		if(in->type == subroutine){} // call the subroutine
-		if(in->type == type_def  ){} // this is actually a declaration
+		break;
 		
-		return in;
+	case T_NUM:
+		sym = new_var();
+		sym->type  = literal;
+		sym->init  = true;
+		sym->value = get_num();
+		break;
+		
+	case T_NAME:
+		if(!( sym = DS_find(global_symbols, get_name()) ))
+			parse_error("Undeclared symbol");
+		
+		if(sym->type == function  ){} // get the function's return value
+		else if(sym->type == subroutine){} // call the subroutine
+		else if(sym->type == type_def  ){} // this is actually a declaration
+		break;
+		
 	default:
 		sprintf(msg_arr, "Could not match token: '%s' to any rule", yytext);
 		parse_error(msg_arr);
 		__builtin_unreachable ();
 	}
+	
+	return sym;
 }
 
 
@@ -90,7 +94,7 @@ const sym_entry * Unary(void){
 		
 		result = new_var();
 		
-		emit_quad(I_NEG, result, arg, NULL);
+		emit_iop(I_NEG, 0, result, arg, NULL);
 		return result;
 	
 	case T_REF:
@@ -114,7 +118,7 @@ const sym_entry * Unary(void){
 		result->type = pointer;
 		result->dref = arg;
 		
-		emit_quad(I_REF, result, arg, NULL);
+		emit_iop(I_REF, 0, result, arg, NULL);
 		return result;
 	
 	case T_DREF:
@@ -126,7 +130,7 @@ const sym_entry * Unary(void){
 		
 		result = arg->dref;
 		
-		emit_quad(I_DREF, result, arg, NULL);
+		emit_iop(I_DREF, 0, result, arg, NULL);
 		return result;
 	
 	case T_NOT:
@@ -136,7 +140,7 @@ const sym_entry * Unary(void){
 		
 		// Symantic Checks
 		
-		emit_quad(I_NOT, result, arg, NULL);
+		emit_iop(I_NOT, 0, result, arg, NULL);
 		return result;
 	
 	case T_INV:
@@ -146,7 +150,7 @@ const sym_entry * Unary(void){
 		
 		// Symantic Checks
 		
-		emit_quad(I_INV, result, arg, NULL);
+		emit_iop(I_INV, 0, result, arg, NULL);
 		return result;
 	
 	default:
@@ -158,7 +162,7 @@ const sym_entry * Unary(void){
 
 const sym_entry * Postfix(void){
 	const sym_entry * arg;
-	sym_entry * result;
+	//sym_entry * result;
 	
 	arg=Unary();
 	
@@ -191,7 +195,7 @@ const sym_entry * Term(void){
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_MUL, result, arg1, arg2);
+			emit_iop(I_MUL, 0, result, arg1, arg2);
 		break;
 		
 		case T_DIV:
@@ -199,7 +203,7 @@ const sym_entry * Term(void){
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_DIV, result, arg1, arg2);
+			emit_iop(I_DIV, 0, result, arg1, arg2);
 		break;
 		
 		case T_MOD:
@@ -207,7 +211,7 @@ const sym_entry * Term(void){
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_MOD, result, arg1, arg2);
+			emit_iop(I_MOD, 0, result, arg1, arg2);
 		break;
 		
 		case T_EXP:
@@ -215,21 +219,21 @@ const sym_entry * Term(void){
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_EXP, result, arg1, arg2);
+			emit_iop(I_EXP, 0, result, arg1, arg2);
 		break;
 		case T_LSHFT:
 			get_token();
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_LSH, result, arg1, arg2);
+			emit_iop(I_LSH, 0, result, arg1, arg2);
 		break;
 		case T_RSHFT:
 			get_token();
 			arg2=Postfix();
 			result = new_var();
 			
-			emit_quad(I_RSH, result, arg1, arg2);
+			emit_iop(I_RSH, 0, result, arg1, arg2);
 		}
 		arg1 = result;
 	}
@@ -249,7 +253,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad(I_ADD, result, arg1, arg2);
+			emit_iop(I_ADD, 0, result, arg1, arg2);
 		break;
 		
 		case T_MINUS:
@@ -257,7 +261,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad(I_SUB, result, arg1, arg2);
+			emit_iop(I_SUB, 0, result, arg1, arg2);
 		break;
 		
 		case T_BAND:
@@ -265,7 +269,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad(I_BAND, result, arg1, arg2);
+			emit_iop(I_BAND, 0, result, arg1, arg2);
 		break;
 		
 		case T_BOR:
@@ -273,7 +277,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad(I_BOR, result, arg1, arg2);
+			emit_iop(I_BOR, 0, result, arg1, arg2);
 		break;
 		
 		case T_BXOR:
@@ -281,7 +285,7 @@ const sym_entry * Expression(void){
 			arg2=Term();
 			result = new_var();
 			
-			emit_quad(I_XOR, result, arg1, arg2);
+			emit_iop(I_XOR, 0, result, arg1, arg2);
 		break;
 		}
 		arg1 = result;
@@ -302,42 +306,42 @@ const sym_entry * Equation(void){
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_EQ, result, arg1, arg2);
+			emit_iop(I_EQ, 0, result, arg1, arg2);
 			break;
 		case T_NEQ:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_NEQ, result, arg1, arg2);
+			emit_iop(I_NEQ, 0, result, arg1, arg2);
 			break;
 		case T_LT:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_LT, result, arg1, arg2);
+			emit_iop(I_LT, 0, result, arg1, arg2);
 			break;
 		case T_GT:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_GT, result, arg1, arg2);
+			emit_iop(I_GT, 0, result, arg1, arg2);
 			break;
 		case T_LTE:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_LTE, result, arg1, arg2);
+			emit_iop(I_LTE, 0, result, arg1, arg2);
 			break;
 		case T_GTE:
 			get_token();
 			arg2=Expression();
 			result=new_var();
 			
-			emit_quad(I_GTE, result, arg1, arg2);
+			emit_iop(I_GTE, 0, result, arg1, arg2);
 		}
 		arg1 = result;
 	}
@@ -362,7 +366,7 @@ sym_entry * Assign(sym_entry * target){
 	if (!result->init) parse_error("Using an uninitialized value");
 	
 	switch (op){
-	case T_ASS: emit_quad(I_ASS, target, result, NULL); break;
+	case T_ASS: emit_iop(I_ASS, 0, target, result, NULL); break;
 	case T_LSH_A:
 	case T_RSH_A:
 	case T_ADD_A:
@@ -398,14 +402,14 @@ const sym_entry * Boolean(void){
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad(I_AND, result, arg1, arg2);
+			emit_iop(I_AND, 0, result, arg1, arg2);
 			break;
 		case T_OR:
 			get_token();
 			arg2=Equation();
 			result=new_var();
 			
-			emit_quad(I_OR, result, arg1, arg2);
+			emit_iop(I_OR, 0, result, arg1, arg2);
 		}
 		arg1 = result;
 	}

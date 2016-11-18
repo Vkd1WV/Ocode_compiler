@@ -7,9 +7,10 @@
 /******************************************************************************/
 
 
-#define UNQ_LABEL_SZ 18 // string length limit for compiler generated labels
-#define NAME_MAX     64 // symbol name length limit.
-#define ERR_ARR_SZ  100 // temp arrays used in error reporting
+/// string length limit for unique compiler generated labels
+#define UNQ_NAME_SZ 16
+#define ERR_ARR_SZ  100  ///< temp arrays used in error reporting
+#define NAME_ARR_SZ 1024 ///< Starting size for the dynamic name array
 
 
 /******************************************************************************/

@@ -40,8 +40,8 @@
 
 
 //icmd * New_iop(void);
-int cmp_sym    (const void * left, const void * right);
-int cmp_sym_key(const void * key , const void * symbol);
+/*int cmp_sym    (const void * left, const void * right);*/
+/*int cmp_sym_key(const void * key , const void * symbol);*/
 
 
 /******************************************************************************/
@@ -49,23 +49,15 @@ int cmp_sym_key(const void * key , const void * symbol);
 /******************************************************************************/
 
 
-/*icmd * New_iop(void){*/
-/*	icmd * new_op;*/
-/*	*/
-/*	new_op = calloc(1, sizeof(icmd));*/
-/*	if (!new_op) crit_error("out of memory");*/
-/*	*/
-/*	*/
-/*	*/
-/*	return new_op;*/
-/*}*/
-
-int cmp_sym(const void * left, const void * right){
-	return strncmp( ((sym_pt)left)->name, ((sym_pt)right)->name, NAME_MAX);
+static int cmp_sym(const void * left, const void * right){
+	return strcmp(
+		dx_to_name(((sym_pt) left)->name),
+		dx_to_name(((sym_pt)right)->name)
+	);
 }
 
-int cmp_sym_key(const void * key, const void * symbol){
-	return strncmp((char*) key, ((sym_pt)symbol)->name, NAME_MAX);
+static int cmp_sym_key(const void * key, const void * symbol){
+	return strcmp((char*) key, dx_to_name(((sym_pt)symbol)->name));
 }
 
 
@@ -90,24 +82,26 @@ void Initialize_intermediate(void){
 	interm_q = DS_new(
 		DS_list,
 		sizeof(icmd),
-		true,
+		false,
 		NULL,
 		NULL
 	);
-	nxt_lbl       = NULL      ; // make sure the nxt_lbl is empty
+	
+	nxt_lbl       = 0; // make sure the nxt_lbl is empty
 }
 
 // Dump the symbol Table
 void Dump_symbols(void){
 	sym_pt sym;
 	
-	fprintf(debug_fd,"\n#Table\tType\tconst\tInit\tDref\n");
+	fputs("# SYMBOL TABLE", debug_fd);
+	fprintf(debug_fd,"\n#Name\tType\tconst\tInit\tDref\n");
 	
 	sym = DS_first(global_symbols);
 	do {
 		if( sym->type != literal )
 			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
-				sym->name,
+				dx_to_name(sym->name),
 				sym->type,
 				sym->constant,
 				sym->init,
@@ -116,41 +110,74 @@ void Dump_symbols(void){
 	} while(( sym = DS_next(global_symbols) ));
 }
 
-// create and return a pointer to a unique label
-const char* new_label(void){
-	static umax i;
-	static char label[UNQ_LABEL_SZ];
+/********************************** NAMES *************************************/
+
+/// insert a new name into the name_array. returns its name_dx
+name_dx add_name(char * name){
+	static name_dx size;
+	static name_dx next;
+	       name_dx name_sz;
+	       name_dx temporary;
 	
-	sprintf(label, "__%04lld", i++); // use __ to prevent collisions
-	return label;
+	/* we have to keep track of things with an index to ensure that the data
+	will continue to be accessable when the array is resized.
+	*/
+	
+	// Initialize the name array
+	if(!size){ // This should only run the first time
+		name_array=malloc(sizeof(char) * NAME_ARR_SZ);
+		if(!name_array) crit_error("Out of Memory");
+		size = NAME_ARR_SZ;
+	}
+	
+	name_sz = strlen(name) + 1; // +1 for the null
+	
+	// resize the array if necessary
+	if(size - next < name_sz){
+		name_array = realloc(name_array, (size *= 2));
+		if(!name_array) crit_error("Out of Memory");
+	}
+	
+	strncpy(dx_to_name(next), name, name_sz);
+	temporary = next;
+	next += name_sz;
+	return temporary;
 }
 
-/* create and return a pointer to a new symbol table entry. temporary symbol
- * names all begin with %.
+/// find a name in the name_array by its name_dx
+inline char * dx_to_name(name_dx index){
+	return name_array+index;
+}
+
+// create and return a pointer to a unique label
+name_dx new_label(void){
+	static umax i;
+	static char label[UNQ_NAME_SZ];
+	// sufficiently large for 32-bit numbers in decimal and then some.
+	
+	
+	sprintf(label, "_%04lld$", i++); // use $ to prevent collisions
+	return add_name(label);
+}
+
+/**	create a new symbol table entry with a unique name.
+ *	*	temporary symbol names all begin with %.
  */
 sym_entry* new_var(void){
 	static umax i;
-	sym_entry new_symbol;
-	sym_pt new_sym_pt = &new_symbol;
+	char name[UNQ_NAME_SZ];
+	static sym_entry new_symbol; // initialized to 0
 	
-	memset(new_sym_pt, 0, sizeof(sym_entry));
-	// create a new symbol entry
-/*	sym_entry* new_symbol=calloc(1, sizeof(sym_entry));*/
-/*	if (!new_symbol) crit_error("Out of memory");*/
-/*	*/
 	// give it a unique name
-	sprintf(new_symbol.name, "%%%04lld", i++);
+	sprintf(name, "%%%04lld", i++);
+	new_symbol.name = add_name(name);
+	new_symbol.type = temp;
 	
 	// insert it into the symbol table
-	DS_sort(global_symbols, new_sym_pt);
-	new_sym_pt = DS_current(global_symbols);
-	
-	
-	// Copy stuff
-	new_sym_pt->type = temp;
+	DS_sort(global_symbols, &new_symbol);
 	
 	// and return it
-	return new_sym_pt;
+	return DS_current(global_symbols);
 }
 
 
@@ -162,38 +189,36 @@ void emit_cmnt(const char* comment){
 	if (debug_fd) fprintf(debug_fd, "\t# %s\n", comment);
 }
 
-void emit_lbl(char* lbl){
-	if (nxt_lbl)
-		crit_error("Internal Compiler Error: consecutive label declaration");
-	// easiest way around this is to emmit null ops with different labels
+void emit_lbl(name_dx lbl){
+	if (nxt_lbl) emit_iop(I_NOP, 0, NULL, NULL, NULL);
+	// If there is already a label in the q emit it with a nop
 	
-	nxt_lbl = calloc(1, strlen(lbl)+1); // +1 for the null
-	if (!nxt_lbl) crit_error("Out of Memory");
+	nxt_lbl = lbl;
 	
-	strncpy(nxt_lbl, lbl, strlen(lbl)+1);
-	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", lbl);
+	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", dx_to_name(lbl));
 }
 
-void emit_quad(
-	byte_code op,
+void emit_iop(
+	byte_code        op,
+	name_dx          target,
 	const sym_entry* out,
 	const sym_entry* left,
 	const sym_entry* right
 ){
-	char arg1[NAME_MAX], arg2[NAME_MAX];
+	char arg1[20], arg2[20];
 	char err_array[ERR_ARR_SZ];
 	icmd intermediate_cmd;
 	icmd * iop = &intermediate_cmd;
 	
 	if (nxt_lbl) {
 		iop->label = nxt_lbl;
-		nxt_lbl = NULL;
+		nxt_lbl = 0;
 	}
 	
 	iop->op = op;
 	
 	switch (op){
-	case I_NUL : break;
+	case I_NOP : break;
 	
 	// Binaries
 	case I_MUL :
@@ -222,7 +247,7 @@ void emit_quad(
 		}
 		else {
 			iop->arg2.symbol = right;
-			sprintf(arg2, "%s", right->name);
+			sprintf(arg2, "%s", dx_to_name(right->name));
 		}
 		
 	// Unaries
@@ -239,7 +264,7 @@ void emit_quad(
 		}
 		else {
 			iop->arg1.symbol = left;
-			sprintf(arg1, "%s", left->name);
+			sprintf(arg1, "%s", dx_to_name(left->name));
 		}
 		
 		iop->result = out;
@@ -247,6 +272,18 @@ void emit_quad(
 		
 	case I_JMP :
 	case I_JZ  :
+		if (left->type == literal){
+			iop->arg1_lit   = true;
+			iop->arg1.value = left->value;
+			sprintf(arg1, "#%4llx", left->value);
+		}
+		else {
+			iop->arg1.symbol = left;
+			sprintf(arg1, "%s", dx_to_name(left->name));
+		}
+		iop->target = target;
+		break;
+		
 	case I_BLK :
 	case I_EBLK:
 	case I_CALL:
@@ -268,7 +305,7 @@ void emit_quad(
 			debug_fd,
 			"%s\t%5s\t%5s\t%s\n",
 			byte_code_dex[op],
-			out->name,
+			dx_to_name(out->name),
 			arg1,
 			right? arg2 : ""
 		);

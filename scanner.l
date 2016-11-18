@@ -299,11 +299,7 @@ SP {
 }
 
 {DIGIT}+ yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
-{NAME}   {
-	if(strlen(yytext)-1 > NAME_MAX) parse_error("name is too long");
-	return T_NAME;
-}
-
+{NAME}   return T_NAME;
 
 
 \' { BEGIN(CHAR); }
@@ -387,6 +383,35 @@ SP {
 <*>. {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
 	parse_error("unknown token");
+}
+
+%%
+
+char * get_name(void){
+	static char * buffer;
+	static unsigned int buf_lngth;
+	unsigned int lngth;
+	
+	if (token != T_NAME) expected("a name");
+	
+	lngth = strlen(yytext)+1; // +1 for the \0
+	
+	// size the buffer if necessary
+	if(!buffer){
+		buffer = malloc(lngth);
+		buf_lngth = lngth;
+	}
+	else if (lngth > buf_lngth){
+		buffer = realloc(buffer, lngth);
+		buf_lngth = lngth;
+	}
+	
+	if (!buffer) crit_error("Out of Memory");
+	
+	strncpy(buffer, yytext, lngth);
+	
+	get_token();
+	return buffer;
 }
 
 

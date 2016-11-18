@@ -8,6 +8,7 @@
 
 // From scanner.l
 token_t yylex(void);
+char * get_name(void);
 
 // From parse_declarations.c
 void Decl_Operator(void);
@@ -20,16 +21,21 @@ const sym_entry * Boolean(void);
 void Statement   (uint lvl);
 
 // From intermediate.c
-const char * new_label              (void);
-sym_entry  * new_var                (void);
-void         Initialize_intermediate(void);
-void Dump_symbols(void);
+void   Initialize_intermediate(void);
+void   Dump_symbols(void);
 
+// Names
+char * dx_to_name(name_dx index);
+name_dx add_name(char * name);
+name_dx     new_label(void); ///< get a new unique label
+sym_entry * new_var  (void);
+
+// Emmiters
 void emit_cmnt(const char* comment);
-void emit_lbl(char* lbl);
-
-void emit_quad(
-	byte_code op,
+void emit_lbl (name_dx lbl);
+void emit_iop(
+	byte_code        op,
+	name_dx          target,
 	const sym_entry* out,
 	const sym_entry* left,
 	const sym_entry* right
@@ -67,15 +73,6 @@ static inline void get_token(void){
 	token=yylex();
 }
 
-static inline char* get_name(void){
-	static char name[NAME_MAX+1];
-	
-	if (token != T_NAME) expected("a name");
-	strncpy(name, yytext, NAME_MAX);
-	get_token();
-	return name;
-}
-
 static inline umax get_num(void){
 	umax num;
 	
@@ -83,6 +80,14 @@ static inline umax get_num(void){
 	num=yynumber;
 	get_token();
 	return num;
+}
+
+static inline bool Match_name(name_dx dx){
+	if ( token != T_NAME || strcmp(name_array+dx, yytext) ){
+		expected(name_array+dx);
+	}
+	get_token();
+	return true;
 }
 
 static inline void Match(token_t t){
