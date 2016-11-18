@@ -50,7 +50,7 @@ void emit_iop(
 /************************ ERROR REPORTING & RECOVERY **************************/
 
 static inline void parse_error(const char* message){
-	printf("ERROR: %s, on line %d.\n", message, yylineno);
+	printf("CODE ERROR: %s, on line %d.\n", message, yylineno);
 	while( (token = yylex()) != T_NL );
 	printf("continuing...\n");
 	longjmp(anewline, 1);

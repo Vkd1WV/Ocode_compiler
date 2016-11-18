@@ -1,7 +1,7 @@
 #!/bin/bash
 
 for file in test/*.oc; do
-	echo "running $file"
-	./occ -d=$file.dbg $file
+	echo -e "\nrunning $file\n"
+	./occ -vd $file.dbg $file
 	#cat $file | ./compiler $file.out
 done

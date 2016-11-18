@@ -1,0 +1,65 @@
+#Omnicode Intermidiate File
+I_ASS	 var1	#   5	
+I_ASS	 var2	#   1	
+I_REF	%0002	 var2	
+I_ASS	  pt1	%0002	
+I_NOT	%0003	 var1	
+I_INV	%0004	 var2	
+I_NEG	%0005	 var3	
+I_MUL	%0008	#   3	#   c
+I_DREF	 var1	  pt1	
+I_MUL	%0009	%0008	var1
+I_DIV	%0011	 var1	#  82
+I_MOD	%0012	 var2	var1
+I_LSH	%0015	#   3	# 101
+I_RSH	%0017	 var2	#   1
+I_SUB	%0020	#   1	#   1
+I_NEG	%0022	#   1	
+I_ADD	%0024	%0022	#   1
+I_BAND	%0027	#   4	#   0
+I_BOR	%0028	 var1	var2
+I_XOR	%0029	 var2	var3
+I_EQ	%0030	 var1	var3
+I_GT	%0031	 var2	var1
+I_LT	%0032	 var3	var1
+I_NEQ	%0033	 var3	var1
+I_GTE	%0036	#   3	#   3
+I_LTE	%0039	#   4	#   5
+I_AND	%0042	#   4	#   0
+I_OR	%0045	#   0	#   0
+I_ASS	 var2	#   4	
+I_MUL	%0047	#   4	var2
+
+
+# SYMBOL TABLE
+#Name	Type	const	Init	Dref
+%0002:	   3	    0	   0	0x12bbb08
+%0003:	   1	    0	   0	(nil)
+%0004:	   1	    0	   0	(nil)
+%0005:	   1	    0	   0	(nil)
+%0008:	   1	    0	   0	(nil)
+%0009:	   1	    0	   0	(nil)
+%0011:	   1	    0	   0	(nil)
+%0012:	   1	    0	   0	(nil)
+%0015:	   1	    0	   0	(nil)
+%0017:	   1	    0	   0	(nil)
+%0020:	   1	    0	   0	(nil)
+%0022:	   1	    0	   0	(nil)
+%0024:	   1	    0	   0	(nil)
+%0027:	   1	    0	   0	(nil)
+%0028:	   1	    0	   0	(nil)
+%0029:	   1	    0	   0	(nil)
+%0030:	   1	    0	   0	(nil)
+%0031:	   1	    0	   0	(nil)
+%0032:	   1	    0	   0	(nil)
+%0033:	   1	    0	   0	(nil)
+%0036:	   1	    0	   0	(nil)
+%0039:	   1	    0	   0	(nil)
+%0042:	   1	    0	   0	(nil)
+%0045:	   1	    0	   0	(nil)
+%0047:	   1	    0	   0	(nil)
+pt1:	   3	    1	   1	0x12bbc20
+pt2:	   3	    0	   0	0x12bbd80
+var1:	   2	    1	   1	(nil)
+var2:	   2	    0	   1	(nil)
+var3:	   2	    0	   1	(nil)

@@ -25,7 +25,7 @@ SRC    :=scanner.l parse.c parse_declarations.c parse_expressions.c parse_statem
 HEADERS:=compiler.h functions.h globals.h tokens.h types.h
 
 OBJECTS:= \
-	scanner.o globals.o main.o \
+	scanner.o cmd_line.o globals.o main.o \
 	parse_expressions.o parse_statements.o parse_declarations.o \
 	intermediate.o \
 	#x86-64.o arm.o
@@ -37,13 +37,19 @@ ALLFILES:= $(SRC) $(HEADERS)
 scanner.c: scanner.l Makefile $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
 
+cmd_line.c cmd_line.h: cmd_line.yuck
+	yuck gen -Hcmd_line.h -o cmd_line.c $<
+
 scanner.o: $(HEADERS) scanner.c
 	$(CC) $(CFLAGS) -Wno-unused-function -c -o $@ scanner.c
+
+main.o: main.c cmd_line.h $(HEADERS)
+	$(CC) $(CFLAGS) -c $<
 
 occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-%.o: %.c %.h
+%.o: %.c %.h $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
 ################################## UTILITIES ###################################

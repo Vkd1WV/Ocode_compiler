@@ -8,60 +8,92 @@
 
 
 #include "compiler.h"
+#include "cmd_line.h"
 
 
-int main (int argc, const char** argv){
-	char * outfile = NULL, * infile = NULL;
+int main (int argc, char** argv){
+	yuck_t argp[1];
+	char * outfile = NULL;
 	char default_outfile[8] = "out.asm";
 	bool errors;
 	
 /*************************** PARSE COMMAND-LINE *******************************/
 	
-	// occ [-d=debugfile] [-o=outfilename] [infile.oc]
-	for(int i=1; i<argc; i++){
-		if(argv[i][0] == '-'){
-			switch (argv[i][1]){
-				case 'd': debug_fd = fopen(argv[i]+3, "w"); break;
-				case 'o': outfile = argv[i]+3;              break;
-				default:
-					printf("Unrecognized parameter: '%s'.\n", argv[i]);
-					exit(EXIT_FAILURE);
-			}
-		}
-		else if (i == argc-1) {
-			infile = argv[argc-1];
-			yyin = fopen(infile, "r");
-			// yyin defaults to stdin
-			if (yyin == NULL){
-				printf("ERROR: file '%s' does not exist.\n", argv[argc]);
-				exit(EXIT_FAILURE);
-			}
-		} 
-		else {
-			printf("ERROR: Unrecognized command-line option '%s'.\n", argv[i]);
-			exit(EXIT_FAILURE);
-		}
+	// Using yuck to parse
+	yuck_parse(argp, argc, argv);
+	
+	if(argp->dashv_flag) verbose=true;
+	
+	if(verbose){
+		printf("\
+ARGUMENTS PASSED\n\
+nargs             :\t%lu\n\
+args              :\t%s\n\
+dashv_flag        :\t%u\n\
+debug_arg         :\t%s\n\
+dashD_arg         :\t%s\n\
+outfile_arg       :\t%s\n\
+dashp_flag        :\t%u\n\
+dasha_flag        :\t%u\n\
+dasho_flag        :\t%u\n\
+x86_long_flag     :\t%u\n\
+x86_protected_flag:\t%u\n\
+arm_v7_flag       :\t%u\n\
+arm_v8_flag       :\t%u\n\n" ,
+			argp->nargs      ,
+			*argp->args      ,
+			argp->dashv_flag ,
+			argp->debug_arg  ,
+			argp->dashD_arg  ,
+			argp->outfile_arg,
+			argp->dashp_flag ,
+			argp->dasha_flag ,
+			argp->dasho_flag ,
+			argp->x86_long_flag     ,
+			argp->x86_protected_flag,
+			argp->arm_v7_flag       ,
+			argp->arm_v8_flag
+		);
 	}
 	
-	// set the default outfile name
-	if (!outfile) {
-		if (infile){
-			outfile=malloc(strlen(infile)+5);
-			if (!outfile) crit_error("Out of memory");
-			sprintf(outfile, "%s.asm", infile);
-		}
-		else{ // use the default outfile
-			outfile = default_outfile;
-		}
+	if (verbose) puts("\nSETINGS");
+	
+	// Set the debug file
+	if(argp->debug_arg) {
+		if (verbose) printf("Setting %s as a debug file.\n", argp->debug_arg);
+		debug_fd = fopen(argp->debug_arg, "w");
 	}
+	
+	// Set the infile
+	if(argp->nargs>1) crit_error("Too many arguments");
+	if(argp->nargs){
+		if (verbose) printf("Setting %s as the input file.\n", *argp->args);
+		yyin = fopen(*argp->args, "r");
+	}
+	else if (verbose) puts("Setting stdin as the input file.");
+	
+	// Set the outfile
+	if(argp->outfile_arg) outfile = argp->outfile_arg;
+	else {
+		if (argp->nargs){
+			outfile=malloc(strlen(*argp->args)+5);
+			if (!outfile) crit_error("Out of memory");
+			sprintf(outfile, "%s.asm", *argp->args);
+		}
+		else // use the default outfile
+			outfile = default_outfile;
+	}
+	if (verbose)
+			printf("Setting %s as the output file.\n", outfile);
+	
+	puts("");
 	
 	/*************************** INITIALIZATIONS ******************************/
 	
-	// The build architecture and mode
-	arch=x86;
-	x86_mode=Long;
 	
 	/***************** PARSING / INTERMEDIATE CODE GENERATION *****************/
+	
+	if(argp->nargs) printf("%s\n", *argp->args);
 	
 	Initialize_intermediate(); // Initialize the intermediate code generator
 	get_token(); // Initialize the lookahead token

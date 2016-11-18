@@ -1,0 +1,22 @@
+Usage: occ [OPTIONS]... FILE...
+A first cross compiler for O-code.
+
+
+##Debugging
+  -v                 be verbose
+  -d, --debug=FILE   Produce an intermediate code debug file.
+
+##External Constant Definitions
+  -D NAME=VALUE   Initialize an external constant. If no value is given it is assumed to be true.
+
+##Output Options
+  --outfile=FILE Redirect the output to a different file.
+  -p             produce portable executable
+  -a             produce assembler
+  -o             produce object code
+
+##Target Architecture Options
+  --x86-long      Build for x86 Long Mode
+  --x86-protected Build for x86 Protected Mode
+  --arm-v7
+  --arm-v8
