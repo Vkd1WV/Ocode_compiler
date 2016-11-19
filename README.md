@@ -1,8 +1,29 @@
-# The OCode Compiler
+# The Omega Code Compiler
 
 I'm proving I can build my own programming language. I am not currently licencing this software in any way.
 
-Usage: `occ [-d=debugfile] [-o=outfilename] infile.oc`
+##Usage:
+`occ \[OPTIONS\]... FILE...`
+
+###Debugging
+`  -v              `   be verbose
+`  -d, --debug=FILE`   Produce an intermediate code debug file.
+
+###External Constant Definitions
+`  -D NAME=VALUE`   Initialize an external constant. If no value is given it is assumed to be 1.
+
+###Output Options
+`  --outfile=FILE` Redirect the output to a different file.
+`  -p            ` produce portable executable
+`  -a            ` produce assembler
+`  -o            ` produce object code
+`  -e            ` produce executable
+
+###Target Architecture Options
+`  --x86-long     ` Build for x86 Long Mode
+`  --x86-protected` Build for x86 Protected Mode
+`  --arm-v7       ` 
+`  --arm-v8       ` 
 
 ## OCode
 

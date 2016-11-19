@@ -1,10 +1,10 @@
-/******************************************************************************/
-//	Author:	Ammon Dodson
-//	Spring 2016
-//
-//	This program should be build with make. A makefile has been provided.
-//
-/******************************************************************************/
+/*******************************************************************************
+ *
+ *	occ : The Omega Code Compiler
+ *
+ *	Copyright (c) 2016 Ammon Dodson
+ *
+ ******************************************************************************/
 
 
 #include "compiler.h"
@@ -14,47 +14,17 @@
 int main (int argc, char** argv){
 	yuck_t argp[1];
 	char * outfile = NULL;
-	char default_outfile[8] = "out.asm";
+	char ** filenames;
 	bool errors;
 	
 /*************************** PARSE COMMAND-LINE *******************************/
 	
 	// Using yuck to parse
 	yuck_parse(argp, argc, argv);
-	
 	if(argp->dashv_flag) verbose=true;
+	if(verbose) print_yuck_results(argp);
 	
-	if(verbose){
-		printf("\
-ARGUMENTS PASSED\n\
-nargs             :\t%lu\n\
-args              :\t%s\n\
-dashv_flag        :\t%u\n\
-debug_arg         :\t%s\n\
-dashD_arg         :\t%s\n\
-outfile_arg       :\t%s\n\
-dashp_flag        :\t%u\n\
-dasha_flag        :\t%u\n\
-dasho_flag        :\t%u\n\
-x86_long_flag     :\t%u\n\
-x86_protected_flag:\t%u\n\
-arm_v7_flag       :\t%u\n\
-arm_v8_flag       :\t%u\n\n" ,
-			argp->nargs      ,
-			*argp->args      ,
-			argp->dashv_flag ,
-			argp->debug_arg  ,
-			argp->dashD_arg  ,
-			argp->outfile_arg,
-			argp->dashp_flag ,
-			argp->dasha_flag ,
-			argp->dasho_flag ,
-			argp->x86_long_flag     ,
-			argp->x86_protected_flag,
-			argp->arm_v7_flag       ,
-			argp->arm_v8_flag
-		);
-	}
+/******************************** SET FILES ***********************************/
 	
 	if (verbose) puts("\nSETINGS");
 	
@@ -93,6 +63,13 @@ arm_v8_flag       :\t%u\n\n" ,
 	
 	/***************** PARSING / INTERMEDIATE CODE GENERATION *****************/
 	
+	/* I would like to be able to proccess multiple files
+	   Each file will create its own .pexe file in /tmp which can then be
+	   proccessed in turn.
+	   I need a temporary file facility
+	 */
+	
+	// print the file we are currently parsing
 	if(argp->nargs) printf("%s\n", *argp->args);
 	
 	Initialize_intermediate(); // Initialize the intermediate code generator

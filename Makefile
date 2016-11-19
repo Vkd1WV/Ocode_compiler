@@ -1,10 +1,11 @@
 # Omega make file
+
+################################## FLAGS #######################################
+
 SOURCEDIR:=$(HOME)/devel
 INSTALLDIR:=$(HOME)/prg
 LIBDIR:=$(INSTALLDIR)/lib
 INCDIR:=$(INSTALLDIR)/include
-
-#LEX:=flex
 
 CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations \
@@ -19,22 +20,33 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
-
-SRC    :=scanner.l parse.c parse_declarations.c parse_expressions.c parse_statements.c globals.c functions.c intermediate.c #x86-64.c arm.c
+################################## FILES #######################################
 
 HEADERS:=compiler.h functions.h globals.h tokens.h types.h
+LIBS   :=-ldata
+
+SRC    := \
+	cmd_line.yuck globals.c main.c \
+	scanner.l \
+	parse_declarations.c parse_expressions.c parse_statements.c \
+	intermediate.c \
+	arm.c x86-64.c
 
 OBJECTS:= \
-	scanner.o cmd_line.o globals.o main.o \
+	cmd_line.o globals.o main.o \
+	scanner.o \
 	parse_expressions.o parse_statements.o parse_declarations.o \
 	intermediate.o \
 	#x86-64.o arm.o
 
-LIBS   :=-ldata
-
 ALLFILES:= $(SRC) $(HEADERS)
 
-scanner.c: scanner.l Makefile $(HEADERS)
+############################### PRODUCTIONS ####################################
+
+occ: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
+
+scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
 
 cmd_line.c cmd_line.h: cmd_line.yuck
@@ -46,14 +58,12 @@ scanner.o: $(HEADERS) scanner.c
 main.o: main.c cmd_line.h $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
-occ: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
-
 %.o: %.c %.h $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
 ################################## UTILITIES ###################################
-CLEANFILES:= $(OBJECTS) occ scanner.c ./test/*.dbg
+
+CLEANFILES:= $(OBJECTS) occ ./tests/*.dbg
 
 .PHONEY: clean todolist test
 clean:
@@ -62,7 +72,7 @@ clean:
 todolist:
 	-@for file in $(ALLFILES:Makefile=); do fgrep -H -e TODO -e FIXME $$file; done; true
 
-test: compiler
-	./test.sh
+test: occ
+	./tests/run
 
 

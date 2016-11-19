@@ -1,4 +1,10 @@
-
+/*******************************************************************************
+ *
+ *	occ : The Omega Code Compiler
+ *
+ *	Copyright (c) 2016 Ammon Dodson
+ *
+ ******************************************************************************/
 
 /*// boilerplate in the output*/
 /*	fprintf(outfile,"; a NASM object file created by the Omega Compiler\n");*/

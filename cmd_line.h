@@ -43,6 +43,7 @@ struct yuck_s {
 	unsigned int dashp_flag;
 	unsigned int dasha_flag;
 	unsigned int dasho_flag;
+	unsigned int dashe_flag;
 	unsigned int x86_long_flag;
 	unsigned int x86_protected_flag;
 	unsigned int arm_v7_flag;

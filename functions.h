@@ -1,3 +1,11 @@
+/*******************************************************************************
+ *
+ *	occ : The Omega Code Compiler
+ *
+ *	Copyright (c) 2016 Ammon Dodson
+ *
+ ******************************************************************************/
+
 #ifndef _FUNCTIIONS_H
 #define _FUNCTIIONS_H
 
@@ -46,6 +54,41 @@ void emit_iop(
 //                             INLINE FUNCTIONS
 /******************************************************************************/
 
+/**************************** VERBOSITY PRINTERS ******************************/
+
+static inline void print_yuck_results(yuck_t * a){
+	printf("\
+ARGUMENTS PASSED\n\
+nargs             :\t%lu\n\
+args              :\t%s\n\
+dashv_flag        :\t%u\n\
+debug_arg         :\t%s\n\
+dashD_arg         :\t%s\n\
+outfile_arg       :\t%s\n\
+dashp_flag        :\t%u\n\
+dasha_flag        :\t%u\n\
+dasho_flag        :\t%u\n\
+dashe_flag        :\t%u\n\
+x86_long_flag     :\t%u\n\
+x86_protected_flag:\t%u\n\
+arm_v7_flag       :\t%u\n\
+arm_v8_flag       :\t%u\n\n" ,
+			a->nargs      ,
+			*a->args      ,
+			a->dashv_flag ,
+			a->debug_arg  ,
+			a->dashD_arg  ,
+			a->outfile_arg,
+			a->dashp_flag ,
+			a->dasha_flag ,
+			a->dasho_flag ,
+			a->dashe_flag ,
+			a->x86_long_flag     ,
+			a->x86_protected_flag,
+			a->arm_v7_flag       ,
+			a->arm_v8_flag
+		);
+}
 
 /************************ ERROR REPORTING & RECOVERY **************************/
 

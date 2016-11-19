@@ -1,3 +1,11 @@
+/*******************************************************************************
+ *
+ *	occ : The Omega Code Compiler
+ *
+ *	Copyright (c) 2016 Ammon Dodson
+ *
+ ******************************************************************************/
+
 #ifndef _TYPES_H
 #define _TYPES_H
 
@@ -206,6 +214,25 @@ typedef struct icode {
 	intermed_arg      arg1;     ///< first argument
 	intermed_arg      arg2;     ///< second argument
 } icmd;
+
+/************************ PORTABLE EXECUTABLE FILE ****************************/
+
+typedef struct pexe_header{
+	///< Magic number
+	///< File version
+	uint32_t name_array_sz; ///< Name Array length in bytes
+	///< File position for start of symbol table
+	///< File position for start of op queue
+	///< checksum of everything after the header
+} pexe_h;
+
+typedef struct pexe_symbol{
+	
+} pexe_sym;
+
+typedef struct pexe_operation{
+	
+} pexe_op;
 
 #endif // _TYPES_H
 

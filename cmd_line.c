@@ -160,7 +160,7 @@ Try `--help' for a list of commands.\n", cmd);
 				tgt->debug_arg = arg ?: argv[++i];
 			}  else if (yuck_streqp(op, "outfile")) {
 				tgt->outfile_arg = arg ?: argv[++i];
-			}    else if (yuck_streqp(op, "x86-long")) {
+			}     else if (yuck_streqp(op, "x86-long")) {
 				tgt->x86_long_flag++; goto xtra_chk;
 			} else if (yuck_streqp(op, "x86-protected")) {
 				tgt->x86_protected_flag++; goto xtra_chk;
@@ -254,6 +254,9 @@ Try `--help' for a list of commands.\n", cmd);
 			case 'o':
 				tgt->dasho_flag++;
 				break;
+			case 'e':
+				tgt->dashe_flag++;
+				break;
 			}
 			goto back_from_OCC_CMD_NONE_shortopt;
 		}
@@ -296,6 +299,7 @@ Try `--help' for a list of commands.\n", cmd);
 	default:
 		break;
 	case OCC_CMD_NONE:
+;
 ;
 ;
 ;
@@ -356,6 +360,7 @@ A first cross compiler for O-code.\n\
   -p                    produce portable executable\n\
   -a                    produce assembler\n\
   -o                    produce object code\n\
+  -e                    produce executable\n\
       --x86-long        Build for x86 Long Mode\n\
       --x86-protected   Build for x86 Protected Mode\n\
       --arm-v7\n\
