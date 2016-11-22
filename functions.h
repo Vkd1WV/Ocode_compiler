@@ -29,7 +29,6 @@ const sym_entry * Boolean(void);
 void Statement   (uint lvl);
 
 // From intermediate.c
-void   Initialize_intermediate(void);
 void   Dump_symbols(void);
 
 // Names
@@ -49,45 +48,24 @@ void emit_iop(
 	const sym_entry* right
 );
 
+// From pexe.c
+bool pexe (char * filename);
+
 
 /******************************************************************************/
 //                             INLINE FUNCTIONS
 /******************************************************************************/
 
-/**************************** VERBOSITY PRINTERS ******************************/
 
-static inline void print_yuck_results(yuck_t * a){
-	printf("\
-ARGUMENTS PASSED\n\
-nargs             :\t%lu\n\
-args              :\t%s\n\
-dashv_flag        :\t%u\n\
-debug_arg         :\t%s\n\
-dashD_arg         :\t%s\n\
-outfile_arg       :\t%s\n\
-dashp_flag        :\t%u\n\
-dasha_flag        :\t%u\n\
-dasho_flag        :\t%u\n\
-dashe_flag        :\t%u\n\
-x86_long_flag     :\t%u\n\
-x86_protected_flag:\t%u\n\
-arm_v7_flag       :\t%u\n\
-arm_v8_flag       :\t%u\n\n" ,
-			a->nargs      ,
-			*a->args      ,
-			a->dashv_flag ,
-			a->debug_arg  ,
-			a->dashD_arg  ,
-			a->outfile_arg,
-			a->dashp_flag ,
-			a->dasha_flag ,
-			a->dasho_flag ,
-			a->dashe_flag ,
-			a->x86_long_flag     ,
-			a->x86_protected_flag,
-			a->arm_v7_flag       ,
-			a->arm_v8_flag
-		);
+static inline int cmp_sym(const void * left, const void * right){
+	return strcmp(
+		dx_to_name(((sym_pt) left)->name),
+		dx_to_name(((sym_pt)right)->name)
+	);
+}
+
+static inline int cmp_sym_key(const void * key, const void * symbol){
+	return strcmp((char*) key, dx_to_name(((sym_pt)symbol)->name));
 }
 
 /************************ ERROR REPORTING & RECOVERY **************************/

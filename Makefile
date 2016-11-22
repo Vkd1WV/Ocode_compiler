@@ -22,7 +22,7 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=compiler.h functions.h globals.h tokens.h types.h
+HEADERS:=compiler.h functions.h globals.h tokens.h types.h yuck.h
 LIBS   :=-ldata
 
 SRC    := \
@@ -30,14 +30,14 @@ SRC    := \
 	scanner.l \
 	parse_declarations.c parse_expressions.c parse_statements.c \
 	intermediate.c \
-	arm.c x86-64.c
+	pexe.c arm.c x86-64.c
 
 OBJECTS:= \
-	cmd_line.o globals.o main.o \
+	yuck.o globals.o main.o \
 	scanner.o \
 	parse_expressions.o parse_statements.o parse_declarations.o \
 	intermediate.o \
-	#x86-64.o arm.o
+	pexe.o #x86-64.o arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 
@@ -49,13 +49,13 @@ occ: $(OBJECTS)
 scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
 
-cmd_line.c cmd_line.h: cmd_line.yuck
-	yuck gen -Hcmd_line.h -o cmd_line.c $<
+yuck.c yuck.h: occ.yuck
+	yuck gen -Hyuck.h -o yuck.c $<
 
 scanner.o: $(HEADERS) scanner.c
 	$(CC) $(CFLAGS) -Wno-unused-function -c -o $@ scanner.c
 
-main.o: main.c cmd_line.h $(HEADERS)
+main.o: main.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
 %.o: %.c %.h $(HEADERS)
@@ -64,8 +64,12 @@ main.o: main.c cmd_line.h $(HEADERS)
 ################################## UTILITIES ###################################
 
 CLEANFILES:= $(OBJECTS) occ ./tests/*.dbg
+VERYCLEANFILES:= $(CLEANFILES) scanner.c yuck.h yuck.c
 
-.PHONEY: clean todolist test
+.PHONEY: clean todolist test very-clean
+very-clean:
+	rm -f $(VERYCLEANFILES)
+
 clean:
 	rm -f $(CLEANFILES)
 

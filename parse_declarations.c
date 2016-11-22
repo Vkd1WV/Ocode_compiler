@@ -56,9 +56,9 @@ void Initializer_list (sym_entry* templt){
 	while (true) {
 		templt->name = add_name(get_name());
 		
-		if( DS_sort(global_symbols, templt) == EXIT_FAILURE )
+		if( DS_sort(symbols, templt) == EXIT_FAILURE )
 			parse_error("Duplicate symbol name");
-		new_symbol = DS_current(global_symbols);
+		new_symbol = DS_current(symbols);
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();
@@ -107,7 +107,7 @@ void Decl_Sub(sym_entry* new_sub){
 	
 	// Name
 	new_sub->name = add_name(get_name());
-	if( DS_sort(global_symbols, new_sub) )
+	if( DS_sort(symbols, new_sub) )
 		parse_error("Duplicate symbol name");
 	
 	// Parameter & Return Declarations
@@ -130,7 +130,7 @@ void Decl_Fun (sym_entry* new_fun){
 	
 	// Name
 	new_fun->name = add_name(get_name());
-	if( DS_sort(global_symbols, new_fun) )
+	if( DS_sort(symbols, new_fun) )
 		parse_error("Duplicate symbol name");
 	
 	// Parameter & Return Declarations

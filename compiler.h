@@ -11,19 +11,6 @@
 
 
 /******************************************************************************/
-//                            Arbitrary Limits
-/******************************************************************************/
-
-
-/// string length limit for unique compiler generated labels
-#define UNQ_NAME_SZ 16
-#define ERR_ARR_SZ  100  ///< temp arrays used in error reporting
-#define NAME_ARR_SZ 1024 ///< Starting size for the dynamic name array
-
-const char default_outfile[8] = "out.asm";
-
-
-/******************************************************************************/
 //                            Collected Headers
 /******************************************************************************/
 
@@ -37,6 +24,7 @@ const char default_outfile[8] = "out.asm";
 #include <data.h>
 
 #include "types.h"
+#include "yuck.h"   // includes type definitions
 #include "tokens.h"
 #include "globals.h"
 #include "functions.h"

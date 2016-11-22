@@ -218,21 +218,21 @@ typedef struct icode {
 /************************ PORTABLE EXECUTABLE FILE ****************************/
 
 typedef struct pexe_header{
-	///< Magic number
-	///< File version
+	uint64_t magic        ; ///< Magic number
+	uint32_t version      ; ///< File version
 	uint32_t name_array_sz; ///< Name Array length in bytes
 	///< File position for start of symbol table
 	///< File position for start of op queue
 	///< checksum of everything after the header
 } pexe_h;
 
-typedef struct pexe_symbol{
-	
-} pexe_sym;
+//typedef struct pexe_symbol{
+//	
+//} pexe_sym;
 
-typedef struct pexe_operation{
-	
-} pexe_op;
+//typedef struct pexe_operation{
+//	
+//} pexe_op;
 
 #endif // _TYPES_H
 

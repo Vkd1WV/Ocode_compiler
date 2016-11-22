@@ -13,7 +13,7 @@
  *	consists of one command per line or structure. Normally, intermediate code
  *	is generated in a queue of structures. However, when the compiler's debug
  *	flag is set, the intermediate code emitters will also create text files
- *	reprsenting the contents of the interm_q.
+ *	reprsenting the contents of the global_inst_q.
  *
  *	The general format of Three Address Codes is:
  *		OP		result	arg1	arg2
@@ -57,46 +57,10 @@
 /******************************************************************************/
 
 
-static int cmp_sym(const void * left, const void * right){
-	return strcmp(
-		dx_to_name(((sym_pt) left)->name),
-		dx_to_name(((sym_pt)right)->name)
-	);
-}
-
-static int cmp_sym_key(const void * key, const void * symbol){
-	return strcmp((char*) key, dx_to_name(((sym_pt)symbol)->name));
-}
-
-
 /******************************************************************************/
 //                            PUBLIC FUNCTIONS
 /******************************************************************************/
 
-
-void Initialize_intermediate(void){
-	if(debug_fd) fprintf(debug_fd,"#Omnicode Intermidiate File\n");
-	
-	// initialize the symbol table
-	global_symbols = DS_new(
-		DS_bst,
-		sizeof(sym_entry),
-		false,
-		&cmp_sym,
-		&cmp_sym_key
-	);
-	
-	// initialize the intermediate code queue
-	interm_q = DS_new(
-		DS_list,
-		sizeof(icmd),
-		false,
-		NULL,
-		NULL
-	);
-	
-	nxt_lbl       = 0; // make sure the nxt_lbl is empty
-}
 
 // Dump the symbol Table
 void Dump_symbols(void){
@@ -105,7 +69,7 @@ void Dump_symbols(void){
 	fputs("# SYMBOL TABLE", debug_fd);
 	fprintf(debug_fd,"\n#Name\tType\tconst\tInit\tDref\n");
 	
-	sym = DS_first(global_symbols);
+	sym = DS_first(symbols);
 	do {
 		if( sym->type != literal )
 			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
@@ -115,7 +79,7 @@ void Dump_symbols(void){
 				sym->init,
 				(void*) sym->dref
 			);
-	} while(( sym = DS_next(global_symbols) ));
+	} while(( sym = DS_next(symbols) ));
 }
 
 /********************************** NAMES *************************************/
@@ -182,10 +146,10 @@ sym_entry* new_var(void){
 	new_symbol.type = temp;
 	
 	// insert it into the symbol table
-	DS_sort(global_symbols, &new_symbol);
+	DS_sort(symbols, &new_symbol);
 	
 	// and return it
-	return DS_current(global_symbols);
+	return DS_current(symbols);
 }
 
 
@@ -305,7 +269,7 @@ void emit_iop(
 	}
 	
 	// queue up this operation
-	DS_nq(interm_q, iop);
+	DS_nq(global_inst_q, iop);
 	
 	// Print to the text file if present
 	if (debug_fd)

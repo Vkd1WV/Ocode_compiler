@@ -55,7 +55,7 @@ const sym_entry * Primary(void){
 		break;
 		
 	case T_NAME:
-		if(!( sym = DS_find(global_symbols, get_name()) ))
+		if(!( sym = DS_find(symbols, get_name()) ))
 			parse_error("Undeclared symbol");
 		
 		if(sym->type == function  ){} // get the function's return value

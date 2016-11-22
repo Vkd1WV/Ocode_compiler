@@ -2,6 +2,5 @@
 
 for file in ./tests/*.oc; do
 	echo -e "\nrunning $file\n"
-	./occ -vpaoed $file.dbg $file
-	#cat $file | ./compiler $file.out
+	./occ -vpad $file
 done

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <limits.h>
-#include "cmd_line.h"
+#include "yuck.h"
 
 #if defined __INTEL_COMPILER
 # pragma warning (push)
@@ -156,11 +156,7 @@ Try `--help' for a list of commands.\n", cmd);
 				/* invoke auto action and exit */
 				yuck_auto_version(tgt);
 				goto success;
-			}  else if (yuck_streqp(op, "debug")) {
-				tgt->debug_arg = arg ?: argv[++i];
-			}  else if (yuck_streqp(op, "outfile")) {
-				tgt->outfile_arg = arg ?: argv[++i];
-			}     else if (yuck_streqp(op, "x86-long")) {
+			}      else if (yuck_streqp(op, "x86-long")) {
 				tgt->x86_long_flag++; goto xtra_chk;
 			} else if (yuck_streqp(op, "x86-protected")) {
 				tgt->x86_protected_flag++; goto xtra_chk;
@@ -235,27 +231,19 @@ Try `--help' for a list of commands.\n", cmd);
 			case 'v':
 				tgt->dashv_flag++;
 				break;
-			case 'd':
-				tgt->debug_arg = *arg
-					? (op += strlen(arg), arg)
-					: argv[++i];
-				break;
 			case 'D':
 				tgt->dashD_arg = *arg
 					? (op += strlen(arg), arg)
 					: argv[++i];
+				break;
+			case 'd':
+				tgt->dashd_flag++;
 				break;
 			case 'p':
 				tgt->dashp_flag++;
 				break;
 			case 'a':
 				tgt->dasha_flag++;
-				break;
-			case 'o':
-				tgt->dasho_flag++;
-				break;
-			case 'e':
-				tgt->dashe_flag++;
 				break;
 			}
 			goto back_from_OCC_CMD_NONE_shortopt;
@@ -310,9 +298,6 @@ Try `--help' for a list of commands.\n", cmd);
 ;
 ;
 ;
-;
-;
-;
 		break;
 	}
 	return;
@@ -323,7 +308,7 @@ Try `--help' for a list of commands.\n", cmd);
 	switch (src->cmd) {
 	default:
 	YUCK_NOCMD:
-		puts("Usage: occ [OPTION]... FILE...\n\
+		puts("Usage: occ [OPTION]... FILE\n\
 \n\
 A first cross compiler for O-code.\n\
 ");
@@ -354,13 +339,10 @@ A first cross compiler for O-code.\n\
   -h, --help            display this help and exit\n\
   -V, --version         output version information and exit\n\
   -v                    be verbose\n\
-  -d, --debug=FILE      Produce an intermediate code debug file.\n\
-  -D NAME               VALUE   Initialize an external constant. If no value is given it is assumed to be true.\n\
-      --outfile=FILE    Redirect the output to a different file.\n\
+  -D NAME               VALUE   Initialize an external constant. If no value is given it is assumed to be 1.\n\
+  -d                    produce debug file.\n\
   -p                    produce portable executable\n\
   -a                    produce assembler\n\
-  -o                    produce object code\n\
-  -e                    produce executable\n\
       --x86-long        Build for x86 Long Mode\n\
       --x86-protected   Build for x86 Protected Mode\n\
       --arm-v7\n\

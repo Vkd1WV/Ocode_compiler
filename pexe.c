@@ -6,16 +6,18 @@
  *
  ******************************************************************************/
 
+#include "compiler.h"
+
 /**	Create a Portable Executable file from the intermediate represetation
-	Takes the output file name as a parameter.
+	Takes the output file name as a parameter. stack or register based VM?
  */
 bool pexe (char * filename){
 	FILE* fd;
 	
-	if (verbose) printf("Creating pexe file: %s\n", filename);
+	if (verbosity) printf("Creating pexe file: %s\n", filename);
 	fd = fopen(filename, "w");
 	
 	
-	
+	fclose(fd);
 	return EXIT_SUCCESS;
 }
