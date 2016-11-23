@@ -30,14 +30,14 @@ SRC    := \
 	scanner.l \
 	parse_declarations.c parse_expressions.c parse_statements.c \
 	intermediate.c \
-	pexe.c arm.c x86-64.c
+	pexe.c arm.c x86.c
 
 OBJECTS:= \
 	yuck.o globals.o main.o \
 	scanner.o \
 	parse_expressions.o parse_statements.o parse_declarations.o \
 	intermediate.o \
-	pexe.o #x86-64.o arm.o
+	pexe.o x86.o #arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 

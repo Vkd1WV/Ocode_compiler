@@ -35,7 +35,7 @@ extern const char * default_out;
 extern const char * default_dbg;
 extern const char * default_asm;
 extern const char * default_pexe;
-extern const char * byte_code_dex[50];
+extern const char * byte_code_dex[NUM_I_CODES];
 
 #define TMP_PATH "/tmp/"
 
@@ -43,7 +43,7 @@ extern const char * byte_code_dex[50];
 
 uint verbosity;
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
-EXTERN FILE *  debug_fd;      ///< contains a text representation of the global_inst_q
+EXTERN FILE *  debug_fd;  ///< contains a text representation of the instruction queue
 
 /*************************** SCANNER TO PARSER ********************************/
 

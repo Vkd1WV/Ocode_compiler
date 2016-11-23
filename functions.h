@@ -49,7 +49,10 @@ void emit_iop(
 );
 
 // From pexe.c
-bool pexe (char * filename);
+void pexe (char * filename);
+
+// From x86.c
+void x86 (char * filename, bool B64);
 
 
 /******************************************************************************/

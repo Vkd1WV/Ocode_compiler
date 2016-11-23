@@ -11,7 +11,7 @@
 /**	Create a Portable Executable file from the intermediate represetation
 	Takes the output file name as a parameter. stack or register based VM?
  */
-bool pexe (char * filename){
+void pexe (char * filename){
 	FILE* fd;
 	
 	if (verbosity) printf("Creating pexe file: %s\n", filename);
@@ -19,5 +19,4 @@ bool pexe (char * filename){
 	
 	
 	fclose(fd);
-	return EXIT_SUCCESS;
 }

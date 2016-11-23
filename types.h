@@ -20,22 +20,10 @@ typedef unsigned int name_dx; ///< indexes into the name_array
 
 typedef uint16_t token_t;
 
-typedef enum {Real, Protected, Virtual, SMM, Compatibility, Long} mode_t;
-typedef enum {x86, arm} arch_t;
+//typedef enum {Real, Protected, Virtual, SMM, Compatibility, Long} mode_t;
+//typedef enum {x86, arm} arch_t;
 
-//typedef enum{
-//	IMM,
-//	R0, R1, R2 , R3 , R4 , R5 , R6 , R7 ,
-//	//R8, R9, R10, R11, R12, R13, R14,
-//	R15,
-//	// x86
-//	A , B , C  , D  , SI , DI , BP ,
-//	// arm
-//	//A1, A2, A3 , A4 , V1 , V2 , V3 , V4 ,
-//	//V5, V6, V7 , V8 , WR , SB , SL , FP ,
-//	//IP, LR, PC,
-//	SP // stack pointer x86=R7, arm=R13
-//} reg_t;
+
 
 /********************************* SYMBOLS ************************************/
 // Each symbol table entry contains all data related to named symbols in the 
@@ -147,6 +135,10 @@ typedef struct sym {
 	
 	// pointer
 	struct sym* dref;
+	
+	
+	// Used by the code generators
+	bool live;
 }sym_entry;
 
 typedef sym_entry* sym_pt;
@@ -157,13 +149,15 @@ typedef sym_entry* sym_pt;
 typedef enum {
 	I_NOP,
 
-	// Unary OPS (6)
+	// Unary OPS (8)
 	I_ASS ,
 	I_REF ,
 	I_DREF,
 	I_NEG ,
 	I_NOT ,
 	I_INV ,
+	I_INC ,
+	I_DEC ,
 
 	// Binary OPS (19)
 	I_MUL,
@@ -196,6 +190,7 @@ typedef enum {
 	I_EBLK,
 	I_CALL,
 	I_RTRN,
+	NUM_I_CODES
 }byte_code;
 
 typedef union {
