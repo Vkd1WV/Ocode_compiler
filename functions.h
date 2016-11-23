@@ -48,11 +48,14 @@ void emit_iop(
 	const sym_entry* right
 );
 
+// From opt.c
+DS Optomize(DS q1, DS q2);
+
 // From pexe.c
-void pexe (char * filename);
+void pexe (char * filename, const DS blk_q);
 
 // From x86.c
-void x86 (char * filename, bool B64);
+void x86 (char * filename, bool B64, const DS blk_q);
 
 
 /******************************************************************************/

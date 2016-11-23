@@ -165,6 +165,8 @@ static void Parse(yuck_t * arg_pt){
 		Statement(0);
 	} while (token != T_EOF);
 	
+	// TODO: add return statments to the global_inst_q
+	
 	// Close the infile
 	fclose(yyin);
 	
@@ -182,15 +184,11 @@ static void Parse(yuck_t * arg_pt){
 }
 
 
-static void Optomize(void){}
-
-
-static void Generate_code(yuck_t * arg_pt){
+static void Generate_code(yuck_t * arg_pt, DS blk_q){
 	
 	// pexe
 	if (arg_pt->dashp_flag){
 		char *pexefile;
-		
 		
 		pexefile = malloc(strlen(*arg_pt->args) + strlen(default_pexe) + 1);
 		if(! pexefile) crit_error("Out of Memory");
@@ -198,7 +196,7 @@ static void Generate_code(yuck_t * arg_pt){
 		pexefile = strcpy(pexefile, *arg_pt->args);
 		pexefile = strncat(pexefile, default_pexe, strlen(default_pexe));
 		
-		pexe(pexefile);
+		pexe(pexefile, blk_q);
 		
 		free(pexefile);
 	}
@@ -220,30 +218,42 @@ static void Generate_code(yuck_t * arg_pt){
 		
 		asmfile = strncat(asmfile, default_asm, strlen(default_asm));
 		
-		// TODO: call code generator
+		if(arg_pt->x86_long_flag) x86(asmfile, true, blk_q);
+		if(arg_pt->x86_protected_flag) x86(asmfile, false, blk_q);
 		
 		free(asmfile);
 	}
 }
 
 
-static void Cleanup(yuck_t * arg_pt){
+static void Cleanup(yuck_t * arg_pt, DS structure){
+	DS blk;
+
 	yuck_free(arg_pt);
 	DS_delete(symbols);
 	DS_delete(global_inst_q);
 	DS_delete(sub_inst_q);
+	
+	while(( blk = DS_first(structure) )) DS_delete(blk);
+	DS_delete(structure);
+	
+	free(name_array);
 }
 
 
 int main (int argc, char** argv){
 	yuck_t arg_pt[1];
+	DS blk_q;
 	
 	yuck_parse(arg_pt, argc, argv);
 	Initialize(arg_pt);
 	Parse(arg_pt);
-	Optomize();
-	Generate_code(arg_pt);
-	Cleanup(arg_pt);
+	
+	blk_q = Optomize(global_inst_q, sub_inst_q);
+	
+	Generate_code(arg_pt, blk_q);
+	
+	Cleanup(arg_pt, blk_q);
 	
 	return EXIT_SUCCESS;
 }

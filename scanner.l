@@ -291,7 +291,7 @@ asm    return T_ASM;
 		else if(yytext[i]>='A' && yytext[i]<='F') // upper case
 			yynumber= (yynumber<<4) | (yytext[i] - 'A' + 10);
 		
-		else crit_error("internal compiler error in scanner {HEX}");
+		else crit_error("Internal: scanner {HEX}");
 		// this should be impossible
 	}
 	

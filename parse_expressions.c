@@ -89,7 +89,7 @@ const sym_entry * Unary(void){
 		case subroutine: parse_error("Subroutine used in an expression");
 		case none:       parse_error("Trying to negate a void data type");
 		case type_def:   parse_error("Data type used in an expression");
-		default:     crit_error("Internal Compiler Error at Unary(), T_MINUS");
+		default:     crit_error("Internal: at Unary(), T_MINUS");
 		}
 		
 		result = new_var();
@@ -112,7 +112,7 @@ const sym_entry * Unary(void){
 		case subroutine: break;
 		case literal: parse_error("Can only create a reference to a memory location");
 		case type_def: parse_error("Data type used in an expression");
-		default: crit_error("Internal Compiler Error at Unary(), T_REF");
+		default: crit_error("Internal: at Unary(), T_REF");
 		}
 		
 		result->type = pointer;
@@ -377,7 +377,7 @@ sym_entry * Assign(sym_entry * target){
 	case T_AND_A:
 	case T_OR_A:
 	case T_XOR_A: parse_error("Feature not implemented");
-	default: crit_error("Internal Compiler Error at Assign()");
+	default: crit_error("Internal: at Assign()");
 	}
 	
 	return result;

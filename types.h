@@ -194,21 +194,35 @@ typedef enum {
 }byte_code;
 
 typedef union {
-	const sym_entry * symbol; ///< a variable
-	umax              value;  ///< a literal
+	sym_entry * symbol; ///< a variable
+	umax        value;  ///< a literal
 } intermed_arg;
 
 
 typedef struct icode {
-	name_dx           label;    ///< The label, if any, for this operation
-	byte_code         op;       ///< The intermediate operator
-	name_dx           target;   ///< target of a jump
-	bool              arg1_lit; ///< whether arg1 is literal or a symbol
-	bool              arg2_lit; ///< whether arg2 is literal or a symbol
-	const sym_entry * result;   ///< result of the operation
-	intermed_arg      arg1;     ///< first argument
-	intermed_arg      arg2;     ///< second argument
+	name_dx        label;    ///< The label, if any, for this operation
+	byte_code      op;       ///< The intermediate operator
+	name_dx        target;   ///< target of a jump
+	bool           arg1_lit; ///< whether arg1 is literal or a symbol
+	bool           arg2_lit; ///< whether arg2 is literal or a symbol
+	sym_entry    * result;   ///< result of the operation
+	intermed_arg   arg1;     ///< first argument
+	intermed_arg   arg2;     ///< second argument
+	
+	// Used by code generators
+	bool result_live;
+	bool arg1_live;
+	bool arg2_live;
+	
+	uint next_use;
 } icmd;
+
+/*********************** OPTOMIZER / CODE GENERATOR ***************************/
+
+//typedef struct bblk {
+//	uint count;
+//	const icmd * steps[];
+//} * bblk_pt;
 
 /************************ PORTABLE EXECUTABLE FILE ****************************/
 

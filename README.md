@@ -2,38 +2,42 @@
 
 I'm proving I can build my own programming language. I am not currently licencing this software in any way.
 
-##Usage: occ [OPTIONS]... FILE...
+##Usage:
+`occ [OPTIONS]... FILE...`
 
 ###Debugging
-  -v   be verbose
+  `-v`   be verbose
 
 ###External Constant Definitions
-  -D NAME=VALUE   Initialize an external constant. If no value is given it is assumed to be 1.
+`  -D NAME=VALUE`   Initialize an external constant. If no value is given it is assumed to be 1.
 
 ###Output Options
-  --outfile=FILE Redirect the output to a different file.
-  -d             produce debug file.
-  -p             produce portable executable
-  -a             produce assembler
+  `--outfile=FILE` Redirect the output to a different file.
+  `-d`             produce debug file.
+  `-p`             produce portable executable
+  `-a`             produce assembler
 
 ###Target Architecture Options
-  --x86-long      Build for x86 Long Mode
-  --x86-protected Build for x86 Protected Mode
-  --arm-v7
-  --arm-v8
+  `--x86-long`      Build for x86 Long Mode
+  `--x86-protected` Build for x86 Protected Mode
+  `--arm-v7`
+  `--arm-v8`
 
 ## Architecture
 
 ### Components
 
 `oc file` -> scanner -> `token`
-`token`   -> parser  -> `name_array, symbols, inst_q, & dbg file`
 
-Optionally an optomizer could be here
+`token`   -> parser  -> `name_array, symbols, global_inst_q, sub_inst_q, & dbg file`
 
-`name_array, symbols, inst_q` -> pexe -> `pexe file`
-`name_array, symbols, inst_q` -> arm  -> `arm.asm`
-`name_array, symbols, inst_q` -> x86  -> `x86.asm`
+`symbols, global_inst_q, sub_inst_q` -> optomizer -> `symbols, blk_q`
+
+`name_array, symbols, blk_q` -> pexe -> `pexe file`
+
+`name_array, symbols, blk_q` -> arm  -> `arm.asm`
+
+`name_array, symbols, blk_q` -> x86  -> `x86.asm`
 
 For simplicity assembly and linking are not built-in.
 

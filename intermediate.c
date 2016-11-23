@@ -262,7 +262,7 @@ void emit_iop(
 	case I_RTRN:
 	default:
 		sprintf(err_array,
-			"Internal Compiler Error: emit_triple() called with cmd = %d",
+			"Internal: emit_iop() called with cmd = %d",
 			op
 		);
 		crit_error(err_array);

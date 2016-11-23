@@ -15,9 +15,18 @@
 
 
 typedef enum {
-	A , B , C  , D  , SI , DI , BP , SP,
+	A,  // Accumulator
+	B,  // General Purpose
+	C,  // Counter
+	D,  // Data
+	SI, // Source Index
+	DI, // Destination Index
+	BP, // General Purpose
+	SP, // Stack Pointer
 	R8, R9, R10, R11, R12, R13, R14, R15
 } reg_t;
+
+/* If within a function the stack is only used for storing automaic variables the the value of SP does not change until the function returns. in which case if parameters are passed in the registers then the BP can be general purpose. */
 
 typedef enum {
 	X_MOV,
@@ -29,11 +38,6 @@ typedef enum {
 const char * inst_array[NUM_X86_INST] = {
 	"mov", "add", "sub"
 };
-
-typedef struct blk {
-	uint count;
-	const icmd * steps[];
-} basic_block;
 
 
 /******************************************************************************/
@@ -206,24 +210,13 @@ static void put_operation(icmd * op){
 }
 
 
-static basic_block * get_blk(void){
-	basic_block * blk;
-	
-	
-}
+//static bblk_pt get_blk(void){
+//	bblk_pt blk;
+//	
+//	
+//}
 
-/******************************************************************************/
-//                             PUBLIC FUNCTIONS
-/******************************************************************************/
-
-
-void x86 (char * filename, bool B64){
-	FILE * outfile;
-	icmd * operation;
-	
-	
-	outfile = fopen(filename, "w");
-	
+static void put_header(FILE * outfile, bool B64){
 	fprintf(outfile,"; a NASM assembler file created by the Omega Compiler\n");
 	
 	// Set width
@@ -243,19 +236,37 @@ void x86 (char * filename, bool B64){
 	// executable code
 	fprintf(outfile,"\nsection .text\t; Program code\n");
 	fprintf(outfile,"_start:\n");
+}
+
+/******************************************************************************/
+//                             PUBLIC FUNCTIONS
+/******************************************************************************/
+
+
+void x86 (char * filename, bool B64, const DS blk_q){
+	FILE * out_fd;
+	DS blk;
 	
-	while (operation = DS_dq(global_inst_q)){
-		put_operation(operation);
-	}
+	out_fd = fopen(filename, "w");
+	put_header(out_fd, B64);
 	
-	while (operation = DS_dq(sub_inst_q)){
-		put_operation(operation);
-	}
+	// This is the text or code section
+	blk = DS_last(blk_q);
 	
-	fprintf(outfile,"\nsection .data\t; Data Section contains constants\n");
-	fprintf(outfile,"\nsection .bss\t; Declare static variables\n");
-	if (B64) fprintf(outfile,"align 8\n");
-	else fprintf(outfile,"align 4\n");
+	
+	
+//	while (operation = DS_dq(global_inst_q)){
+//		put_operation(operation);
+//	}
+//	
+//	while (operation = DS_dq(sub_inst_q)){
+//		put_operation(operation);
+//	}
+	
+	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");
+	fprintf(out_fd,"\nsection .bss\t; Declare static variables\n");
+	if (B64) fprintf(out_fd,"align 8\n");
+	else fprintf(out_fd,"align 4\n");
 	
 	//TODO: static variables
 }
