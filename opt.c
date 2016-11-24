@@ -14,6 +14,7 @@
  *	optomized, basic-block queue.
  */
 
+
 /******************************************************************************/
 //                               DEFINITIONS
 /******************************************************************************/
@@ -56,7 +57,7 @@ static DS Mk_blk(DS q){
 	return blk;
 }
 
-static void Dead_code(DS blk){}
+//static void Dead_code(DS blk){}
 
 static void Next_use(DS blk){
 	icmd * iop;
@@ -64,7 +65,15 @@ static void Next_use(DS blk){
 	iop = DS_last(blk);
 	
 	do {
-		
+		if(iop->op > I_DEC){ // if a binary op
+			if(
+				!iop->arg2_lit &&
+				iop->arg2.symbol->type == temp &&
+				!iop->arg2.symbol->live
+			)
+			iop->arg2_live = false;
+			else iop->arg2_live = true;
+		}
 		
 		if(iop->op != I_NOP){
 			// set liveness in iop
@@ -80,15 +89,7 @@ static void Next_use(DS blk){
 				iop->arg1_live = false;
 			else iop->arg1_live = true;
 			
-			if(iop->op > I_DEC){ // if a binary op
-				if(
-					!iop->arg2_lit &&
-					iop->arg2.symbol->type == temp &&
-					!iop->arg2.symbol->live
-				)
-				iop->arg2_live = false;
-			else iop->arg2_live = true;
-			}
+			
 			
 			// set liveness in symbols
 			if (iop->result->type == temp) iop->result->live = false;
@@ -105,6 +106,7 @@ static void Next_use(DS blk){
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
+
 DS Optomize(DS q1, DS q2){
 	DS blk_q, blk;
 	
@@ -116,9 +118,17 @@ DS Optomize(DS q1, DS q2){
 		NULL
 	);
 	
-	while ((blk = Mk_blk(q1))) DS_nq(blk_q, blk);
+	if (verbosity) puts("Optomizing");
 	
-	while ((blk = Mk_blk(q2))) DS_nq(blk_q, blk);
+	while ((blk = Mk_blk(q1))){
+		Next_use(blk);
+		DS_nq(blk_q, blk);
+	}
+	
+	while ((blk = Mk_blk(q2))){
+		Next_use(blk);
+		DS_nq(blk_q, blk);
+	}
 	
 	return blk_q;
 }

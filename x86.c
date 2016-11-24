@@ -26,6 +26,10 @@ typedef enum {
 	R8, R9, R10, R11, R12, R13, R14, R15
 } reg_t;
 
+#define NUM_X86_REG 16
+
+sym_pt reg_d[NUM_X86_REG];
+
 /* If within a function the stack is only used for storing automaic variables the the value of SP does not change until the function returns. in which case if parameters are passed in the registers then the BP can be general purpose. */
 
 typedef enum {
@@ -49,14 +53,14 @@ const char * inst_array[NUM_X86_INST] = {
 void test_x86(void);
 
 
-static char * put_num(umax num){
+static char * str_num(umax num){
 	static char array[20];
 	sprintf(array, "0x%llu", num);
 	return array;
 }
 
 // assumes width is possible in current mode
-static char * put_reg(width_t width, reg_t reg, bool B64){
+static char * str_reg(width_t width, reg_t reg, bool B64){
 	static char array[4];
 	
 	if (!B64 && width == byte8)
@@ -101,7 +105,7 @@ static char * put_reg(width_t width, reg_t reg, bool B64){
 }
 
 
-static void put_operation(icmd * op){
+static void put_op(icmd * op){
 	switch (op -> op){
 	case I_NOP:
 		break;
@@ -209,13 +213,6 @@ static void put_operation(icmd * op){
 	}
 }
 
-
-//static bblk_pt get_blk(void){
-//	bblk_pt blk;
-//	
-//	
-//}
-
 static void put_header(FILE * outfile, bool B64){
 	fprintf(outfile,"; a NASM assembler file created by the Omega Compiler\n");
 	
@@ -238,11 +235,31 @@ static void put_header(FILE * outfile, bool B64){
 	fprintf(outfile,"_start:\n");
 }
 
+static void Gen_blk(FILE * out_fd, DS blk){
+	icmd * iop;
+	
+	iop = DS_last(blk);
+	do{
+		// Getreg
+		
+		// find a copy of arg1 and put it in result
+		
+		// generate op res arg2
+		
+		// if arg1 or arg2 are not live remove them from the reg_d
+		
+	} while (( iop = DS_previous(blk) ));
+	
+	// commit live symbols in regs to memory
+}
+
+
 /******************************************************************************/
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
-
+/**	Produces a NASM file from the block queue
+*/
 void x86 (char * filename, bool B64, const DS blk_q){
 	FILE * out_fd;
 	DS blk;
@@ -250,18 +267,16 @@ void x86 (char * filename, bool B64, const DS blk_q){
 	out_fd = fopen(filename, "w");
 	put_header(out_fd, B64);
 	
+	// Initialize the register descriptor
+	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
+	
 	// This is the text or code section
 	blk = DS_last(blk_q);
 	
+	do{
+		Gen_blk(out_fd, blk);
+	} while(( blk = DS_previous(blk_q) ));
 	
-	
-//	while (operation = DS_dq(global_inst_q)){
-//		put_operation(operation);
-//	}
-//	
-//	while (operation = DS_dq(sub_inst_q)){
-//		put_operation(operation);
-//	}
 	
 	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");
 	fprintf(out_fd,"\nsection .bss\t; Declare static variables\n");

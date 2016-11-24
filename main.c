@@ -9,66 +9,10 @@
 
 #include "compiler.h"
 
-//typedef enum {
-//	F_OC = 0,
-//	F_ROOT, ///< The infile name without the extension
-//	F_DBG,
-//	F_PEXE,
-//	F_ASM,
-//	F_OBJ,
-//	NUM_TMP_FILES
-//} tmp_files;
-
-
-//void set_files(
-//	char  ** (*filenames)[NUM_TMP_FILES],
-//	yuck_t * argp,
-//	char   * outfile
-//){
-//	unsigned int length;
-//	char * in;
-//	
-//	// allocate space
-//	for(int i=0; i<NUM_TMP_FILES; i++){
-//		(*filenames)[i] = malloc(sizeof(char*) * argp->nargs);
-//		if(! (*filenames)[i] ) crit_error("Out of memory");
-//	}
-//	
-//	if(verbosity)printf("TMP_MAX: %d\n", TMP_MAX);
-//	
-//	// For each infile
-//	for(uint i=0; i<argp->nargs; i++){
-//		in = (*filenames)[F_OC][i] = argp->args[i];
-//		
-//		// get the filename root
-//		length = strlen(in);
-//		
-//		if(in[length-2] == 'c' && in[length-3] == 'o' && in[length-4] == '.'){
-//			(*filenames)[F_ROOT][i] = calloc(1, length-2);
-//			if (! (*filenames)[F_ROOT][i]) crit_error("Out of memory");
-//			
-//			strncpy((*filenames)[F_ROOT][i], in, length-3);
-//		}
-//		else (*filenames)[F_ROOT][i] = (*filenames)[F_OC][i];
-//		
-//		// Set the temporary files
-//		for(int j=F_DBG; j <= F_OBJ; j++){
-//			(*filenames)[j][i] = malloc(L_tmpnam);
-//			if (! (*filenames)[j][i] ) crit_error("Out of memory");
-//			if (! tmpnam((*filenames)[j][i]) ) crit_error("tmpnam() failed");
-//		}
-//	}
-//	
-//	// Set the outfile
-//	if(argp->outfile_arg) outfile = argp->outfile_arg;
-//	if (verbosity)
-//		printf("Setting %s as the output file.\n", outfile);
-//	
-//	puts("");
-//}
-
 
 static void Initialize(yuck_t * arg_pt){
+	uint sum;
+	
 	if (arg_pt->nargs > 1) puts("Too many arguments...Ignoring.");
 	
 	// set the global verbosity
@@ -98,6 +42,13 @@ arm_v8_flag       :\t%u\n\n" ,
 			arg_pt->arm_v7_flag       ,
 			arg_pt->arm_v8_flag
 		);
+	
+	// test for a target architecture
+	sum = arg_pt->x86_long_flag + arg_pt->x86_protected_flag;
+	sum += arg_pt->arm_v7_flag + arg_pt->arm_v8_flag;
+	
+	if(arg_pt->dasha_flag && sum != 1)
+		crit_error("Must specify exactly one target architecture.");
 	
 	// initialize the symbol table
 	symbols = DS_new(
@@ -178,7 +129,7 @@ static void Parse(yuck_t * arg_pt){
 	}
 	
 	if(errors){
-		puts("Errors were found.");
+		puts("Errors were found. Exiting...");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -195,6 +146,8 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		
 		pexefile = strcpy(pexefile, *arg_pt->args);
 		pexefile = strncat(pexefile, default_pexe, strlen(default_pexe));
+		
+		if(verbosity) printf("pexefile is: %s\n", pexefile);
 		
 		pexe(pexefile, blk_q);
 		
@@ -218,8 +171,10 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		
 		asmfile = strncat(asmfile, default_asm, strlen(default_asm));
 		
+		if(verbosity) printf("asmfile is: %s\n", asmfile);
+		
 		if(arg_pt->x86_long_flag) x86(asmfile, true, blk_q);
-		if(arg_pt->x86_protected_flag) x86(asmfile, false, blk_q);
+		else if(arg_pt->x86_protected_flag) x86(asmfile, false, blk_q);
 		
 		free(asmfile);
 	}
@@ -229,6 +184,7 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 static void Cleanup(yuck_t * arg_pt, DS structure){
 	DS blk;
 
+	if(verbosity) puts("Cleanup");
 	yuck_free(arg_pt);
 	DS_delete(symbols);
 	DS_delete(global_inst_q);
