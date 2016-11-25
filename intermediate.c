@@ -149,7 +149,7 @@ sym_pt new_var(sym_type type){
 	if(new_symbol.stat || new_symbol.constant || new_symbol.init || new_symbol.size) puts("new_var() screwed up!!");
 	
 	// insert it into the symbol table
-	DS_sort(symbols, &new_symbol);
+	DS_insert(symbols, &new_symbol);
 	
 	// and return it
 	return DS_current(symbols);
