@@ -28,7 +28,7 @@ void While (uint lvl);
 
 void Label(void){
 	Match(T_LBL);
-	emit_lbl(   add_name( get_name() )   );
+	emit_lbl(add_name( get_name() ));
 	Match(T_NL);
 }
 
@@ -39,7 +39,7 @@ void Jump(void){
 }
 
 void If(uint lvl){
-	const sym_entry * condition;
+	sym_pt condition;
 	name_dx if_label, else_label;
 	
 	Match(T_IF);
@@ -47,7 +47,7 @@ void If(uint lvl){
 	if_label = new_label();
 	
 	condition = Boolean();
-	if(condition->type == literal){}
+	if(condition->type == st_lit_int){}
 	emit_iop(I_JZ, if_label, NULL, condition, NULL);
 	
 	Statement(lvl);
@@ -71,7 +71,7 @@ void If(uint lvl){
 
 void While(uint lvl){
 	name_dx repeat_label, skip_label;
-	const sym_entry * result;
+	sym_pt result;
 	
 	Match(T_WHILE);
 	emit_cmnt("Start of WHILE loop");

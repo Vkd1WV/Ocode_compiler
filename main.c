@@ -53,7 +53,7 @@ arm_v8_flag       :\t%u\n\n" ,
 	// initialize the symbol table
 	symbols = DS_new(
 		DS_bst,
-		sizeof(sym_entry),
+		sizeof(struct sym),
 		false,
 		&cmp_sym,
 		&cmp_sym_key

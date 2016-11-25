@@ -47,6 +47,13 @@ I want a type checking mode between one type, and void (any type), such that I c
 
 Enumerated types should each be in their own namespace
 
+Signed integers are typedefs, where multiplication and division are operator overloaded.
+
+`typedef word sword`
+`typedef max smax`
+
+
+
 ## Intermediate Code
 The intermetiate represetation consists of three parts:
 *	The name array

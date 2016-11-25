@@ -73,57 +73,59 @@ COMPILE-TIME
 */
 
 typedef enum {
-	void_t,	// default value if unassigned
-	word,	// natural unit for given processor
-	byte,	// 8 bits
-	byte2,	// 16 bits
-	byte3,	// 24 bits
-	byte4,	// 32 bits
-	byte8,	// 64 bits
-	max_t	// the largest unit for given processor
-} width_t;
-
-typedef enum {
-	none,       // default value if unassigned
-	temp,       // a place holder for a register
-	data,
-	pointer,    // a pointer to the symbol contained in dref
-	function,
-	subroutine,
-	literal,    // a literal number to be inserted directly
-	type_def    // defined type
-} symbol_t;
+	st_int,     ///< an integer
+	st_ref,     ///< a reference
+	st_fun,     ///< a function
+	st_sub,     ///< a subroutine
+	st_lit_int, ///< a literal integer to be inserted directly
+	st_lit_str, ///< a string literal
+	st_type_def ///< defined type or struct or class
+} sym_type;
 
 //switch (sym_pt->type){
-//case none:
-//case temp:
-//case data:
-//case pointer:
-//case function:
-//case subroutine:
-//case literal:
-//case type_def:
+//case st_int:
+//case st_ref:
+//case st_fun:
+//case st_sub:
+//case st_lit_int:
+//case st_lit_str:
+//case st_type_def:
 //default:
 //}
 
+typedef enum {
+	w_undef,
+	w_word,  ///< an integer of the natural width of the target processor
+	w_max,   ///< an integer of the greatest width of the target processor
+	w_byte,  ///< an 8-bit integer
+	w_byte2, ///< a 16-bit integer
+	w_byte4, ///< a 32-bit integer
+	w_byte8  ///< a 64-bit integer
+} int_size;
+
 typedef struct sym {
-	name_dx name;
-	symbol_t type;     // Symbol type
+	name_dx  name; ///< index into the name_array
+	sym_type type; ///< Symbol type
+	bool     temp;
 	
-	// Data, Pointer
+	// Qualifiers
 	bool stat;     // Is it a static data location
 	bool constant; // should this data ever be changed again
-	bool init;     // Is the data location initialized
 	
-	// Data and temp
-	width_t size;
+	// Initialized and literal
+	bool init;        // Is the data location initialized
+	umax value;       // integer literals or initialized
+	uint8_t * str;    // string literals and initialized arrays
+	char * assembler; // contents of an asm fun or sub
 	
-	// literal
-	umax value;
+	// Reference
+	struct sym* dref;
+	
+	// Integers
+	int_size size;
 	
 	// function and subroutine
-	bool assembler; // Is this an assembler routine fun or sub
-	DS   local;     // Local scope for functions and structures
+	//DS   local;     // Local scope for functions and structures
 	// Parameter specification
 //	sym_entry * A;
 //	sym_entry * B;
@@ -133,16 +135,12 @@ typedef struct sym {
 //	sym_entry * F;
 	// return value
 	
-	// pointer
-	struct sym* dref;
-	
-	
 	// Used by the code generators
 	bool live;
-}sym_entry;
+} * sym_pt;
 
-typedef sym_entry* sym_pt;
-
+/** A reference is a very general concept of which the pointer is the simplest.
+*/
 
 /*************************** INTERMEDIATE QUEUE *******************************/
 
@@ -194,20 +192,20 @@ typedef enum {
 }byte_code;
 
 typedef union {
-	sym_entry * symbol; ///< a variable
-	umax        value;  ///< a literal
+	sym_pt symbol; ///< a variable
+	umax   value;  ///< a literal
 } intermed_arg;
 
 
 typedef struct icode {
-	name_dx        label;    ///< The label, if any, for this operation
-	byte_code      op;       ///< The intermediate operator
-	name_dx        target;   ///< target of a jump
-	bool           arg1_lit; ///< whether arg1 is literal or a symbol
-	bool           arg2_lit; ///< whether arg2 is literal or a symbol
-	sym_entry    * result;   ///< result of the operation
-	intermed_arg   arg1;     ///< first argument
-	intermed_arg   arg2;     ///< second argument
+	name_dx      label;    ///< The label, if any, for this operation
+	byte_code    op;       ///< The intermediate operator
+	name_dx      target;   ///< target of a jump
+	bool         arg1_lit; ///< whether arg1 is literal or a symbol
+	bool         arg2_lit; ///< whether arg2 is literal or a symbol
+	sym_pt       result;   ///< result of the operation
+	intermed_arg arg1;     ///< first argument
+	intermed_arg arg2;     ///< second argument
 	
 	// Used by code generators
 	bool result_live;

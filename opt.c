@@ -44,7 +44,7 @@ static DS Mk_blk(DS q){
 	
 	DS_nq(blk, iop);
 	
-	while(( iop = DS_last(q) )){
+	while(( iop = DS_first(q) )){
 		if(iop->label) break; // entry points are leaders
 		DS_nq(blk, DS_dq(q));
 		if(iop->op == I_JMP || iop->op == I_JZ || iop->op == I_RTRN) break;
@@ -58,17 +58,19 @@ static DS Mk_blk(DS q){
 }
 
 //static void Dead_code(DS blk){}
+//static void Remove_dead_symbols(){}
 
 static void Next_use(DS blk){
 	icmd * iop;
 	
-	iop = DS_last(blk);
+	iop = DS_first(blk);
+	if(!iop) crit_error("Internal: Next_use() received an empty block");
 	
 	do {
 		if(iop->op > I_DEC){ // if a binary op
 			if(
 				!iop->arg2_lit &&
-				iop->arg2.symbol->type == temp &&
+				iop->arg2.symbol->temp &&
 				!iop->arg2.symbol->live
 			)
 			iop->arg2_live = false;
@@ -77,13 +79,13 @@ static void Next_use(DS blk){
 		
 		if(iop->op != I_NOP){
 			// set liveness in iop
-			if(iop->result->type == temp && !iop->result->live)
+			if(iop->result->temp && !iop->result->live)
 				iop->result_live = false;
 			else iop->result_live = true;
 			
 			if(
 				!iop->arg1_lit &&
-				iop->arg1.symbol->type == temp &&
+				iop->arg1.symbol->temp &&
 				!iop->arg1.symbol->live
 			)
 				iop->arg1_live = false;
@@ -92,13 +94,13 @@ static void Next_use(DS blk){
 			
 			
 			// set liveness in symbols
-			if (iop->result->type == temp) iop->result->live = false;
+			if (iop->result->temp) iop->result->live = false;
 			else iop->result->live = true;
 		
 			if(!iop->arg1_lit) iop->arg1.symbol->live = true;
 			if(iop->op > I_DEC && !iop->arg2_lit) iop->arg2.symbol->live = true;
 		}
-	} while(( iop = DS_previous(blk) ));
+	} while(( iop = DS_next(blk) ));
 }
 
 

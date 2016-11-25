@@ -15,16 +15,16 @@
 
 
 void Decl_Word    (sym_pt templt);
-void Decl_Pointer (sym_entry* templt);
-void Decl_Type    (sym_entry* templt);
-void Decl_Sub     (sym_entry* new_sub);
-void Decl_Fun     (sym_entry* new_fun);
+void Decl_Pointer (sym_pt templt);
+void Decl_Type    (sym_pt templt);
+void Decl_Sub     (sym_pt new_sub);
+void Decl_Fun     (sym_pt new_fun);
 
 void Type_specifier(sym_pt templt_pt);
 
-void Qualifier_list   (sym_entry* templt);
-void Initializer_list (sym_entry* templt);
-void Parameter_list   (sym_entry* templt);
+void Qualifier_list   (sym_pt templt);
+void Initializer_list (sym_pt templt);
+void Parameter_list   (sym_pt templt);
 
 
 /******************************************************************************/
@@ -32,7 +32,7 @@ void Parameter_list   (sym_entry* templt);
 /******************************************************************************/
 
 
-void Qualifier_list   (sym_entry* templt){
+void Qualifier_list   (sym_pt templt){
 	if (token == T_STATIC){
 		templt->stat = true;
 		get_token();
@@ -41,17 +41,16 @@ void Qualifier_list   (sym_entry* templt){
 		templt->constant = true;
 		get_token();
 	}
-	else if (token == T_ASM){
-		if (!( templt->type == function || templt->type == subroutine ))
-			parse_error("Invalid use of assembler qualifier in declaration");
-		templt->assembler = true;
-		get_token();
-	}
+/*	else if (token == T_ASM){*/
+/*		if (!( templt->type == function || templt->type == subroutine ))*/
+/*			parse_error("Invalid use of assembler qualifier in declaration");*/
+/*		templt->assembler = true;*/
+/*		get_token();*/
+/*	}*/
 }
 
-void Initializer_list (sym_entry* templt){
-	      sym_entry * new_symbol;
-	const sym_entry * initializer;
+void Initializer_list (sym_pt templt){
+	sym_pt new_symbol, initializer;
 	
 	while (true) {
 		templt->name = add_name(get_name());
@@ -63,7 +62,7 @@ void Initializer_list (sym_entry* templt){
 		if (token == T_ASS){ // Initialized value
 			get_token();
 			
-			if(new_symbol->type != data && new_symbol->type != pointer)
+			if(new_symbol->type != st_int && new_symbol->type != st_ref)
 				parse_error("Invalid target for initialization");
 			new_symbol->init = true;
 			
@@ -82,7 +81,7 @@ void Initializer_list (sym_entry* templt){
 }
 
 // Parameter lists for functions and subroutines
-void Parameter_list   (sym_entry* templt){
+void Parameter_list   (sym_pt templt){
 	templt = templt;
 }
 
@@ -93,13 +92,13 @@ void Parameter_list   (sym_entry* templt){
 
 
 // Define a Datatype
-void Decl_Type (sym_entry* templt){
+void Decl_Type (sym_pt templt){
 	templt = templt;
 }
 
 // Declare a Subroutine
-void Decl_Sub(sym_entry* new_sub){
-	new_sub->type  = subroutine;
+void Decl_Sub(sym_pt new_sub){
+	new_sub->type  = st_sub;
 	//new_sub->local = new_DS('l');
 	
 	get_token();
@@ -121,8 +120,8 @@ void Decl_Sub(sym_entry* new_sub){
 }
 
 // Declare a Function
-void Decl_Fun (sym_entry* new_fun){
-	new_fun->type  = function;
+void Decl_Fun (sym_pt new_fun){
+	new_fun->type  = st_fun;
 	//new_fun->local = new_DS('l');
 	
 	get_token();
@@ -147,9 +146,9 @@ void Decl_Fun (sym_entry* new_fun){
 void Decl_Pointer (sym_pt templt){
 	sym_pt target;
 	
-	templt->type = pointer;
+	templt->type = st_ref;
 	
-	target=calloc(1, sizeof(sym_entry));
+	target=calloc(1, sizeof(struct sym));
 	if (!target) crit_error("Out of memory");
 	
 	templt->dref = target;
@@ -165,18 +164,17 @@ void Decl_Pointer (sym_pt templt){
 
 // Declare a Word
 void Decl_Word(sym_pt templt){
-	templt->type = data;
+	templt->type = st_int;
 	
 	//puts("Decl_Word");
 	
 	switch (token){
-		case T_8:    templt->size=byte   ; break;
-		case T_16:   templt->size=byte2  ; break;
-		case T_24:   templt->size=byte3  ; break;
-		case T_32:   templt->size=byte4  ; break;
-		case T_64:   templt->size=byte8  ; break;
-		case T_WORD: templt->size=word   ; break;
-		case T_MAX:  templt->size=max_t  ; break;
+		case T_8:    templt->size=w_byte ; break;
+		case T_16:   templt->size=w_byte2; break;
+		case T_32:   templt->size=w_byte4; break;
+		case T_64:   templt->size=w_byte8; break;
+		case T_WORD: templt->size=w_word ; break;
+		case T_MAX:  templt->size=w_max  ; break;
 		default: crit_error("Internal compiler error at Decl_word()");
 	}
 	get_token();
@@ -205,12 +203,12 @@ void Type_specifier(sym_pt templt_pt){
 void Decl_Operator(){}
 
 void Decl_Symbol  (void){
-	sym_entry templt;
+	struct sym templt;
 	
 	//puts("Decl_Symbol");
 	
 	// Initialize the template
-	memset((void*) &templt, 0, sizeof(sym_entry));
+	memset((void*) &templt, 0, sizeof(struct sym));
 	
 	Type_specifier(&templt);
 	

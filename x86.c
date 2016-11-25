@@ -59,11 +59,20 @@ static char * str_num(umax num){
 	return array;
 }
 
+static char * str_name(name_dx dx){
+	char * name;
+	// FIXME
+	
+	// prefix a $ to each name to prevent collisions
+	
+	return name;
+}
+
 // assumes width is possible in current mode
-static char * str_reg(width_t width, reg_t reg, bool B64){
+static char * str_reg(int_size width, reg_t reg, bool B64){
 	static char array[4];
 	
-	if (!B64 && width == byte8)
+	if (!B64 && width == w_byte8)
 		crit_error("operand too large for current proccessor mode");
 	if (!B64 && reg >SP)
 		crit_error("registers R8-R15 are only availible in Long mode");
@@ -71,13 +80,12 @@ static char * str_reg(width_t width, reg_t reg, bool B64){
 	array[4] = '\0';
 	
 	switch (width){
-	case byte  : array[1] = ' '; array[3] = ' '; break;
-	case byte2 : array[1] = ' '; array[3] = 'x'; break;
-	case byte3 :
-	case byte4 : array[1] = 'e'; array[3] = 'x'; break;
-	case byte8 :
-	case max_t : array[1] = 'r'; array[3] = 'x'; break;
-	case void_t:
+	case w_byte : array[1] = ' '; array[3] = ' '; break;
+	case w_byte2: array[1] = ' '; array[3] = 'x'; break;
+	case w_byte4: array[1] = 'e'; array[3] = 'x'; break;
+	case w_byte8:
+	case w_max  : array[1] = 'r'; array[3] = 'x'; break;
+	case w_word:
 	default    : crit_error("something done broke in put_reg()");
 	}
 	
@@ -263,6 +271,8 @@ static void Gen_blk(FILE * out_fd, DS blk){
 void x86 (char * filename, bool B64, const DS blk_q){
 	FILE * out_fd;
 	DS blk;
+	
+	puts("Generating x86 code...");
 	
 	out_fd = fopen(filename, "w");
 	put_header(out_fd, B64);

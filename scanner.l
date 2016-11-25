@@ -158,7 +158,6 @@ end      return T_END;
 
 byte    return T_8;
 byte2   return T_16;
-byte3   return T_24;
 byte4   return T_32;
 byte8   return T_64;
 word    return T_WORD;
@@ -338,7 +337,7 @@ asm    return T_ASM;
 	}
 	
 	BEGIN(0);
-	return (T_NUM);
+	return (T_CHAR);
 }
 
 

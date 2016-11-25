@@ -71,7 +71,7 @@ void Dump_symbols(void){
 	
 	sym = DS_first(symbols);
 	do {
-		if( sym->type != literal )
+		if( sym->type != st_lit_int )
 			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
 				dx_to_name(sym->name),
 				sym->type,
@@ -128,22 +128,25 @@ name_dx new_label(void){
 	// sufficiently large for 32-bit numbers in decimal and then some.
 	
 	
-	sprintf(label, "_%04lld$", i++); // use $ to prevent collisions
+	sprintf(label, "_$%04lld", i++); // use $ to prevent collisions
 	return add_name(label);
 }
 
 /**	create a new symbol table entry with a unique name.
  *	*	temporary symbol names all begin with %.
  */
-sym_entry* new_var(void){
+sym_pt new_var(sym_type type){
 	static umax i;
 	char name[UNQ_NAME_SZ];
-	static sym_entry new_symbol; // initialized to 0
+	static struct sym new_symbol; // initialized to 0
 	
 	// give it a unique name
-	sprintf(name, "%%%04lld", i++);
+	sprintf(name, "_#%04lld", i++);
 	new_symbol.name = add_name(name);
-	new_symbol.type = temp;
+	new_symbol.type = type;
+	new_symbol.temp = true;
+	
+	if(new_symbol.stat || new_symbol.constant || new_symbol.init || new_symbol.size) puts("new_var() screwed up!!");
 	
 	// insert it into the symbol table
 	DS_sort(symbols, &new_symbol);
@@ -171,11 +174,11 @@ void emit_lbl(name_dx lbl){
 }
 
 void emit_iop(
-	byte_code        op,
-	name_dx          target,
-	const sym_entry* out,
-	const sym_entry* left,
-	const sym_entry* right
+	byte_code    op,
+	name_dx      target,
+	const sym_pt out,
+	const sym_pt left,
+	const sym_pt right
 ){
 	char arg1[20], arg2[20];
 	char err_array[ERR_ARR_SZ];
@@ -212,7 +215,7 @@ void emit_iop(
 	case I_GTE :
 	case I_AND :
 	case I_OR  : // stuff for binaries only
-		if (right->type == literal){
+		if (right->type == st_lit_int){
 			iop->arg2_lit   = true;
 			iop->arg2.value = right->value;
 			sprintf(arg2, "#%4llx", right->value);
@@ -229,7 +232,7 @@ void emit_iop(
 	case I_NEG :
 	case I_NOT :
 	case I_INV : // stuff for unaries and binaries
-		if (left->type == literal){
+		if (left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
 			sprintf(arg1, "#%4llx", left->value);
@@ -244,7 +247,7 @@ void emit_iop(
 		
 	case I_JMP :
 	case I_JZ  :
-		if (left->type == literal){
+		if (left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
 			sprintf(arg1, "#%4llx", left->value);

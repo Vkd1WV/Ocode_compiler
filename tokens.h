@@ -20,7 +20,7 @@
 #define T_NUM  (token_t)0x0002 // sets yynumber
 #define T_NAME (token_t)0x0003 // sets yytext
 #define T_STR  (token_t)0x0004 // sets yytext
-//#define T_CHAR (token_t)0x0005 // sets yytext
+#define T_CHAR (token_t)0x0005 // sets yynumber
 // char will eventually be a variable width encoding, but for now it is just byte
 
 

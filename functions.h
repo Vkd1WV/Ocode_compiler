@@ -23,7 +23,7 @@ void Decl_Operator(void);
 void Decl_Symbol  (void);
 
 // From parse_expressions.c
-const sym_entry * Boolean(void);
+sym_pt Boolean(void);
 
 // from parse_statements.c
 void Statement   (uint lvl);
@@ -35,7 +35,7 @@ void   Dump_symbols(void);
 char * dx_to_name(name_dx index);
 name_dx add_name(char * name);
 name_dx     new_label(void); ///< get a new unique label
-sym_entry * new_var  (void);
+sym_pt new_var  (sym_type);
 
 // Emmiters
 void emit_cmnt(const char* comment);
@@ -43,9 +43,9 @@ void emit_lbl (name_dx lbl);
 void emit_iop(
 	byte_code        op,
 	name_dx          target,
-	const sym_entry* out,
-	const sym_entry* left,
-	const sym_entry* right
+	const sym_pt out,
+	const sym_pt left,
+	const sym_pt right
 );
 
 // From opt.c
@@ -74,9 +74,20 @@ static inline int cmp_sym_key(const void * key, const void * symbol){
 	return strcmp((char*) key, dx_to_name(((sym_pt)symbol)->name));
 }
 
+/********************************* WARNINGS ***********************************/
+
+static inline void parse_warn(const char * message){
+	printf("WARNING: %s, on line %d.\n", message, yylineno);
+}
+
+static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
+	if (arg1->type != arg2->type)
+		parse_warn("Incompatible types in comparison");
+}
+
 /************************ ERROR REPORTING & RECOVERY **************************/
 
-static inline void parse_error(const char* message){
+static inline void parse_error(const char * message){
 	printf("CODE ERROR: %s, on line %d.\n", message, yylineno);
 	while( (token = yylex()) != T_NL );
 	printf("continuing...\n");
