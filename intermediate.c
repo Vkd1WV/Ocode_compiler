@@ -204,10 +204,10 @@ void emit_cmnt(const char* comment){
 	if (debug_fd) fprintf(debug_fd, "\t# %s\n", comment);
 }
 
-void emit_lbl(name_dx lbl){
-	emit_iop(I_NOP, lbl, NULL, NULL, NULL);
-	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", dx_to_name(lbl));
-}
+/*void emit_lbl(name_dx lbl){*/
+/*	emit_iop(I_NOP, lbl, NULL, NULL, NULL);*/
+/*	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", dx_to_name(lbl));*/
+/*}*/
 
 void emit_iop(
 	name_dx      label,

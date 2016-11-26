@@ -113,7 +113,7 @@ static sym_pt Primary(void){
 		break;
 		
 	case T_NAME:
-		if(!( sym = DS_find(symbols, get_name()) ))
+		if(!( sym = (sym_pt) DS_find(symbols, get_name()) ))
 			parse_error("Undeclared symbol");
 		
 		if(sym->type == st_fun){
@@ -184,7 +184,7 @@ static sym_pt Unary(void){
 		result->init = true;
 		result->dref = arg;
 		
-		emit_iop(NO_NAME, NO_NAME, I_REF, NO_NAME, result, arg, NULL);
+		emit_iop(NO_NAME, I_REF, NO_NAME, result, arg, NULL);
 		return result;
 	
 	case T_DREF:
@@ -279,7 +279,7 @@ static sym_pt Postfix(void){
 	
 	while (false){
 		switch (token){
-		
+		default: break;
 		}
 	}
 	
@@ -391,10 +391,12 @@ static sym_pt Term(void){
 				result->init = true;
 				result->constant = true;
 				
-				result->value = arg1->value;
-				for(int i = arg2->value; i > 1; i--)
-					result->value *= arg1->value;
 				if(!arg2->value) result->value = 0;
+				else{
+					result->value = arg1->value;
+					for(umax i = arg2->value; i > 1; i--)
+						result->value *= arg1->value;
+				}
 			}
 			else{
 				result = new_var(st_int);
@@ -451,6 +453,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_RSH, NO_NAME, result, arg1, arg2);
 			}
+		default: crit_error("Internal: at Term()");
 		}
 		arg1 = result;
 	}
@@ -631,6 +634,8 @@ static sym_pt Expression(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_XOR, NO_NAME, result, arg1, arg2);
 			}
+		
+		default: crit_error("Internal: at Expression()");
 		}
 		
 		arg1 = result;
@@ -912,6 +917,7 @@ static sym_pt Equation(void){
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
 				emit_iop(NO_NAME, I_GTE, NO_NAME, result, arg1, arg2);
 			}
+		default: crit_error("Internal: at Equation()");
 		}
 		
 		Warn_comparison(arg1, arg2);
@@ -940,17 +946,50 @@ static sym_pt Assign(sym_pt target){
 	set_init_size(target, result, NULL);
 	
 	switch (op){
-	case T_ASS  : emit_iop(NO_NAME, I_ASS, NO_NAME, target, result, NULL  ); break;
-	case T_LSH_A: emit_iop(NO_NAME, I_LSH, NO_NAME, target, target, result); break;
-	case T_RSH_A: emit_iop(NO_NAME, I_RSH, NO_NAME, target, target, result); break;
-	case T_ADD_A: emit_iop(NO_NAME, I_ADD, NO_NAME, target, target, result); break;
-	case T_SUB_A: emit_iop(NO_NAME, I_SUB, NO_NAME, target, target, result); break;
-	case T_MUL_A: emit_iop(NO_NAME, I_MUL, NO_NAME, target, target, result); break;
-	case T_DIV_A: emit_iop(NO_NAME, I_DIV, NO_NAME, target, target, result); break;
-	case T_MOD_A: emit_iop(NO_NAME, I_MOD, NO_NAME, target, target, result); break;
-	case T_AND_A: emit_iop(NO_NAME, I_AND, NO_NAME, target, target, result); break;
-	case T_OR_A : emit_iop(NO_NAME, I_OR , NO_NAME, target, target, result); break;
-	case T_XOR_A: emit_iop(NO_NAME, I_XOR, NO_NAME, target, target, result); break;
+	case T_ASS:
+		emit_iop(NO_NAME, I_ASS, NO_NAME, target, result, NULL  );
+		break;
+	
+	case T_LSH_A:
+		emit_iop(NO_NAME, I_LSH, NO_NAME, target, target, result);
+		break;
+	
+	case T_RSH_A:
+		emit_iop(NO_NAME, I_RSH, NO_NAME, target, target, result);
+		break;
+	
+	case T_ADD_A:
+		emit_iop(NO_NAME, I_ADD, NO_NAME, target, target, result);
+		break;
+	
+	case T_SUB_A:
+		emit_iop(NO_NAME, I_SUB, NO_NAME, target, target, result);
+		break;
+	
+	case T_MUL_A:
+		emit_iop(NO_NAME, I_MUL, NO_NAME, target, target, result);
+		break;
+	
+	case T_DIV_A:
+		emit_iop(NO_NAME, I_DIV, NO_NAME, target, target, result);
+		break;
+	
+	case T_MOD_A:
+		emit_iop(NO_NAME, I_MOD, NO_NAME, target, target, result);
+		break;
+	
+	case T_AND_A:
+		emit_iop(NO_NAME, I_AND, NO_NAME, target, target, result);
+		break;
+	
+	case T_OR_A :
+		emit_iop(NO_NAME, I_OR , NO_NAME, target, target, result);
+		break;
+	
+	case T_XOR_A:
+		emit_iop(NO_NAME, I_XOR, NO_NAME, target, target, result);
+		break;
+	
 	default: crit_error("Internal: at Assign()");
 	}
 	
@@ -1060,7 +1099,8 @@ sym_pt Boolean(void){
 				else parse_warn("Using an uninitialized value");
 				result->size = w_byte;
 				emit_iop(NO_NAME, I_OR, NO_NAME, result, arg1, arg2);
-			};
+			}
+		default: crit_error("Internal: at Boolean()");
 		}
 		
 		arg1 = result;

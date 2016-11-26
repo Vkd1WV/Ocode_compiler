@@ -9,14 +9,21 @@ INCDIR:=$(INSTALLDIR)/include
 
 CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations \
-	-Wredundant-decls -Wnested-externs -Wshadow \
-	-Wpointer-arith -Wcast-align \
-	-Wuninitialized -Wmaybe-uninitialized \
-	-Winline -Wno-long-long \
-	-Wwrite-strings \
-	-Wno-discarded-qualifiers #-Wconversion
+	-Wredundant-decls -Werror=implicit-function-declaration -Wnested-externs \
+	-Wshadow -Wbad-function-cast \
+	-Wcast-align \
+	-Wdeclaration-after-statement -Werror=uninitialized \
+	-Winline \
+	-Wswitch-default -Wswitch-enum \
+	-Wsuggest-attribute=pure -Wsuggest-attribute=const \
+	-Wsuggest-attribute=noreturn -Wsuggest-attribute=format \
+	-Wtrampolines -Wstack-protector \
+	-Wwrite-strings -Wno-discarded-qualifiers \
+	-Wc++-compat \
+	 -Wconversion -Wdisabled-optimization \
+	#-Wno-long-long -Wpadded
 
-CPPWARNINGS:=	-Wall -Wextra -pedantic \
+CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wmissing-declarations \
 	-Wredundant-decls -Wshadow \
 	-Wpointer-arith -Wcast-align \
@@ -27,7 +34,7 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic \
 
 
 CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
-CPPFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
+CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
 ################################## FILES #######################################
@@ -64,15 +71,21 @@ scanner.c: scanner.l $(HEADERS)
 yuck.c yuck.h: occ.yuck
 	yuck gen -Hyuck.h -o yuck.c $<
 
-scanner.o: $(HEADERS) scanner.c
-	$(CC) $(CFLAGS) -Wno-unused-function -c -o $@ scanner.c
+
 
 main.o: main.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
+# suppress warnings for third party slop
+scanner.o: $(HEADERS) scanner.c
+	$(CC) $(CFLAGS) -w -c -o $@ scanner.c
+yuck.o: yuck.c yuck.h
+	$(CC) $(CFLAGS) -w -c $<
+
 %.o: %.c %.h $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
-%.opp: %.cpp %.h $(HEADERS)
+
+%.opp: %.cpp %.hpp $(HEADERS)
 	$(CXX) $(CPPFLAGS) -c $<
 
 ################################## UTILITIES ###################################

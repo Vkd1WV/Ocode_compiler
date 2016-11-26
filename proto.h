@@ -40,7 +40,7 @@ sym_pt new_var  (sym_type);
 
 // Emmiters
 void emit_cmnt(const char* comment);
-void emit_lbl (name_dx lbl);
+//void emit_lbl (name_dx lbl);
 void emit_iop(
 	name_dx      label,
 	byte_code    op,

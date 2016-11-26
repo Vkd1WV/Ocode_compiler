@@ -68,7 +68,7 @@ void Initializer_list (sym_pt templt){
 			initializer=Boolean();
 			//if (!initializer->init) error("Using an uninitialized value");
 			
-			emit_iop(I_ASS, 0, new_symbol, initializer, NULL);
+			emit_iop(NO_NAME, I_ASS, 0, new_symbol, initializer, NULL);
 		}
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");

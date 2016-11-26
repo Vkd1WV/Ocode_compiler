@@ -28,13 +28,13 @@ void While (uint lvl);
 
 void Label(void){
 	Match(T_LBL);
-	emit_lbl(add_name( get_name() ));
+	emit_iop(add_name( get_name() ), I_NOP, NO_NAME, NULL, NULL, NULL);
 	Match(T_NL);
 }
 
 void Jump(void){
 	Match(T_JMP);
-	emit_iop(I_JMP, add_name(get_name()), NULL, NULL, NULL);
+	emit_iop(NO_NAME, I_JMP, add_name(get_name()), NULL, NULL, NULL);
 	Match(T_NL);
 }
 
@@ -48,7 +48,7 @@ void If(uint lvl){
 	
 	condition = Boolean();
 	if(condition->type == st_lit_int){}
-	emit_iop(I_JZ, if_label, NULL, condition, NULL);
+	emit_iop(NO_NAME, I_JZ, if_label, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
@@ -56,15 +56,15 @@ void If(uint lvl){
 		Match(T_ELSE);
 		emit_cmnt("start of ELSE statement");
 		else_label = new_label();
-		emit_iop(I_JMP, else_label, NULL, NULL, NULL);
-		emit_lbl(if_label);
+		emit_iop(NO_NAME, I_JMP, else_label, NULL, NULL, NULL);
+		emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 		
 		Statement(lvl);
 		
-		emit_lbl(else_label);
+		emit_iop(else_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 		emit_cmnt("End of ELSE");
 	}
-	else emit_lbl(if_label);
+	else emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	emit_cmnt("End of IF Statement\n");
 }
@@ -78,16 +78,16 @@ void While(uint lvl){
 	repeat_label = new_label();
 	skip_label   = new_label();
 	
-	emit_lbl(repeat_label);
+	emit_iop(repeat_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	result = Boolean();
 	
-	emit_iop(I_JZ, skip_label, NULL, result, NULL);
+	emit_iop(NO_NAME, I_JZ, skip_label, NULL, result, NULL);
 	
 	Statement(lvl);
 	
-	emit_iop(I_JMP, repeat_label, NULL, NULL, NULL);
-	emit_lbl(skip_label);
+	emit_iop(NO_NAME, I_JMP, repeat_label, NULL, NULL, NULL);
+	emit_iop(skip_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 	emit_cmnt("End of WHILE loop\n");
 }
 

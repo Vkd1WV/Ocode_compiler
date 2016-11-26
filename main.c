@@ -106,7 +106,7 @@ static void Parse(yuck_t * arg_pt){
 	}
 	
 	get_token(); // Initialize the lookahead token
-	emit_lbl(add_name("_#GLOBAL_START"));
+	emit_iop(add_name("_#GLOBAL_START"), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	

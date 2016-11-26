@@ -35,7 +35,7 @@ extern const char * default_out;
 extern const char * default_dbg;
 extern const char * default_asm;
 extern const char * default_pexe;
-//extern const char * byte_code_dex[NUM_I_CODES];
+extern const char * byte_code_dex[NUM_I_CODES];
 
 /******************************* DEBUGGING ************************************/
 
