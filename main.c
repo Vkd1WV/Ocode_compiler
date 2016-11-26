@@ -75,9 +75,6 @@ arm_v8_flag       :\t%u\n\n" ,
 		NULL,
 		NULL
 	);
-	
-	nxt_lbl       = 0; // make sure the nxt_lbl is empty
-	
 }
 
 
@@ -96,7 +93,7 @@ static void Parse(yuck_t * arg_pt){
 	if (arg_pt->dashd_flag){
 		char *dbgfile;
 		
-		dbgfile = malloc(strlen(*arg_pt->args) + strlen(default_dbg) + 1);
+		dbgfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
 		if(! dbgfile) crit_error("Out of Memory");
 		
 		dbgfile = strcpy(dbgfile, *arg_pt->args);
@@ -109,6 +106,7 @@ static void Parse(yuck_t * arg_pt){
 	}
 	
 	get_token(); // Initialize the lookahead token
+	emit_lbl(add_name("_#GLOBAL_START"));
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	
@@ -126,6 +124,10 @@ static void Parse(yuck_t * arg_pt){
 		fputs("\n\n", debug_fd);
 		Dump_symbols();
 		fclose(debug_fd);
+		
+		puts("\nI Q DUMP\n");
+		Dump_iq(global_inst_q);
+		Dump_iq(sub_inst_q);
 	}
 	
 	if(errors){
@@ -141,7 +143,7 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 	if (arg_pt->dashp_flag){
 		char *pexefile;
 		
-		pexefile = malloc(strlen(*arg_pt->args) + strlen(default_pexe) + 1);
+		pexefile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_pexe)+1);
 		if(! pexefile) crit_error("Out of Memory");
 		
 		pexefile = strcpy(pexefile, *arg_pt->args);
@@ -159,12 +161,12 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		char *asmfile;
 		
 		if (arg_pt->nargs){
-			asmfile = malloc(strlen(*arg_pt->args) + strlen(default_asm) + 1);
+			asmfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_asm)+1);
 			if(! asmfile) crit_error("Out of Memory");
 			asmfile = strcpy(asmfile, *arg_pt->args);
 		}
 		else{
-			asmfile = malloc(strlen(default_out) + strlen(default_asm) + 1);
+			asmfile = (char*) malloc(strlen(default_out)+strlen(default_asm)+1);
 			if(! asmfile) crit_error("Out of Memory");
 			asmfile = strcpy(asmfile, default_out);
 		}
@@ -190,7 +192,7 @@ static void Cleanup(yuck_t * arg_pt, DS structure){
 	DS_delete(global_inst_q);
 	DS_delete(sub_inst_q);
 	
-	while(( blk = DS_first(structure) )) DS_delete(blk);
+	while(( blk = (DS) DS_first(structure) )) DS_delete(blk);
 	DS_delete(structure);
 	
 	free(name_array);

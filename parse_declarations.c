@@ -55,7 +55,7 @@ void Initializer_list (sym_pt templt){
 	while (true) {
 		templt->name = add_name(get_name());
 		
-		if(( new_symbol = DS_insert(symbols, templt) ))
+		if(!( new_symbol = DS_insert(symbols, templt) ))
 			parse_error("Duplicate symbol name");
 		
 		if (token == T_ASS){ // Initialized value

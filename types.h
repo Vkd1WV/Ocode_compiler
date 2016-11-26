@@ -16,9 +16,10 @@
 
 typedef unsigned long long umax;
 typedef unsigned int uint;
-typedef unsigned int name_dx; ///< indexes into the name_array
-
 typedef uint16_t token_t;
+
+typedef unsigned int name_dx; ///< indexes into the name_array
+#define NO_NAME ((name_dx)UINT_MAX)
 
 //typedef enum {Real, Protected, Virtual, SMM, Compatibility, Long} mode_t;
 //typedef enum {x86, arm} arch_t;
@@ -127,12 +128,6 @@ typedef struct sym {
 	// function and subroutine
 	//DS   local;     // Local scope for functions and structures
 	// Parameter specification
-//	sym_entry * A;
-//	sym_entry * B;
-//	sym_entry * C;
-//	sym_entry * D;
-//	sym_entry * E;
-//	sym_entry * F;
 	// return value
 	
 	// Used by the code generators

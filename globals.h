@@ -35,9 +35,7 @@ extern const char * default_out;
 extern const char * default_dbg;
 extern const char * default_asm;
 extern const char * default_pexe;
-extern const char * byte_code_dex[NUM_I_CODES];
-
-#define TMP_PATH "/tmp/"
+//extern const char * byte_code_dex[NUM_I_CODES];
 
 /******************************* DEBUGGING ************************************/
 
@@ -64,7 +62,6 @@ EXTERN DS      symbols;       ///< symbol table
 EXTERN DS      global_inst_q; ///< a global instruction queue
 EXTERN DS      sub_inst_q;    ///< an instruction queue for subroutines
 EXTERN char *  name_array;    ///< dynamic array for symbol and label names
-EXTERN name_dx nxt_lbl;       ///< points to the label of the next icmd
 
 /***************************** CODE GENERATOR *********************************/
 

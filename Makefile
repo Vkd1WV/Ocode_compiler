@@ -16,20 +16,30 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wwrite-strings \
 	-Wno-discarded-qualifiers #-Wconversion
 
+CPPWARNINGS:=	-Wall -Wextra -pedantic \
+	-Wmissing-declarations \
+	-Wredundant-decls -Wshadow \
+	-Wpointer-arith -Wcast-align \
+	-Wuninitialized -Wmaybe-uninitialized \
+	-Winline -Wno-long-long \
+	-Wwrite-strings \
+	-Wconversion
+
 
 CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
+CPPFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=compiler.h functions.h globals.h tokens.h types.h yuck.h
+HEADERS:=compiler.h proto.h globals.h tokens.h types.h yuck.h
 LIBS   :=-ldata
 
 SRC    := \
 	cmd_line.yuck globals.c main.c \
 	scanner.l \
 	parse_declarations.c parse_expressions.c parse_statements.c \
-	intermediate.c \
+	intermediate.c icmd.cpp\
 	opt.c \
 	pexe.c arm.c x86.c
 
@@ -62,10 +72,12 @@ main.o: main.c $(HEADERS)
 
 %.o: %.c %.h $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
+%.opp: %.cpp %.h $(HEADERS)
+	$(CXX) $(CPPFLAGS) -c $<
 
 ################################## UTILITIES ###################################
 
-CLEANFILES:= $(OBJECTS) occ ./tests/*.dbg
+CLEANFILES:= *.o *.opp occ ./tests/*.dbg ./tests/*.asm
 VERYCLEANFILES:= $(CLEANFILES) scanner.c yuck.h yuck.c
 
 .PHONEY: clean todolist test very-clean

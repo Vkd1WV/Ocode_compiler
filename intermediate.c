@@ -57,6 +57,34 @@
 /******************************************************************************/
 
 
+static inline void Print_icmd(icmd * iop){
+	char * result, arg1[16], arg2[16];
+	
+	if (iop->result) result = dx_to_name(iop->result->name);
+	else result = dx_to_name(iop->target);
+	
+	if (iop->arg1.symbol){
+		if(iop->arg1_lit) sprintf(arg1, "0x%llx", iop->arg1.value);
+		else strncpy(arg1, dx_to_name(iop->arg1.symbol->name), 16);
+	}
+	else arg1[0] = '\0';
+	
+	if (iop->arg2.symbol){
+		if(iop->arg2_lit) sprintf(arg1, "0x%llx", iop->arg2.value);
+		else strncpy(arg2, dx_to_name(iop->arg2.symbol->name), 16);
+	}
+	else arg1[0] = '\0';
+	
+	printf("%4s:\t%s\t%4s\t%4s\t%4s\n",
+		dx_to_name(iop->label),
+		byte_code_dex[iop->op],
+		result,
+		arg1,
+		arg2
+	);
+}
+
+
 /******************************************************************************/
 //                            PUBLIC FUNCTIONS
 /******************************************************************************/
@@ -80,6 +108,17 @@ void Dump_symbols(void){
 				(void*) sym->dref
 			);
 	} while(( sym = DS_next(symbols) ));
+}
+
+void Dump_iq(DS iq){
+	icmd * iop;
+	
+	iop = DS_first(iq);
+	
+	printf("LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	do {
+		Print_icmd(iop);
+	} while (( iop = DS_next(iq) ));
 }
 
 /********************************** NAMES *************************************/
@@ -118,7 +157,8 @@ name_dx add_name(char * name){
 
 /// find a name in the name_array by its name_dx
 inline char * dx_to_name(name_dx index){
-	return name_array+index;
+	if(index == NO_NAME) return NULL;
+	else return name_array+index;
 }
 
 // create and return a pointer to a unique label
@@ -165,15 +205,12 @@ void emit_cmnt(const char* comment){
 }
 
 void emit_lbl(name_dx lbl){
-	if (nxt_lbl) emit_iop(I_NOP, 0, NULL, NULL, NULL);
-	// If there is already a label in the q emit it with a nop
-	
-	nxt_lbl = lbl;
-	
+	emit_iop(I_NOP, lbl, NULL, NULL, NULL);
 	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", dx_to_name(lbl));
 }
 
 void emit_iop(
+	name_dx      label,
 	byte_code    op,
 	name_dx      target,
 	const sym_pt out,
@@ -182,13 +219,7 @@ void emit_iop(
 ){
 	char arg1[20], arg2[20];
 	char err_array[ERR_ARR_SZ];
-	icmd intermediate_cmd;
-	icmd * iop = &intermediate_cmd;
-	
-	if (nxt_lbl) {
-		iop->label = nxt_lbl;
-		nxt_lbl = 0;
-	}
+	icmd iop[1];
 	
 	iop->op = op;
 	
@@ -280,9 +311,10 @@ void emit_iop(
 			debug_fd,
 			"%s\t%5s\t%5s\t%s\n",
 			byte_code_dex[op],
-			dx_to_name(out->name),
-			arg1,
+			out  ? dx_to_name(out->name) : "",
+			left ? arg1 : "",
 			right? arg2 : ""
 		);
 }
+
 

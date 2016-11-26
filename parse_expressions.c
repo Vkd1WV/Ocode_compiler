@@ -153,7 +153,7 @@ static sym_pt Unary(void){
 /*		*/
 /*		case data:*/
 /*			result = new_var();*/
-/*			emit_iop(I_NEG, 0, result, arg, NULL);*/
+/*			emit_iop(NO_NAME, I_NEG, NO_NAME, result, arg, NULL);*/
 /*			return result;*/
 /*		*/
 /*		case subroutine: parse_error("Subroutine used in an expression");*/
@@ -184,7 +184,7 @@ static sym_pt Unary(void){
 		result->init = true;
 		result->dref = arg;
 		
-		emit_iop(I_REF, 0, result, arg, NULL);
+		emit_iop(NO_NAME, NO_NAME, I_REF, NO_NAME, result, arg, NULL);
 		return result;
 	
 	case T_DREF:
@@ -199,7 +199,7 @@ static sym_pt Unary(void){
 		
 		result = arg->dref;
 		
-		emit_iop(I_DREF, 0, result, arg, NULL);
+		emit_iop(NO_NAME, I_DREF, NO_NAME, result, arg, NULL);
 		return result;
 	
 	case T_NOT:
@@ -212,7 +212,7 @@ static sym_pt Unary(void){
 		case st_int:
 			result = new_var(st_int);
 			set_init_size(result, arg, NULL);
-			emit_iop(I_NOT, 0, result, arg, NULL);
+			emit_iop(NO_NAME, I_NOT, NO_NAME, result, arg, NULL);
 			break;
 		
 		case st_lit_int:
@@ -242,7 +242,7 @@ static sym_pt Unary(void){
 		case st_int:
 			result = new_var(st_int);
 			set_init_size(result, arg, NULL);
-			emit_iop(I_INV, 0, result, arg, NULL);
+			emit_iop(NO_NAME, I_INV, NO_NAME, result, arg, NULL);
 			break;
 		
 		case st_lit_int:
@@ -319,7 +319,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_MUL, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_MUL, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -344,7 +344,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_DIV, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_DIV, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -369,7 +369,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_MOD, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_MOD, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -399,7 +399,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_EXP, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_EXP, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -424,7 +424,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_LSH, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_LSH, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -449,7 +449,7 @@ static sym_pt Term(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_RSH, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_RSH, NO_NAME, result, arg1, arg2);
 			}
 		}
 		arg1 = result;
@@ -508,7 +508,7 @@ static sym_pt Expression(void){
 				else result = new_var(st_int);
 				
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_ADD, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_ADD, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -557,7 +557,7 @@ static sym_pt Expression(void){
 				else result = new_var(st_int);
 				
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_SUB, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_SUB, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -581,7 +581,7 @@ static sym_pt Expression(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_BAND, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_BAND, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -605,7 +605,7 @@ static sym_pt Expression(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_BOR, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_BOR, NO_NAME, result, arg1, arg2);
 			}
 		break;
 		
@@ -629,7 +629,7 @@ static sym_pt Expression(void){
 			else{
 				result = new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(I_XOR, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_XOR, NO_NAME, result, arg1, arg2);
 			}
 		}
 		
@@ -685,7 +685,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_EQ, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_EQ, NO_NAME, result, arg1, arg2);
 			}
 			break;
 			
@@ -730,7 +730,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_NEQ, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_NEQ, NO_NAME, result, arg1, arg2);
 			}
 			break;
 			
@@ -775,7 +775,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_LT, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_LT, NO_NAME, result, arg1, arg2);
 			}
 			break;
 			
@@ -820,7 +820,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_GT, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_GT, NO_NAME, result, arg1, arg2);
 			}
 			break;
 			
@@ -865,7 +865,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_LTE, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_LTE, NO_NAME, result, arg1, arg2);
 			}
 			break;
 			
@@ -910,7 +910,7 @@ static sym_pt Equation(void){
 				result = new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
-				emit_iop(I_GTE, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_GTE, NO_NAME, result, arg1, arg2);
 			}
 		}
 		
@@ -940,17 +940,17 @@ static sym_pt Assign(sym_pt target){
 	set_init_size(target, result, NULL);
 	
 	switch (op){
-	case T_ASS  : emit_iop(I_ASS, 0, target, result, NULL  ); break;
-	case T_LSH_A: emit_iop(I_LSH, 0, target, target, result); break;
-	case T_RSH_A: emit_iop(I_RSH, 0, target, target, result); break;
-	case T_ADD_A: emit_iop(I_ADD, 0, target, target, result); break;
-	case T_SUB_A: emit_iop(I_SUB, 0, target, target, result); break;
-	case T_MUL_A: emit_iop(I_MUL, 0, target, target, result); break;
-	case T_DIV_A: emit_iop(I_DIV, 0, target, target, result); break;
-	case T_MOD_A: emit_iop(I_MOD, 0, target, target, result); break;
-	case T_AND_A: emit_iop(I_AND, 0, target, target, result); break;
-	case T_OR_A : emit_iop(I_OR , 0, target, target, result); break;
-	case T_XOR_A: emit_iop(I_XOR, 0, target, target, result); break;
+	case T_ASS  : emit_iop(NO_NAME, I_ASS, NO_NAME, target, result, NULL  ); break;
+	case T_LSH_A: emit_iop(NO_NAME, I_LSH, NO_NAME, target, target, result); break;
+	case T_RSH_A: emit_iop(NO_NAME, I_RSH, NO_NAME, target, target, result); break;
+	case T_ADD_A: emit_iop(NO_NAME, I_ADD, NO_NAME, target, target, result); break;
+	case T_SUB_A: emit_iop(NO_NAME, I_SUB, NO_NAME, target, target, result); break;
+	case T_MUL_A: emit_iop(NO_NAME, I_MUL, NO_NAME, target, target, result); break;
+	case T_DIV_A: emit_iop(NO_NAME, I_DIV, NO_NAME, target, target, result); break;
+	case T_MOD_A: emit_iop(NO_NAME, I_MOD, NO_NAME, target, target, result); break;
+	case T_AND_A: emit_iop(NO_NAME, I_AND, NO_NAME, target, target, result); break;
+	case T_OR_A : emit_iop(NO_NAME, I_OR , NO_NAME, target, target, result); break;
+	case T_XOR_A: emit_iop(NO_NAME, I_XOR, NO_NAME, target, target, result); break;
 	default: crit_error("Internal: at Assign()");
 	}
 	
@@ -1013,7 +1013,7 @@ sym_pt Boolean(void){
 				result->size = w_byte;
 				if(arg1->init && arg2->init) result->init = true;
 				else parse_warn("Using an uninitialized value");
-				emit_iop(I_AND, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_AND, NO_NAME, result, arg1, arg2);
 			};
 			break;
 			
@@ -1059,7 +1059,7 @@ sym_pt Boolean(void){
 				if(arg1->init && arg2->init) result->init = true;
 				else parse_warn("Using an uninitialized value");
 				result->size = w_byte;
-				emit_iop(I_OR, 0, result, arg1, arg2);
+				emit_iop(NO_NAME, I_OR, NO_NAME, result, arg1, arg2);
 			};
 		}
 		

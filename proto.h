@@ -29,7 +29,8 @@ sym_pt Boolean(void);
 void Statement   (uint lvl);
 
 // From intermediate.c
-void   Dump_symbols(void);
+void Dump_symbols(void );
+void Dump_iq     (DS iq);
 
 // Names
 char * dx_to_name(name_dx index);
@@ -41,8 +42,9 @@ sym_pt new_var  (sym_type);
 void emit_cmnt(const char* comment);
 void emit_lbl (name_dx lbl);
 void emit_iop(
-	byte_code        op,
-	name_dx          target,
+	name_dx      label,
+	byte_code    op,
+	name_dx      target,
 	const sym_pt out,
 	const sym_pt left,
 	const sym_pt right
