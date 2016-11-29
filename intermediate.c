@@ -97,7 +97,7 @@ void Dump_symbols(void){
 	fputs("# SYMBOL TABLE", debug_fd);
 	fprintf(debug_fd,"\n#Name\tType\tconst\tInit\tDref\n");
 	
-	sym = DS_first(symbols);
+	sym = (sym_pt) DS_first(symbols);
 	do {
 		if( sym->type != st_lit_int )
 			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
@@ -107,18 +107,18 @@ void Dump_symbols(void){
 				sym->init,
 				(void*) sym->dref
 			);
-	} while(( sym = DS_next(symbols) ));
+	} while(( sym = (sym_pt) DS_next(symbols) ));
 }
 
 void Dump_iq(DS iq){
 	icmd * iop;
 	
-	iop = DS_first(iq);
+	iop = (icmd*) DS_first(iq);
 	
 	printf("LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	do {
 		Print_icmd(iop);
-	} while (( iop = DS_next(iq) ));
+	} while (( iop = (icmd*) DS_next(iq) ));
 }
 
 /********************************** NAMES *************************************/
@@ -136,16 +136,18 @@ name_dx add_name(char * name){
 	
 	// Initialize the name array
 	if(!size){ // This should only run the first time
-		name_array=malloc(sizeof(char) * NAME_ARR_SZ);
+		name_array= (char*)malloc(sizeof(char) * NAME_ARR_SZ);
 		if(!name_array) crit_error("Out of Memory");
 		size = NAME_ARR_SZ;
 	}
 	
-	name_sz = strlen(name) + 1; // +1 for the null
+	name_sz = (name_dx)strlen(name) + 1; // +1 for the null
 	
 	// resize the array if necessary
 	if(size - next < name_sz){
-		name_array = realloc(name_array, (size *= 2));
+		if ((unsigned long int)size * 2 > UINT_MAX )
+			crit_error("Name_array maxed out");
+		name_array = (char*) realloc(name_array, (size *= 2));
 		if(!name_array) crit_error("Out of Memory");
 	}
 	
@@ -188,11 +190,8 @@ sym_pt new_var(sym_type type){
 	
 	if(new_symbol.stat || new_symbol.constant || new_symbol.init || new_symbol.size) puts("new_var() screwed up!!");
 	
-	// insert it into the symbol table
-	DS_insert(symbols, &new_symbol);
-	
-	// and return it
-	return DS_current(symbols);
+	// insert it into the symbol table and return it
+	return (sym_pt)DS_insert(symbols, &new_symbol);
 }
 
 
@@ -290,10 +289,13 @@ void emit_iop(
 		iop->target = target;
 		break;
 		
+	case I_INC :
+	case I_DEC :
 	case I_BLK :
 	case I_EBLK:
 	case I_CALL:
 	case I_RTRN:
+	case NUM_I_CODES:
 	default:
 		sprintf(err_array,
 			"Internal: emit_iop() called with cmd = %d",
@@ -301,6 +303,8 @@ void emit_iop(
 		);
 		crit_error(err_array);
 	}
+	
+	iop->label = label;
 	
 	// queue up this operation
 	DS_nq(global_inst_q, iop);

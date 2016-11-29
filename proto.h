@@ -66,14 +66,11 @@ void x86 (char * filename, bool B64, const DS blk_q);
 
 
 static inline int cmp_sym(const void * left, const void * right){
-	return strcmp(
-		dx_to_name(((sym_pt) left)->name),
-		dx_to_name(((sym_pt)right)->name)
-	);
+	return strcmp( (char*)left, (char*)right );
 }
 
-static inline int cmp_sym_key(const void * key, const void * symbol){
-	return strcmp((char*) key, dx_to_name(((sym_pt)symbol)->name));
+static inline const void * sym_key(const void * symbol){
+	return dx_to_name(((sym_pt)symbol)->name);
 }
 
 /********************************* WARNINGS ***********************************/

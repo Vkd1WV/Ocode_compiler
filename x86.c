@@ -60,12 +60,18 @@ static char * str_num(umax num){
 }
 
 static char * str_name(name_dx dx){
-	char * name;
-	// FIXME
+	char * in_name;
+	static char * out_name;
+	unsigned int length;
 	
-	// prefix a $ to each name to prevent collisions
+	in_name = dx_to_name(dx);
+	length = strlen(in_name) + 2; // $ and \0
 	
-	return name;
+	out_name = (char*) realloc(out_name, length);
+	
+	sprintf(out_name, "$%s", in_name);
+	
+	return out_name;
 }
 
 // assumes width is possible in current mode
@@ -82,11 +88,12 @@ static char * str_reg(int_size width, reg_t reg, bool B64){
 	switch (width){
 	case w_byte : array[1] = ' '; array[3] = ' '; break;
 	case w_byte2: array[1] = ' '; array[3] = 'x'; break;
+	case w_word :
 	case w_byte4: array[1] = 'e'; array[3] = 'x'; break;
 	case w_byte8:
 	case w_max  : array[1] = 'r'; array[3] = 'x'; break;
-	case w_word:
-	default    : crit_error("something done broke in put_reg()");
+	case w_undef:
+	default     : crit_error("something done broke in put_reg()");
 	}
 	
 	switch (reg){
@@ -186,37 +193,38 @@ static void put_op(icmd * op){
 
 	case I_GT :
 		break;
-
+	
 	case I_LTE:
 		break;
-
+	
 	case I_GTE:
 		break;
-
+	
 	case I_AND:
 		break;
-
+	
 	case I_OR :
 		break;
-
+	
 	case I_JMP :
 		break;
-
+	
 	case I_JZ  :
 		break;
-
+	
 	case I_BLK :
 		break;
-
+	
 	case I_EBLK:
 		break;
-
+	
 	case I_CALL:
 		break;
-
+	
 	case I_RTRN:
 		break;
-
+	
+	case NUM_I_CODES:
 	default: crit_error("something done broke in put_operation()");
 	}
 }
@@ -246,7 +254,7 @@ static void put_header(FILE * outfile, bool B64){
 static void Gen_blk(FILE * out_fd, DS blk){
 	icmd * iop;
 	
-	iop = DS_last(blk);
+	iop = (icmd*) DS_first(blk);
 	do{
 		// Getreg
 		
@@ -256,7 +264,7 @@ static void Gen_blk(FILE * out_fd, DS blk){
 		
 		// if arg1 or arg2 are not live remove them from the reg_d
 		
-	} while (( iop = DS_previous(blk) ));
+	} while (( iop = (icmd*) DS_next(blk) ));
 	
 	// commit live symbols in regs to memory
 }
@@ -281,11 +289,11 @@ void x86 (char * filename, bool B64, const DS blk_q){
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
 	// This is the text or code section
-	blk = DS_last(blk_q);
+	blk = (DS) DS_last(blk_q);
 	
 	do{
 		Gen_blk(out_fd, blk);
-	} while(( blk = DS_previous(blk_q) ));
+	} while(( blk = (DS) DS_previous(blk_q) ));
 	
 	
 	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");

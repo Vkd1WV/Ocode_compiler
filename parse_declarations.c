@@ -55,7 +55,7 @@ void Initializer_list (sym_pt templt){
 	while (true) {
 		templt->name = add_name(get_name());
 		
-		if(!( new_symbol = DS_insert(symbols, templt) ))
+		if(!( new_symbol = (sym_pt)DS_insert(symbols, templt) ))
 			parse_error("Duplicate symbol name");
 		
 		if (token == T_ASS){ // Initialized value
@@ -147,7 +147,7 @@ void Decl_Pointer (sym_pt templt){
 	
 	templt->type = st_ref;
 	
-	target=calloc(1, sizeof(struct sym));
+	target= (sym_pt) calloc(1, sizeof(struct sym));
 	if (!target) crit_error("Out of memory");
 	
 	templt->dref = target;

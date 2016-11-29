@@ -51,30 +51,16 @@ arm_v8_flag       :\t%u\n\n" ,
 		crit_error("Must specify exactly one target architecture.");
 	
 	// initialize the symbol table
-	symbols = DS_new(
-		DS_bst,
+	symbols = DS_new_bst(
 		sizeof(struct sym),
 		false,
-		&cmp_sym,
-		&cmp_sym_key
+		&sym_key,
+		&cmp_sym
 	);
 	
 	// initialize the intermediate code queues
-	global_inst_q = DS_new(
-		DS_list,
-		sizeof(icmd),
-		false,
-		NULL,
-		NULL
-	);
-	
-	sub_inst_q = DS_new(
-		DS_list,
-		sizeof(icmd),
-		false,
-		NULL,
-		NULL
-	);
+	global_inst_q = DS_new_list(sizeof(icmd));
+	sub_inst_q    = DS_new_list(sizeof(icmd));
 }
 
 

@@ -31,20 +31,14 @@ static DS Mk_blk(DS q){
 	icmd * iop;
 	
 	// Each block must contain at least one instruction
-	iop = DS_dq(q);
+	iop = (icmd*)DS_dq(q);
 	if(!iop) return NULL;
 	
-	blk = DS_new(
-		DS_list,
-		sizeof(icmd),
-		false,
-		NULL,
-		NULL
-	);
+	blk = (DS) DS_new_list(sizeof(icmd));
 	
 	DS_nq(blk, iop);
 	
-	while(( iop = DS_first(q) )){
+	while(( iop = (icmd*)DS_first(q) )){
 		if(iop->label) break; // entry points are leaders
 		DS_nq(blk, DS_dq(q));
 		if(iop->op == I_JMP || iop->op == I_JZ || iop->op == I_RTRN) break;
@@ -63,7 +57,7 @@ static DS Mk_blk(DS q){
 static void Next_use(DS blk){
 	icmd * iop;
 	
-	iop = DS_first(blk);
+	iop = (icmd*)DS_first(blk);
 	if(!iop) crit_error("Internal: Next_use() received an empty block");
 	
 	do {
@@ -100,7 +94,7 @@ static void Next_use(DS blk){
 			if(!iop->arg1_lit) iop->arg1.symbol->live = true;
 			if(iop->op > I_DEC && !iop->arg2_lit) iop->arg2.symbol->live = true;
 		}
-	} while(( iop = DS_next(blk) ));
+	} while(( iop = (icmd*)DS_next(blk) ));
 }
 
 
@@ -112,13 +106,7 @@ static void Next_use(DS blk){
 DS Optomize(DS q1, DS q2){
 	DS blk_q, blk;
 	
-	blk_q = DS_new(
-		DS_list,
-		sizeof(DS),
-		false,
-		NULL,
-		NULL
-	);
+	blk_q = DS_new_list(sizeof(DS));
 	
 	if (verbosity) puts("Optomizing");
 	
