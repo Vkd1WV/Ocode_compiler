@@ -33,13 +33,13 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wconversion
 
 
-CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
-CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -L$(LIBDIR) -g -DDEBUG
+CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -I./ -L$(LIBDIR) -g -DDEBUG
+CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=compiler.h global.h tokens.h yuck.h parse.h icmd.h
+HEADERS:=compiler.h global.h tokens.h yuck.h parse.h icmd.h opt.h out/out.h
 LIBS   :=-ldata
 
 SRC    := \
@@ -48,13 +48,13 @@ SRC    := \
 	parse_declarations.c parse_expressions.c parse_statements.c parse.c \
 	icmd.c\
 	opt.c \
-	pexe.c arm.c x86.c
+	./out/pexe.c ./out/arm.c ./out/x86.c
 
 OBJECTS:= \
-	yuck.o globals.o main.o \
+	yuck.o global.o main.o \
 	scanner.o parse.o icmd.o \
 	opt.o \
-	pexe.o x86.o #arm.o
+	./out/pexe.o ./out/x86.o #./out/arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 

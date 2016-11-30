@@ -30,7 +30,7 @@
 #include "parse.h"
 #include "icmd.h"
 #include "opt.h"
-#include "code_gen.h"
+#include "out/out.h"
 
 
 #endif // _COMPILER_H
