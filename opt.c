@@ -34,12 +34,14 @@ static DS Mk_blk(DS q){
 	iop = (icmd*)DS_dq(q);
 	if(!iop) return NULL;
 	
+	info_msg("Making Block");
+	
 	blk = (DS) DS_new_list(sizeof(icmd));
 	
 	DS_nq(blk, iop);
 	
 	while(( iop = (icmd*)DS_first(q) )){
-		if(iop->label) break; // entry points are leaders
+		if(iop->label != NO_NAME) break; // entry points are leaders
 		DS_nq(blk, DS_dq(q));
 		if(iop->op == I_JMP || iop->op == I_JZ || iop->op == I_RTRN) break;
 		// statements after exits are leaders
@@ -102,23 +104,29 @@ static void Next_use(DS blk){
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
+void Dump_blkq(FILE * fd, DS blkq){
+	
+}
+
 
 DS Optomize(DS q1, DS q2){
 	DS blk_q, blk;
 	
 	blk_q = DS_new_list(sizeof(DS));
 	
-	if (verbosity) puts("Optomizing");
+	info_msg("Optomizing");
 	
-	while ((blk = Mk_blk(q1))){
+	while (( blk = Mk_blk(q1) )){
 		Next_use(blk);
 		DS_nq(blk_q, blk);
 	}
 	
-	while ((blk = Mk_blk(q2))){
+	while (( blk = Mk_blk(q2) )){
 		Next_use(blk);
 		DS_nq(blk_q, blk);
 	}
+	
+	if (debug_fd) Dump_blkq(debug_fd, blk_q);
 	
 	return blk_q;
 }

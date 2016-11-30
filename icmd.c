@@ -66,22 +66,23 @@ void Dump_iq(FILE * fd){
 	fprintf(fd, "GLOBAL QUEUE\n");
 	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	
-	fflush(fd);
+	if(verbosity >= V_DEBUG) fflush(fd);
 	
 	iop = (icmd*) DS_first(global_inst_q);
 	
-	sprintf(err_array, "Printing iop at: %p", (void*)iop);
-	debug_msg(err_array);
-	
 	do {
+		sprintf(err_array, "Printing iop at: %p", (void*)iop);
+		debug_msg(err_array);
+		
 		Print_icmd(fd, iop);
+		if(verbosity >= V_DEBUG) fflush(fd);
 	} while (( iop = (icmd*) DS_next(global_inst_q) ));
 	
 	fputs("\n\n", fd);
 	fflush(fd);
 	
 	info_msg("Dumping the sub queue");
-	fprintf(fd, "GLOBAL QUEUE\n");
+	fprintf(fd, "SUB QUEUE\n");
 	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	
 	fflush(fd);

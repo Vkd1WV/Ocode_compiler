@@ -83,7 +83,8 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		pexefile = strcpy(pexefile, *arg_pt->args);
 		pexefile = strncat(pexefile, default_pexe, strlen(default_pexe));
 		
-		if(verbosity) printf("pexefile is: %s\n", pexefile);
+		sprintf(err_array, "pexefile is: %s\n", pexefile);
+		info_msg(err_array);
 		
 		pexe(pexefile, blk_q);
 		
@@ -107,7 +108,8 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		
 		asmfile = strncat(asmfile, default_asm, strlen(default_asm));
 		
-		if(verbosity) printf("asmfile is: %s\n", asmfile);
+		sprintf(err_array, "asmfile is: %s\n", asmfile);
+		info_msg(err_array);
 		
 		if(arg_pt->x86_long_flag) x86(asmfile, true, blk_q);
 		else if(arg_pt->x86_protected_flag) x86(asmfile, false, blk_q);
@@ -120,15 +122,21 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 static void Cleanup(yuck_t * arg_pt, DS structure){
 	DS blk;
 
-	if(verbosity) puts("Cleanup");
+	info_msg("Cleanup");
 	yuck_free(arg_pt);
+	debug_msg("Deleting the symbol table");
 	DS_delete(symbols);
+	debug_msg("Deleting the Global Queue");
 	DS_delete(global_inst_q);
+	debug_msg("Deleting the Sub queue");
 	DS_delete(sub_inst_q);
 	
+	debug_msg("Deleting the blocks");
 	while(( blk = (DS) DS_first(structure) )) DS_delete(blk);
+	debug_msg("Deleting the block queue");
 	DS_delete(structure);
 	
+	debug_msg("Deleting the name array");
 	free(name_array);
 }
 

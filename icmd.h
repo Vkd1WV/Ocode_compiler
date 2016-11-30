@@ -204,11 +204,13 @@ static inline const void * sym_key(const void * symbol){
 /********************** PRINT INTERMEDIATE REPRESENTATION *********************/
 
 static inline void Print_icmd(FILE * fd, icmd * iop){
-	fprintf(fd, "%4s:\t%s\t%4s\n",
-		dx_to_name(iop->label),
-		op_code_dex[iop->op],
-		dx_to_name(iop->target)
-	);
+	if(!iop) fputs("NULL", fd);
+	else
+		fprintf(fd, "%4s:\t%s\t%4s\n",
+			dx_to_name(iop->label),
+			op_code_dex[iop->op],
+			dx_to_name(iop->target)
+		);
 }
 
 static inline void Print_sym(FILE * fd, sym_pt sym){
@@ -219,7 +221,7 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 		"undef", "word", "max", "1", "2", "4", "8"
 	};
 	
-	if(!sym) puts("NULL");
+	if(!sym) fputs("NULL", fd);
 	else
 		fprintf(fd, "%4s:\t%7s %5s %s%s%s%s  %p\n",
 			dx_to_name(sym->name),

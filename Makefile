@@ -85,7 +85,7 @@ yuck.o: yuck.c yuck.h
 
 ################################## UTILITIES ###################################
 
-CLEANFILES:= *.o ./out/*.o *.opp occ ./tests/*.dbg ./tests/*.asm
+CLEANFILES:= *.o ./out/*.o *.opp occ ./tests/*.dbg ./tests/*.asm ./tests/*.pexe
 VERYCLEANFILES:= $(CLEANFILES) scanner.c yuck.h yuck.c
 
 .PHONEY: clean todolist test very-clean
