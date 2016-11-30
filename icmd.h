@@ -7,6 +7,76 @@
  ******************************************************************************/
 
 
+#ifndef _ICMD_H
+#define _ICMD_H
+
+
+/******************************************************************************/
+//                            TYPE DEFINITIONS
+/******************************************************************************/
+
+
+/******************************* NAME ARRAY ***********************************/
+
+typedef unsigned int name_dx; ///< indexes into the name_array
+
+/********************************* SYMBOLS ************************************/
+
+typedef enum {
+	st_undef,
+	st_int,      ///< an integer
+	st_ref,      ///< a reference
+	st_fun,      ///< a function
+	st_sub,      ///< a subroutine
+	st_lit_int,  ///< a literal integer to be inserted directly
+	st_lit_str,  ///< a string literal
+	st_type_def, ///< defined type or struct or class
+	st_NUM
+} sym_type;
+
+typedef enum {
+	w_undef,
+	w_word,  ///< an integer of the natural width of the target processor
+	w_max,   ///< an integer of the greatest width of the target processor
+	w_byte,  ///< an 8-bit integer
+	w_byte2, ///< a 16-bit integer
+	w_byte4, ///< a 32-bit integer
+	w_byte8, ///< a 64-bit integer
+	w_NUM
+} int_size;
+
+typedef struct sym {
+	name_dx  name; ///< index into the name_array
+	sym_type type; ///< Symbol type
+	bool     temp;
+	
+	// Qualifiers
+	bool stat;     // Is it a static data location
+	bool constant; // should this data ever be changed again
+	
+	// Initialized and literal
+	bool init;        // Is the data location initialized
+	umax value;       // integer literals or initialized
+	uint8_t * str;    // string literals and initialized arrays
+	char * assembler; // contents of an asm fun or sub
+	
+	// Reference
+	struct sym* dref;
+	
+	// Integers
+	int_size size;
+	
+	// function and subroutine
+	//DS   local;     // Local scope for functions and structures
+	// Parameter specification
+	// return value
+	
+	// Used by the code generators
+	bool live;
+} * sym_pt;
+
+/************************* INTERMEDIATE INSTRUCTIONS **************************/
+
 typedef enum {
 	I_NOP,
 
@@ -54,17 +124,169 @@ typedef enum {
 	NUM_I_CODES
 }op_code;
 
+typedef union {
+	sym_pt symbol; ///< a variable
+	umax   value;  ///< a literal
+} intermed_arg;
+
+
+typedef struct icode {
+	name_dx      label;    ///< The label, if any, for this operation
+	name_dx      target;   ///< target of a jump
+
+	sym_pt       result;   ///< result of the operation
+	intermed_arg arg1;     ///< first argument
+	intermed_arg arg2;     ///< second argument
+	bool         arg1_lit; ///< whether arg1 is literal or a symbol
+	bool         arg2_lit; ///< whether arg2 is literal or a symbol
+	
+	op_code    op;       ///< The intermediate operator
+	
+	// Used by code generators
+	bool result_live;
+	bool arg1_live;
+	bool arg2_live;
+} icmd;
+
 
 /******************************************************************************/
-//                                C WRAPPERS
+//                            GLOBAL CONSTANTS
 /******************************************************************************/
 
 
-#ifdef __cplusplus
-extern "C" {
+/// string length limit for unique compiler generated labels
+#define UNQ_NAME_SZ 16
+#define NAME_ARR_SZ 1024 ///< Starting size for the dynamic name array
+#define NO_NAME     ((name_dx)UINT_MAX)
+extern const char * op_code_dex[NUM_I_CODES];
+
+
+/******************************************************************************/
+//                             GLOBAL VARIABLES
+/******************************************************************************/
+
+
+#ifdef _GLOBALS_C
+	#define EXTERN
+#else
+	#define EXTERN extern
 #endif
 
+
+EXTERN DS      symbols;       ///< symbol table
+EXTERN DS      global_inst_q; ///< a global instruction queue
+EXTERN DS      sub_inst_q;    ///< an instruction queue for subroutines
+EXTERN char *  name_array;    ///< dynamic array for symbol and label names
+
+
+#undef EXTERN
+
+
+/******************************************************************************/
+//                          GLOBAL INLINE FUNCTIONS
+/******************************************************************************/
+
+
+/// find a name in the name_array by its name_dx
+static inline char * dx_to_name(name_dx index){
+	if(index == NO_NAME) return NULL;
+	else return name_array+index;
+}
+
+static inline int cmp_sym(const void * left, const void * right){
+	return strcmp( (char*)left, (char*)right );
+}
+
+static inline const void * sym_key(const void * symbol){
+	return dx_to_name(((sym_pt)symbol)->name);
+}
+
+/********************** PRINT INTERMEDIATE REPRESENTATION *********************/
+
+static inline void Print_icmd(FILE * fd, icmd * iop){
+	char * result, arg1[16], arg2[16];
+	
+//	if (iop->result) result = dx_to_name(iop->result->name);
+//	else result = dx_to_name(iop->target);
+//	
+//	if (iop->arg1.symbol){
+//		if(iop->arg1_lit) sprintf(arg1, "0x%llx", iop->arg1.value);
+//		else strncpy(arg1, dx_to_name(iop->arg1.symbol->name), 16);
+//	}
+//	else arg1[0] = '\0';
+//	
+//	if (iop->arg2.symbol){
+//		if(iop->arg2_lit) sprintf(arg1, "0x%llx", iop->arg2.value);
+//		else strncpy(arg2, dx_to_name(iop->arg2.symbol->name), 16);
+//	}
+//	else arg1[0] = '\0';
+//	
+//	fprintf(fd, "%4s:\t%s\t%4s\t%4s\t%4s\n",
+//		dx_to_name(iop->label),
+//		byte_code_dex[iop->op],
+//		result,
+//		arg1,
+//		arg2
+//	);
+	puts("");
+}
+
+static inline void Print_sym(FILE * fd, sym_pt sym){
+	char * types[st_NUM] = {
+		"undef", "int", "ref", "fun", "sub", "lit_int", "lit_str", "tp_def"
+	};
+	char * widths[w_NUM] = {
+		"undef", "word", "max", "1", "2", "4", "8"
+	};
+	
+	if(!sym) puts("Print_sym() received a NULL");
+	
+	fprintf(fd, "%s%s %s:%s %s%s%s %p\n",
+		sym->temp? "t " : "  ",
+		types[sym->type],
+		sym->type == st_int? widths[sym->size] : "",
+		dx_to_name(sym->name),
+		sym->constant? "c": " ",
+		sym->stat? "s": " ",
+		sym->init? "i": " ",
+		(void*) sym->dref
+	);
+}
+
+/********************* DEBUG INTERMEDIATE REPRESENTATION **********************/
+
+static inline void debug_sym(const char * message, sym_pt sym){
+	if (verbosity){
+		fprintf(stderr, "DEBUG: %s, on line %d : ", message, yylineno);
+		Print_sym(stderr, sym);
+	}
+}
+
+static inline void debug_iop(const char * message, icmd * iop){
+	if (verbosity){
+		fprintf(stderr, "DEBUG: %s, on line %d : ", message, yylineno);
+		Print_icmd(stderr, iop);
+	}
+}
+
+
+/******************************************************************************/
+//                             GLOBAL PROTOTYPES
+/******************************************************************************/
+
+
+void Dump_symbols(void );
+void Dump_iq     (void);
+
+// Names
+name_dx add_name(char * name);
+name_dx     new_label(void); ///< get a new unique label
+sym_pt new_var  (sym_type);  ///< Create a unique temporary symbol
+
+// Emmiters
+void emit_cmnt(const char* comment);
 void emit_iop(
+	name_dx      label,
 	op_code      op,
 	name_dx      target,
 	const sym_pt out,
@@ -72,12 +294,7 @@ void emit_iop(
 	const sym_pt right
 );
 
-void Print_icmd(void * iop);
 
-void emit_lbl(name_dx lbl);
-
-#ifdef __cplusplus
-}
-#endif
+#endif // _ICMD_H
 
 

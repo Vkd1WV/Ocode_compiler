@@ -64,65 +64,6 @@ arm_v8_flag       :\t%u\n\n" ,
 }
 
 
-static void Parse(yuck_t * arg_pt){
-	bool errors;
-	
-	// Set the infile
-	if(arg_pt->nargs){
-		yyin = fopen(*arg_pt->args, "r");
-		if(!yyin) crit_error("No such file");
-		printf("Reading from: %s\n", *arg_pt->args);
-	}
-	else puts("Reading from: stdin");
-	
-	// Set the debug file
-	if (arg_pt->dashd_flag){
-		char *dbgfile;
-		
-		dbgfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
-		if(! dbgfile) crit_error("Out of Memory");
-		
-		dbgfile = strcpy(dbgfile, *arg_pt->args);
-		dbgfile = strncat(dbgfile, default_dbg, strlen(default_dbg));
-		debug_fd = fopen(dbgfile, "w");
-		
-		fprintf(debug_fd,"#Omnicode Intermediate File\n");
-		
-		free(dbgfile);
-	}
-	
-	get_token(); // Initialize the lookahead token
-	emit_iop(add_name("_#GLOBAL_START"), I_NOP, NO_NAME, NULL, NULL, NULL);
-	
-	errors=setjmp(anewline); // Save the program state for error recovery
-	
-	do {
-		Statement(0);
-	} while (token != T_EOF);
-	
-	// TODO: add return statments to the global_inst_q
-	
-	// Close the infile
-	fclose(yyin);
-	
-	// close the debug file
-	if (debug_fd){
-		fputs("\n\n", debug_fd);
-		Dump_symbols();
-		fclose(debug_fd);
-		
-		puts("\nI Q DUMP\n");
-		Dump_iq(global_inst_q);
-		Dump_iq(sub_inst_q);
-	}
-	
-	if(errors){
-		puts("Errors were found. Exiting...");
-		exit(EXIT_FAILURE);
-	}
-}
-
-
 static void Generate_code(yuck_t * arg_pt, DS blk_q){
 	
 	// pexe

@@ -10,18 +10,6 @@
 
 
 /******************************************************************************/
-//                           PRIVATE PROTOTYPES
-/******************************************************************************/
-
-
-void Label (void    );
-void Jump  (void    );
-void If    (uint lvl); // only control statements need to know the block_lvl
-void While (uint lvl);
-//void For   (uint lvl); for <range statement>
-
-
-/******************************************************************************/
 //                           CONTROL STATEMENTS
 /******************************************************************************/
 

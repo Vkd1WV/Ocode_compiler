@@ -20,8 +20,8 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wtrampolines -Wstack-protector \
 	-Wwrite-strings -Wno-discarded-qualifiers \
 	-Wc++-compat \
-	 -Wconversion -Wdisabled-optimization \
-	#-Wno-long-long -Wpadded
+	-Wconversion -Wdisabled-optimization \
+	# -Wpadded
 
 CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wmissing-declarations \
@@ -39,22 +39,20 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=compiler.h proto.h globals.h tokens.h types.h yuck.h
+HEADERS:=compiler.h global.h tokens.h yuck.h parse.h icmd.h
 LIBS   :=-ldata
 
 SRC    := \
 	cmd_line.yuck globals.c main.c \
 	scanner.l \
-	parse_declarations.c parse_expressions.c parse_statements.c \
-	intermediate.c icmd.cpp\
+	parse_declarations.c parse_expressions.c parse_statements.c parse.c \
+	icmd.c\
 	opt.c \
 	pexe.c arm.c x86.c
 
 OBJECTS:= \
 	yuck.o globals.o main.o \
-	scanner.o \
-	parse_expressions.o parse_statements.o parse_declarations.o \
-	intermediate.o \
+	scanner.o parse.o icmd.o \
 	opt.o \
 	pexe.o x86.o #arm.o
 

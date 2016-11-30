@@ -9,22 +9,7 @@
 #include "compiler.h"
 
 
-/******************************************************************************/
-//                           PRIVATE PROTOTYPES
-/******************************************************************************/
 
-
-void Decl_Word    (sym_pt templt);
-void Decl_Pointer (sym_pt templt);
-void Decl_Type    (sym_pt templt);
-void Decl_Sub     (sym_pt new_sub);
-void Decl_Fun     (sym_pt new_fun);
-
-void Type_specifier(sym_pt templt_pt);
-
-void Qualifier_list   (sym_pt templt);
-void Initializer_list (sym_pt templt);
-void Parameter_list   (sym_pt templt);
 
 
 /******************************************************************************/
@@ -57,6 +42,8 @@ void Initializer_list (sym_pt templt){
 		
 		if(!( new_symbol = (sym_pt)DS_insert(symbols, templt) ))
 			parse_error("Duplicate symbol name");
+		
+		debug_sym("Initializer_list(): Adding symbol", new_symbol);
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();

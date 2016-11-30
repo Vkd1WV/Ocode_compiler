@@ -5,3 +5,6 @@ junk
 
 # Executables
 occ
+
+# Debug files
+*.dbg

@@ -10,22 +10,6 @@
 
 
 /******************************************************************************/
-//                           PRIVATE PROTOTYPES
-/******************************************************************************/
-
-
-// expressions in order of precedence
-static sym_pt Primary   (void);
-static sym_pt Unary     (void);
-static sym_pt Postfix   (void);
-static sym_pt Term      (void);
-static sym_pt Expression(void);
-static sym_pt Equation  (void);
-
-static sym_pt Assign(sym_pt target);
-
-
-/******************************************************************************/
 //                           PRIVATE FUNCTIONS
 /******************************************************************************/
 
@@ -38,7 +22,10 @@ static sym_pt Assign(sym_pt target);
 static inline bool is_init(sym_pt sym){
 	char message[ERR_ARR_SZ];
 	
+	if(!sym) puts("ERROR: is_init() received a NULL");
+	
 	if(!sym->init){
+		Print_sym(stderr, sym);
 		sprintf(
 			message,
 			"Symbol %s is being used uninitialized",
@@ -55,6 +42,7 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 	
 	// check initialization
 	if(!arg1->init){
+		Print_sym(stderr, arg1);
 		sprintf(
 			message,
 			"Symbol %s is being used uninitialized",
@@ -63,6 +51,7 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 		parse_warn(message);
 	}
 	else if(arg2 && !arg2->init){ // arg2 may be NULL
+		Print_sym(stderr, arg2);
 		sprintf(
 			message,
 			"Symbol %s is being used uninitialized",
@@ -159,7 +148,7 @@ static sym_pt Unary(void){
 /*		case subroutine: parse_error("Subroutine used in an expression");*/
 /*		case none:       parse_error("Trying to negate a void data type");*/
 /*		case type_def:   parse_error("Data type used in an expression");*/
-/*		default:         crit_error("Internal: at Unary(), T_MINUS");*/
+/*		default:         parse_crit(arg1, arg2, "Internal: at Unary(), T_MINUS");*/
 /*		}*/
 	
 	case T_REF:
@@ -177,7 +166,9 @@ static sym_pt Unary(void){
 		case st_lit_int:
 		case st_lit_str:
 		case st_type_def: parse_error(ref_inval);
-		default: crit_error("Internal: at Unary(), T_REF");
+		case st_undef:
+		case st_NUM:
+		default: parse_crit(arg, NULL, "Internal: at Unary(), T_REF");
 		}
 		
 		result = new_var(st_ref);
@@ -227,7 +218,9 @@ static sym_pt Unary(void){
 		case st_sub:
 		case st_lit_str:
 		case st_type_def: parse_error("Invalid target of NOT operation");
-		default: crit_error("Internal: at Unary(), T_NOT");
+		case st_undef:
+		case st_NUM:
+		default: parse_crit(arg, NULL, "Internal: at Unary(), T_NOT");
 		}
 		
 		return result;
@@ -257,7 +250,9 @@ static sym_pt Unary(void){
 		case st_sub:
 		case st_lit_str:
 		case st_type_def: parse_error("Invalid target of NOT operation");
-		default: crit_error("Internal: at Unary(), T_NOT");
+		case st_undef:
+		case st_NUM:
+		default: parse_crit(arg, NULL, "Internal: at Unary(), T_NOT");
 		}
 		
 		return result;
@@ -321,7 +316,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_MUL, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		
 		case T_DIV:
@@ -346,7 +341,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_DIV, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		
 		case T_MOD:
@@ -371,7 +366,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_MOD, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		
 		case T_EXP:
@@ -403,7 +398,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_EXP, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		
 		case T_LSHFT:
@@ -428,7 +423,7 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_LSH, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		
 		case T_RSHFT:
@@ -453,7 +448,12 @@ static sym_pt Term(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_RSH, NO_NAME, result, arg1, arg2);
 			}
-		default: crit_error("Internal: at Term()");
+			break;
+		
+		
+		default:
+			sprintf(err_array, "Internal: at Term() with token %d", token);
+			parse_crit(arg1, arg2, err_array);
 		}
 		arg1 = result;
 	}
@@ -482,7 +482,9 @@ static sym_pt Expression(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to addition");
-			default: crit_error("Internal: at Expression(), T_PLUS");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Expression(), T_PLUS");
 			}
 			
 			switch (arg2->type){
@@ -495,7 +497,9 @@ static sym_pt Expression(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to addition");
-			default: crit_error("Internal: at Expression(), T_PLUS");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Expression(), T_PLUS");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -531,7 +535,9 @@ static sym_pt Expression(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to subtraction");
-			default: crit_error("Internal: at Expression(), T_MINUS");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Expression(), T_MINUS");
 			}
 			
 			switch (arg2->type){
@@ -544,7 +550,9 @@ static sym_pt Expression(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to subtraction");
-			default: crit_error("Internal: at Expression(), T_MINUS");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Expression(), T_MINUS");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -610,7 +618,7 @@ static sym_pt Expression(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_BOR, NO_NAME, result, arg1, arg2);
 			}
-		break;
+			break;
 		
 		case T_BXOR:
 			get_token();
@@ -634,8 +642,9 @@ static sym_pt Expression(void){
 				set_init_size(result, arg1, arg2);
 				emit_iop(NO_NAME, I_XOR, NO_NAME, result, arg1, arg2);
 			}
+			break;
 		
-		default: crit_error("Internal: at Expression()");
+		default: parse_crit(arg1, arg2, "Internal: at Expression()");
 		}
 		
 		arg1 = result;
@@ -664,7 +673,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to equality");
-			default: crit_error("Internal: at Equation(), T_EQ");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_EQ");
 			}
 			
 			switch (arg2->type){
@@ -676,7 +687,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to equality");
-			default: crit_error("Internal: at Equation(), T_EQ");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_EQ");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -709,7 +722,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to not equal");
-			default: crit_error("Internal: at Equation(), T_NEQ");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_NEQ");
 			}
 			
 			switch (arg2->type){
@@ -721,7 +736,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to not equal");
-			default: crit_error("Internal: at Equation(), T_NEQ");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_NEQ");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -754,7 +771,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to less than");
-			default: crit_error("Internal: at Equation(), T_LT");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_LT");
 			}
 			
 			switch (arg2->type){
@@ -766,7 +785,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to less than");
-			default: crit_error("Internal: at Equation(), T_LT");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_LT");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -799,7 +820,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to greater than operator");
-			default: crit_error("Internal: at Equation(), T_GT");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_GT");
 			}
 			
 			switch (arg2->type){
@@ -811,7 +834,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to greater than operator");
-			default: crit_error("Internal: at Equation(), T_GT");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_GT");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -844,7 +869,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to lte");
-			default: crit_error("Internal: at Equation(), T_LTE");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_LTE");
 			}
 			
 			switch (arg2->type){
@@ -856,7 +883,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to lte");
-			default: crit_error("Internal: at Equation(), T_LTE");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_LTE");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -889,7 +918,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to gte");
-			default: crit_error("Internal: at Equation(), T_GTE");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_GTE");
 			}
 			
 			switch (arg2->type){
@@ -901,7 +932,9 @@ static sym_pt Equation(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to gte");
-			default: crit_error("Internal: at Equation(), T_GTE");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Equation(), T_GTE");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -917,7 +950,10 @@ static sym_pt Equation(void){
 				if(is_init(arg1) && is_init(arg2)) result->init = true;
 				emit_iop(NO_NAME, I_GTE, NO_NAME, result, arg1, arg2);
 			}
-		default: crit_error("Internal: at Equation()");
+			break;
+		
+		
+		default: parse_crit(arg1, arg2, "Internal: at Equation()");
 		}
 		
 		Warn_comparison(arg1, arg2);
@@ -990,7 +1026,7 @@ static sym_pt Assign(sym_pt target){
 		emit_iop(NO_NAME, I_XOR, NO_NAME, target, target, result);
 		break;
 	
-	default: crit_error("Internal: at Assign()");
+	default: parse_crit(target, result, "Internal: at Assign()");
 	}
 	
 	target->init = true;
@@ -1025,7 +1061,9 @@ sym_pt Boolean(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to logical and");
-			default: crit_error("Internal: at Boolean(), T_AND");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Boolean(), T_AND");
 			}
 			
 			switch (arg2->type){
@@ -1037,7 +1075,9 @@ sym_pt Boolean(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to logical and");
-			default: crit_error("Internal: at Boolean(), T_AND");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Boolean(), T_AND");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -1055,8 +1095,8 @@ sym_pt Boolean(void){
 				emit_iop(NO_NAME, I_AND, NO_NAME, result, arg1, arg2);
 			};
 			break;
-			
-			
+		
+		
 		case T_OR:
 			get_token();
 			arg2=Equation();
@@ -1071,7 +1111,9 @@ sym_pt Boolean(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid first argument to logical and");
-			default: crit_error("Internal: at Boolean(), T_AND");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Boolean(), T_AND");
 			}
 			
 			switch (arg2->type){
@@ -1083,7 +1125,9 @@ sym_pt Boolean(void){
 			case st_lit_str:
 			case st_type_def:
 				parse_error("Invalid second argument to logical and");
-			default: crit_error("Internal: at Boolean(), T_AND");
+			case st_undef:
+			case st_NUM:
+			default: parse_crit(arg1, arg2, "Internal: at Boolean(), T_AND");
 			}
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
@@ -1100,7 +1144,10 @@ sym_pt Boolean(void){
 				result->size = w_byte;
 				emit_iop(NO_NAME, I_OR, NO_NAME, result, arg1, arg2);
 			}
-		default: crit_error("Internal: at Boolean()");
+			break;
+		
+		
+		default: parse_crit(arg1, arg2, "Internal: at Boolean()");
 		}
 		
 		arg1 = result;

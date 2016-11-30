@@ -6,87 +6,36 @@
  *
  ******************************************************************************/
 
-/*
- *	OMNI INTERMEDIATE CODE GENERATION
- *
- *	Omni Intermediate Code is an implementation of three-address-code. It
- *	consists of one command per line or structure. Normally, intermediate code
- *	is generated in a queue of structures. However, when the compiler's debug
- *	flag is set, the intermediate code emitters will also create text files
- *	reprsenting the contents of the global_inst_q.
- *
- *	The general format of Three Address Codes is:
- *		OP		result	arg1	arg2
- *		OP		result	arg1
- *	The code must also contain jump statements and labels for flow control:
- *		LBL		label
- *		JMP		label	[condition]
- *	There must be function calls
- *		PARAM	reg		val
- *		CALL	label
- *		RTRN
- *
- *	Every control structure is reimplemented in the Intermediate Code with
- *	labels and jump statements. This requires extra labels provided by the
- *	new_label() function.
- *
- *	Expressions are reimplemented as individual operations. These operations
- *	will eventually act directly on register values. In the Intermediate Code
- *	registers are represented as temp symbols. Temp symbol names all begin with
- *	the % symbol.
- *
- *	In the future we will be able to implement an optimizer that processes
- *	Intermediate code into better Intermediate Code.
- *
- */
-
 #include "compiler.h"
 
-/******************************************************************************/
-//                             LOCAL PROTOTYPES
-/******************************************************************************/
-
-
-//icmd * New_iop(void);
-/*int cmp_sym    (const void * left, const void * right);*/
-/*int cmp_sym_key(const void * key , const void * symbol);*/
-
 
 /******************************************************************************/
-//                            PRIVATE FUNCTIONS
+//                            GLOBAL CONSTANTS
 /******************************************************************************/
 
 
-static inline void Print_icmd(icmd * iop){
-	char * result, arg1[16], arg2[16];
-	
-	if (iop->result) result = dx_to_name(iop->result->name);
-	else result = dx_to_name(iop->target);
-	
-	if (iop->arg1.symbol){
-		if(iop->arg1_lit) sprintf(arg1, "0x%llx", iop->arg1.value);
-		else strncpy(arg1, dx_to_name(iop->arg1.symbol->name), 16);
-	}
-	else arg1[0] = '\0';
-	
-	if (iop->arg2.symbol){
-		if(iop->arg2_lit) sprintf(arg1, "0x%llx", iop->arg2.value);
-		else strncpy(arg2, dx_to_name(iop->arg2.symbol->name), 16);
-	}
-	else arg1[0] = '\0';
-	
-	printf("%4s:\t%s\t%4s\t%4s\t%4s\n",
-		dx_to_name(iop->label),
-		byte_code_dex[iop->op],
-		result,
-		arg1,
-		arg2
-	);
-}
+const char * op_code_dex[NUM_I_CODES] = {
+	"I_NOP", "I_ASS", "I_REF", "I_DREF", "I_NEG", "I_NOT" , "I_INV" , "I_INC",
+	"I_DEC",
+	"I_MUL",
+	"I_DIV", "I_MOD", "I_EXP", "I_LSH" , "I_RSH", "I_ADD" , "I_SUB" , "I_BAND",
+	"I_BOR", "I_XOR", "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  , "I_LTE" , "I_GTE" ,
+	"I_AND", "I_OR" , "I_JMP", "I_JZ"  , "I_BLK", "I_EBLK", "I_CALL", "I_RTRN"
+};
 
 
 /******************************************************************************/
-//                            PUBLIC FUNCTIONS
+//                             INLINE FUNCTIONS
+/******************************************************************************/
+
+
+/******************************************************************************/
+//                             PRIVATE FUNCTIONS
+/******************************************************************************/
+
+
+/******************************************************************************/
+//                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
 
@@ -99,26 +48,28 @@ void Dump_symbols(void){
 	
 	sym = (sym_pt) DS_first(symbols);
 	do {
-		if( sym->type != st_lit_int )
-			fprintf(debug_fd, "%s:\t%4d\t%5d\t%4d\t%p\n",
-				dx_to_name(sym->name),
-				sym->type,
-				sym->constant,
-				sym->init,
-				(void*) sym->dref
-			);
+		Print_sym(debug_fd, sym);
 	} while(( sym = (sym_pt) DS_next(symbols) ));
 }
 
-void Dump_iq(DS iq){
+void Dump_iq(void){
 	icmd * iop;
 	
-	iop = (icmd*) DS_first(iq);
+	fprintf(debug_fd, "GLOBAL QUEUE\n");
+	fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	
-	printf("LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	iop = (icmd*) DS_first(global_inst_q);
 	do {
-		Print_icmd(iop);
-	} while (( iop = (icmd*) DS_next(iq) ));
+		Print_icmd(debug_fd, iop);
+	} while (( iop = (icmd*) DS_next(global_inst_q) ));
+	
+	fprintf(debug_fd, "GLOBAL QUEUE\n");
+	fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	
+	iop = (icmd*) DS_first(sub_inst_q);
+	do {
+		Print_icmd(debug_fd, iop);
+	} while (( iop = (icmd*) DS_next(sub_inst_q) ));
 }
 
 /********************************** NAMES *************************************/
@@ -157,12 +108,6 @@ name_dx add_name(char * name){
 	return temporary;
 }
 
-/// find a name in the name_array by its name_dx
-inline char * dx_to_name(name_dx index){
-	if(index == NO_NAME) return NULL;
-	else return name_array+index;
-}
-
 // create and return a pointer to a unique label
 name_dx new_label(void){
 	static umax i;
@@ -197,30 +142,26 @@ sym_pt new_var(sym_type type){
 
 /******************************** EMITTERS ************************************/
 
-
-
 void emit_cmnt(const char* comment){
 	if (debug_fd) fprintf(debug_fd, "\t# %s\n", comment);
 }
 
-/*void emit_lbl(name_dx lbl){*/
-/*	emit_iop(I_NOP, lbl, NULL, NULL, NULL);*/
-/*	if (debug_fd) fprintf(debug_fd, "\nlbl %s:", dx_to_name(lbl));*/
-/*}*/
-
 void emit_iop(
 	name_dx      label,
-	byte_code    op,
+	op_code    op,
 	name_dx      target,
 	const sym_pt out,
 	const sym_pt left,
 	const sym_pt right
 ){
 	char arg1[20], arg2[20];
-	char err_array[ERR_ARR_SZ];
 	icmd iop[1];
 	
-	iop->op = op;
+	iop->label  = label;
+	iop->op     = op;
+	iop->target = target;
+	
+	debug_iop("emit_iop(): op is set", iop);
 	
 	switch (op){
 	case I_NOP : break;
@@ -306,15 +247,18 @@ void emit_iop(
 	
 	iop->label = label;
 	
+	debug_iop("emit_iop(): Adding iop", iop);
+	
 	// queue up this operation
 	DS_nq(global_inst_q, iop);
+	
 	
 	// Print to the text file if present
 	if (debug_fd)
 		fprintf(
 			debug_fd,
 			"%s\t%5s\t%5s\t%s\n",
-			byte_code_dex[op],
+			op_code_dex[op],
 			out  ? dx_to_name(out->name) : "",
 			left ? arg1 : "",
 			right? arg2 : ""
