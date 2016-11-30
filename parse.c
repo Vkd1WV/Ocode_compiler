@@ -124,9 +124,10 @@ void Parse(yuck_t * arg_pt){
 	if(arg_pt->nargs){
 		yyin = fopen(*arg_pt->args, "r");
 		if(!yyin) crit_error("No such file");
-		printf("Reading from: %s\n", *arg_pt->args);
+		sprintf(err_array, "Reading from: %s\n", *arg_pt->args);
+		notice_msg(err_array);
 	}
-	else puts("Reading from: stdin");
+	else notice_msg("Reading from: stdin");
 	
 	// Set the debug file
 	if (arg_pt->dashd_flag){
@@ -153,6 +154,7 @@ void Parse(yuck_t * arg_pt){
 		Statement(0);
 	} while (token != T_EOF);
 	
+	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
 	// TODO: add return statments to the global_inst_q
 	
 	// Close the infile
@@ -160,16 +162,17 @@ void Parse(yuck_t * arg_pt){
 	
 	// close the debug file
 	if (debug_fd){
-		fputs("\n\n", debug_fd);
-		Dump_symbols();
+		
+		info_msg("Producing debug file");
+		Dump_symbols(debug_fd);
+		Dump_iq(debug_fd);
+		info_msg("Closing debug file");
 		fclose(debug_fd);
 		
-		puts("\nI Q DUMP\n");
-		Dump_iq();
 	}
 	
 	if(errors){
-		puts("Errors were found. Exiting...");
+		notice_msg("Errors were found. Exiting...");
 		exit(EXIT_FAILURE);
 	}
 }

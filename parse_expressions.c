@@ -20,18 +20,11 @@
 */
 
 static inline bool is_init(sym_pt sym){
-	char message[ERR_ARR_SZ];
-	
 	if(!sym) puts("ERROR: is_init() received a NULL");
 	
 	if(!sym->init){
+		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, sym);
-		sprintf(
-			message,
-			"Symbol %s is being used uninitialized",
-			dx_to_name(sym->name)
-		);
-		parse_warn(message);
 		return false;
 	}
 	return true;
@@ -42,22 +35,12 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 	
 	// check initialization
 	if(!arg1->init){
+		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, arg1);
-		sprintf(
-			message,
-			"Symbol %s is being used uninitialized",
-			dx_to_name(arg1->name)
-		);
-		parse_warn(message);
 	}
 	else if(arg2 && !arg2->init){ // arg2 may be NULL
+		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, arg2);
-		sprintf(
-			message,
-			"Symbol %s is being used uninitialized",
-			dx_to_name(arg2->name)
-		);
-		parse_warn(message);
 	}
 	else result->init = true;
 	

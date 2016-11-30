@@ -33,7 +33,7 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wconversion
 
 
-CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -I./ -L$(LIBDIR) -g -DDEBUG
+CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g -DDEBUG
 CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g -DDEBUG
 LFLAGS:=#-d
 
@@ -63,16 +63,13 @@ ALLFILES:= $(SRC) $(HEADERS)
 occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
+parse.o: parse_declarations.c parse_expressions.c parse_statements.c parse.c
+
 scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
 
 yuck.c yuck.h: occ.yuck
 	yuck gen -Hyuck.h -o yuck.c $<
-
-
-
-main.o: main.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $<
 
 # suppress warnings for third party slop
 scanner.o: $(HEADERS) scanner.c
@@ -88,7 +85,7 @@ yuck.o: yuck.c yuck.h
 
 ################################## UTILITIES ###################################
 
-CLEANFILES:= *.o *.opp occ ./tests/*.dbg ./tests/*.asm
+CLEANFILES:= *.o ./out/*.o *.opp occ ./tests/*.dbg ./tests/*.asm
 VERYCLEANFILES:= $(CLEANFILES) scanner.c yuck.h yuck.c
 
 .PHONEY: clean todolist test very-clean

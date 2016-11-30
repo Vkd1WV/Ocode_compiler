@@ -43,7 +43,7 @@ void Initializer_list (sym_pt templt){
 		if(!( new_symbol = (sym_pt)DS_insert(symbols, templt) ))
 			parse_error("Duplicate symbol name");
 		
-		debug_sym("Initializer_list(): Adding symbol", new_symbol);
+		debug_sym("Initializer_list():Adding symbol", new_symbol);
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();
@@ -55,7 +55,7 @@ void Initializer_list (sym_pt templt){
 			initializer=Boolean();
 			//if (!initializer->init) error("Using an uninitialized value");
 			
-			emit_iop(NO_NAME, I_ASS, 0, new_symbol, initializer, NULL);
+			emit_iop(NO_NAME, I_ASS, NO_NAME, new_symbol, initializer, NULL);
 		}
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");
@@ -136,6 +136,9 @@ void Decl_Pointer (sym_pt templt){
 	
 	target= (sym_pt) calloc(1, sizeof(struct sym));
 	if (!target) crit_error("Out of memory");
+	
+	target->name = NO_NAME;
+	target->init = true; // assume it's initialized
 	
 	templt->dref = target;
 	

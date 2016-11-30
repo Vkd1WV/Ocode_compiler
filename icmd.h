@@ -204,31 +204,11 @@ static inline const void * sym_key(const void * symbol){
 /********************** PRINT INTERMEDIATE REPRESENTATION *********************/
 
 static inline void Print_icmd(FILE * fd, icmd * iop){
-	char * result, arg1[16], arg2[16];
-	
-//	if (iop->result) result = dx_to_name(iop->result->name);
-//	else result = dx_to_name(iop->target);
-//	
-//	if (iop->arg1.symbol){
-//		if(iop->arg1_lit) sprintf(arg1, "0x%llx", iop->arg1.value);
-//		else strncpy(arg1, dx_to_name(iop->arg1.symbol->name), 16);
-//	}
-//	else arg1[0] = '\0';
-//	
-//	if (iop->arg2.symbol){
-//		if(iop->arg2_lit) sprintf(arg1, "0x%llx", iop->arg2.value);
-//		else strncpy(arg2, dx_to_name(iop->arg2.symbol->name), 16);
-//	}
-//	else arg1[0] = '\0';
-//	
-//	fprintf(fd, "%4s:\t%s\t%4s\t%4s\t%4s\n",
-//		dx_to_name(iop->label),
-//		byte_code_dex[iop->op],
-//		result,
-//		arg1,
-//		arg2
-//	);
-	puts("");
+	fprintf(fd, "%4s:\t%s\t%4s\n",
+		dx_to_name(iop->label),
+		op_code_dex[iop->op],
+		dx_to_name(iop->target)
+	);
 }
 
 static inline void Print_sym(FILE * fd, sym_pt sym){
@@ -239,32 +219,32 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 		"undef", "word", "max", "1", "2", "4", "8"
 	};
 	
-	if(!sym) puts("Print_sym() received a NULL");
-	
-	fprintf(fd, "%s%s %s:%s %s%s%s %p\n",
-		sym->temp? "t " : "  ",
-		types[sym->type],
-		sym->type == st_int? widths[sym->size] : "",
-		dx_to_name(sym->name),
-		sym->constant? "c": " ",
-		sym->stat? "s": " ",
-		sym->init? "i": " ",
-		(void*) sym->dref
-	);
+	if(!sym) puts("NULL");
+	else
+		fprintf(fd, "%4s:\t%7s %5s %s%s%s%s  %p\n",
+			dx_to_name(sym->name),
+			types[sym->type],
+			sym->type == st_int? widths[sym->size] : "",
+			sym->temp    ? "t": " ",
+			sym->constant? "c": " ",
+			sym->stat    ? "s": " ",
+			sym->init    ? "i": " ",
+			(void*) sym->dref
+		);
 }
 
 /********************* DEBUG INTERMEDIATE REPRESENTATION **********************/
 
 static inline void debug_sym(const char * message, sym_pt sym){
-	if (verbosity){
-		fprintf(stderr, "DEBUG: %s, on line %d : ", message, yylineno);
+	if (verbosity >= V_DEBUG){
+		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
 		Print_sym(stderr, sym);
 	}
 }
 
 static inline void debug_iop(const char * message, icmd * iop){
-	if (verbosity){
-		fprintf(stderr, "DEBUG: %s, on line %d : ", message, yylineno);
+	if (verbosity >= V_DEBUG){
+		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
 		Print_icmd(stderr, iop);
 	}
 }
@@ -275,8 +255,8 @@ static inline void debug_iop(const char * message, icmd * iop){
 /******************************************************************************/
 
 
-void Dump_symbols(void );
-void Dump_iq     (void);
+void Dump_symbols(FILE * fd);
+void Dump_iq     (FILE * fd);
 
 // Names
 name_dx add_name(char * name);

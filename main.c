@@ -16,8 +16,15 @@ static void Initialize(yuck_t * arg_pt){
 	if (arg_pt->nargs > 1) puts("Too many arguments...Ignoring.");
 	
 	// set the global verbosity
-	verbosity=arg_pt->dashv_flag;
-	if(verbosity) printf("\
+	switch(arg_pt->dashv_flag){
+	case 2: verbosity = V_DEBUG; break;
+	case 1: verbosity = V_INFO ; break;
+	case 0:
+	default: verbosity = V_NOTE; break;
+	}
+	
+	
+	if(verbosity >= V_DEBUG) printf("\
 ARGUMENTS PASSED\n\
 nargs             :\t%lu\n\
 args              :\t%s\n\

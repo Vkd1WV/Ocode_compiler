@@ -40,36 +40,58 @@ const char * op_code_dex[NUM_I_CODES] = {
 
 
 // Dump the symbol Table
-void Dump_symbols(void){
+void Dump_symbols(FILE * fd){
 	sym_pt sym;
 	
-	fputs("# SYMBOL TABLE", debug_fd);
-	fprintf(debug_fd,"\n#Name\tType\tconst\tInit\tDref\n");
+	info_msg("Dumping Symbols");
+	fputs("# SYMBOL TABLE", fd);
+	fprintf(fd,"\nName:\t   Type Width Flags Dref\n");
 	
 	sym = (sym_pt) DS_first(symbols);
 	do {
-		Print_sym(debug_fd, sym);
+		Print_sym(fd, sym);
 	} while(( sym = (sym_pt) DS_next(symbols) ));
+	
+	fputs("\n\n", fd);
+	
+	fflush(fd);
+	
+	info_msg("Finished Symbols");
 }
 
-void Dump_iq(void){
+void Dump_iq(FILE * fd){
 	icmd * iop;
 	
-	fprintf(debug_fd, "GLOBAL QUEUE\n");
-	fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	info_msg("Dumping the Global queue");
+	fprintf(fd, "GLOBAL QUEUE\n");
+	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	
+	fflush(fd);
 	
 	iop = (icmd*) DS_first(global_inst_q);
+	
+	sprintf(err_array, "Printing iop at: %p", (void*)iop);
+	debug_msg(err_array);
+	
 	do {
-		Print_icmd(debug_fd, iop);
+		Print_icmd(fd, iop);
 	} while (( iop = (icmd*) DS_next(global_inst_q) ));
 	
-	fprintf(debug_fd, "GLOBAL QUEUE\n");
-	fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	fputs("\n\n", fd);
+	fflush(fd);
+	
+	info_msg("Dumping the sub queue");
+	fprintf(fd, "GLOBAL QUEUE\n");
+	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	
+	fflush(fd);
 	
 	iop = (icmd*) DS_first(sub_inst_q);
 	do {
-		Print_icmd(debug_fd, iop);
+		Print_icmd(fd, iop);
 	} while (( iop = (icmd*) DS_next(sub_inst_q) ));
+	
+	fflush(fd);
 }
 
 /********************************** NAMES *************************************/
@@ -154,17 +176,20 @@ void emit_iop(
 	const sym_pt left,
 	const sym_pt right
 ){
-	char arg1[20], arg2[20];
 	icmd iop[1];
+	void * temp;
 	
 	iop->label  = label;
 	iop->op     = op;
 	iop->target = target;
 	
-	debug_iop("emit_iop(): op is set", iop);
+	debug_sym("emit_iop()        : out         ", out);
+	debug_sym("emit_iop()        : left        ", left);
+	debug_sym("emit_iop()        : right       ", right);
 	
 	switch (op){
-	case I_NOP : break;
+	case I_NOP :
+	case I_RTRN: break;
 	
 	// Binaries
 	case I_MUL :
@@ -189,12 +214,8 @@ void emit_iop(
 		if (right->type == st_lit_int){
 			iop->arg2_lit   = true;
 			iop->arg2.value = right->value;
-			sprintf(arg2, "#%4llx", right->value);
 		}
-		else {
-			iop->arg2.symbol = right;
-			sprintf(arg2, "%s", dx_to_name(right->name));
-		}
+		else iop->arg2.symbol = right;
 		
 	// Unaries
 	case I_ASS :
@@ -206,12 +227,8 @@ void emit_iop(
 		if (left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
-			sprintf(arg1, "#%4llx", left->value);
 		}
-		else {
-			iop->arg1.symbol = left;
-			sprintf(arg1, "%s", dx_to_name(left->name));
-		}
+		else iop->arg1.symbol = left;
 		
 		iop->result = out;
 		break;
@@ -221,13 +238,8 @@ void emit_iop(
 		if (left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
-			sprintf(arg1, "#%4llx", left->value);
 		}
-		else {
-			iop->arg1.symbol = left;
-			sprintf(arg1, "%s", dx_to_name(left->name));
-		}
-		iop->target = target;
+		else iop->arg1.symbol = left;
 		break;
 		
 	case I_INC :
@@ -235,7 +247,7 @@ void emit_iop(
 	case I_BLK :
 	case I_EBLK:
 	case I_CALL:
-	case I_RTRN:
+	
 	case NUM_I_CODES:
 	default:
 		sprintf(err_array,
@@ -245,24 +257,13 @@ void emit_iop(
 		crit_error(err_array);
 	}
 	
-	iop->label = label;
-	
-	debug_iop("emit_iop(): Adding iop", iop);
+	debug_iop("emit_iop()        :Adding iop   ", iop);
 	
 	// queue up this operation
-	DS_nq(global_inst_q, iop);
+	temp= DS_nq(global_inst_q, iop);
+	sprintf(err_array, "iop saved at: %p", temp);
+	debug_msg(err_array);
 	
-	
-	// Print to the text file if present
-	if (debug_fd)
-		fprintf(
-			debug_fd,
-			"%s\t%5s\t%5s\t%s\n",
-			op_code_dex[op],
-			out  ? dx_to_name(out->name) : "",
-			left ? arg1 : "",
-			right? arg2 : ""
-		);
 }
 
 

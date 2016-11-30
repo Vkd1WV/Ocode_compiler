@@ -28,6 +28,15 @@
 typedef unsigned long long umax;
 typedef unsigned int uint;
 
+typedef enum {
+	V_QUIET,
+	V_ERROR,
+	V_WARN,
+	V_NOTE,
+	V_INFO,
+	V_DEBUG
+} verb_t;
+
 
 /******************************************************************************/
 //                                CONSTANTS
@@ -53,7 +62,8 @@ extern const char * default_pexe;
 #endif
 
 
-uint verbosity;
+verb_t verbosity;
+
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
 EXTERN FILE *  debug_fd;  ///< contains a text representation of the instruction queue
 char err_array[ERR_ARR_SZ];
@@ -71,6 +81,22 @@ static inline void crit_error(const char* message){
 	fprintf(stderr, "CRITICAL ERROR: %s.\n", message);
 	exit(EXIT_FAILURE);
 }
+
+static inline void notice_msg(const char * message){
+	if (verbosity >= V_NOTE)
+		fprintf(stderr, "NOTICE: %s.\n", message);
+}
+
+static inline void info_msg(const char * message){
+	if (verbosity >= V_INFO)
+		fprintf(stderr, "INFO: %s.\n", message);
+}
+
+static inline void debug_msg(const char * message){
+	if (verbosity >= V_DEBUG)
+		fprintf(stderr, "DEBUG: %s.\n", message);
+}
+
 
 #endif // _GLOBAL_H
 

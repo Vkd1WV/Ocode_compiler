@@ -2,5 +2,5 @@
 
 for file in ./tests/*.oc; do
 	echo -e "\nrunning $file\n"
-	./occ -vpad --x86-long $file
+	./occ -vvpad --x86-long $file
 done
