@@ -39,7 +39,7 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=compiler.h global.h tokens.h yuck.h parse.h icmd.h opt.h out/out.h
+HEADERS:=global.h tokens.h yuck.h parse.h icmd.h opt.h out/out.h
 LIBS   :=-ldata
 
 SRC    := \

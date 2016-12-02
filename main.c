@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 
-#include "compiler.h"
+#include "global.h"
 
 
 static void Initialize(yuck_t * arg_pt){

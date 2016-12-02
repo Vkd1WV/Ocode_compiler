@@ -12,7 +12,7 @@
 
 
 /******************************************************************************/
-//                            TYPE DEFINITIONS
+//                           DEPENDENCY HEADERS
 /******************************************************************************/
 
 
@@ -23,7 +23,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
 #include <data.h>
+
+
+/******************************************************************************/
+//                            TYPE DEFINITIONS
+/******************************************************************************/
+
 
 typedef unsigned long long umax;
 typedef unsigned int uint;
@@ -66,7 +73,7 @@ verb_t verbosity;
 
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
 EXTERN FILE *  debug_fd;  ///< contains a text representation of the instruction queue
-char err_array[ERR_ARR_SZ];
+EXTERN char err_array[ERR_ARR_SZ];
 
 
 #undef EXTERN
@@ -80,6 +87,16 @@ char err_array[ERR_ARR_SZ];
 static inline void crit_error(const char* message){
 	fprintf(stderr, "CRITICAL ERROR: %s.\n", message);
 	exit(EXIT_FAILURE);
+}
+
+static inline void err_msg(const char * message){
+	if (verbosity >= V_ERROR)
+		fprintf(stderr, "ERROR: %s.\n", message);
+}
+
+static inline void warn_msg(const char * message){
+	if (verbosity >= V_WARN)
+		fprintf(stderr, "ERROR: %s.\n", message);
 }
 
 static inline void notice_msg(const char * message){
@@ -96,6 +113,19 @@ static inline void debug_msg(const char * message){
 	if (verbosity >= V_DEBUG)
 		fprintf(stderr, "DEBUG: %s.\n", message);
 }
+
+
+/******************************************************************************/
+//                            COMPILER HEADERS
+/******************************************************************************/
+
+
+#include "yuck.h"   // includes type definitions
+#include "tokens.h"
+#include "parse.h"
+#include "icmd.h"
+#include "opt.h"
+#include "out/out.h"
 
 
 #endif // _GLOBAL_H

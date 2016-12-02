@@ -6,7 +6,7 @@
  *
  ******************************************************************************/
 
-#include "compiler.h"
+#include "global.h"
 
 typedef struct pexe_header{
 	uint64_t magic        ; ///< Magic number

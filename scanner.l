@@ -9,8 +9,8 @@
 
 #define _SCANNER_L // Used in globals.h to eliminate spurrious warnings
 
-#include "compiler.h"
-#define YY_DECL token_t yylex(void)
+#include "global.h"
+#define YY_DECL token_t yylex(void) // Eliminates spurrious warnings
 %}
 
 

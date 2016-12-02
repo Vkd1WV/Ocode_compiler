@@ -1,6 +1,6 @@
 #define _GLOBALS_C
 
-#include "compiler.h"
+#include "global.h"
 
 
 const char * default_out  = "out"  ;

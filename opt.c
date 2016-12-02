@@ -6,7 +6,7 @@
  *
  ******************************************************************************/
 
-#include "compiler.h"
+#include "global.h"
 
 /**	@file opt.c
  *	Optomize the intermediate representation.
@@ -105,7 +105,20 @@ static void Next_use(DS blk){
 /******************************************************************************/
 
 void Dump_blkq(FILE * fd, DS blkq){
+	DS blk;
 	
+	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
+	if (!blkq) err_msg("Internal: Dump_blkq(): received NULL block queue");
+	
+	info_msg("Dumping the block queue");
+	
+	blk = (DS) DS_first(blkq);
+	
+	do {
+		Dump_iq(blk);
+	} while(( blk = (DS) DS_next(blkq) ));
+	
+	info_msg("Finished dumping the block queue");
 }
 
 

@@ -35,7 +35,7 @@
 //                             GLOBAL PROTOTYPES
 /******************************************************************************/
 
-
+void Dump_blkq(FILE * fd, DS blkq);
 DS Optomize(DS q1, DS q2);
 
 
