@@ -39,7 +39,7 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=global.h tokens.h yuck.h parse.h icmd.h opt.h out/out.h
+HEADERS:=global.h yuck.h parse.h icmd.h opt.h out/out.h
 LIBS   :=-ldata
 
 SRC    := \
@@ -64,6 +64,7 @@ occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 parse.o: parse_declarations.c parse_expressions.c parse_statements.c parse.c
+	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
 scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
