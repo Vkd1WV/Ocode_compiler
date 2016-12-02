@@ -32,7 +32,8 @@ typedef struct pexe_header{
 void pexe (char * filename, const DS blk_q){
 	FILE* fd;
 	
-	if (verbosity) printf("Creating pexe file: %s\n", filename);
+	sprintf(err_array, "Creating pexe file: '%s'", filename);
+	info_msg(err_array);
 	fd = fopen(filename, "w");
 	
 	

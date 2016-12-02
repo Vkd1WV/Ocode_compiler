@@ -3,7 +3,8 @@ A first cross compiler for O-code.
 
 
 ##Debugging
-  -v   be verbose
+  -v   be verbose. -vv produces tons of debuging output.
+  -q   supress all warnings -qq silently fail on errors
 
 ##External Constant Definitions
   -D NAME=VALUE   Initialize an external constant. If no value is given it is assumed to be 1.

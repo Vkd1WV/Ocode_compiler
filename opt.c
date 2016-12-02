@@ -115,7 +115,7 @@ void Dump_blkq(FILE * fd, DS blkq){
 	blk = (DS) DS_first(blkq);
 	
 	do {
-		Dump_iq(blk);
+		Dump_iq(fd, blk);
 	} while(( blk = (DS) DS_next(blkq) ));
 	
 	info_msg("Finished dumping the block queue");

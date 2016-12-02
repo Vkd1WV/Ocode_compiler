@@ -221,7 +221,7 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 		"undef", "word", "max", "1", "2", "4", "8"
 	};
 	
-	if(!sym) fputs("NULL", fd);
+	if(!sym) fputs("NULL\n", fd);
 	else
 		fprintf(fd, "%4s:\t%7s %5s %s%s%s%s  %p\n",
 			dx_to_name(sym->name),
@@ -258,7 +258,7 @@ static inline void debug_iop(const char * message, icmd * iop){
 
 
 void Dump_symbols(FILE * fd);
-void Dump_iq     (FILE * fd);
+void Dump_iq     (FILE * fd, DS queue);
 
 // Names
 name_dx add_name(char * name);

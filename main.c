@@ -9,11 +9,16 @@
 
 #include "global.h"
 
+// file name defaults
+const char * default_out  = "out"  ;
+const char * default_dbg  = ".dbg" ;
+const char * default_asm  = ".asm" ;
+const char * default_pexe = ".pexe";
 
 static void Initialize(yuck_t * arg_pt){
 	uint sum;
 	
-	if (arg_pt->nargs > 1) puts("Too many arguments...Ignoring.");
+	if (arg_pt->nargs > 1) notice_msg("Too many arguments...Ignoring.");
 	
 	// set the global verbosity
 	switch(arg_pt->dashv_flag){
@@ -29,6 +34,7 @@ ARGUMENTS PASSED\n\
 nargs             :\t%lu\n\
 args              :\t%s\n\
 dashv_flag        :\t%u\n\
+dashq_flag        :\t%u\n\
 dashD_arg         :\t%s\n\
 dashd_flag        :\t%u\n\
 dashp_flag        :\t%u\n\
@@ -40,6 +46,7 @@ arm_v8_flag       :\t%u\n\n" ,
 			arg_pt->nargs      ,
 			*arg_pt->args      ,
 			arg_pt->dashv_flag ,
+			arg_pt->dashq_flag ,
 			arg_pt->dashD_arg  ,
 			arg_pt->dashd_flag ,
 			arg_pt->dashp_flag ,
@@ -83,7 +90,7 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		pexefile = strcpy(pexefile, *arg_pt->args);
 		pexefile = strncat(pexefile, default_pexe, strlen(default_pexe));
 		
-		sprintf(err_array, "pexefile is: %s\n", pexefile);
+		sprintf(err_array, "pexefile is: '%s'", pexefile);
 		info_msg(err_array);
 		
 		pexe(pexefile, blk_q);
@@ -108,7 +115,7 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		
 		asmfile = strncat(asmfile, default_asm, strlen(default_asm));
 		
-		sprintf(err_array, "asmfile is: %s\n", asmfile);
+		sprintf(err_array, "asmfile is: '%s'", asmfile);
 		info_msg(err_array);
 		
 		if(arg_pt->x86_long_flag) x86(asmfile, true, blk_q);
@@ -122,7 +129,7 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 static void Cleanup(yuck_t * arg_pt, DS structure){
 	DS blk;
 
-	info_msg("Cleanup");
+	info_msg("Cleanup...");
 	yuck_free(arg_pt);
 	debug_msg("Deleting the symbol table");
 	DS_delete(symbols);

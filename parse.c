@@ -125,9 +125,9 @@ void Parse(yuck_t * arg_pt){
 		yyin = fopen(*arg_pt->args, "r");
 		if(!yyin) crit_error("No such file");
 		sprintf(err_array, "Reading from: %s\n", *arg_pt->args);
-		notice_msg(err_array);
+		info_msg(err_array);
 	}
-	else notice_msg("Reading from: stdin");
+	else info_msg("Reading from: stdin");
 	
 	// Set the debug file
 	if (arg_pt->dashd_flag){
@@ -155,24 +155,36 @@ void Parse(yuck_t * arg_pt){
 	} while (token != T_EOF);
 	
 	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
-	// TODO: add return statments to the global_inst_q
 	
 	// Close the infile
 	fclose(yyin);
 	
-	// close the debug file
+	// write to the debug file
 	if (debug_fd){
 		
 		info_msg("Producing debug file");
 		Dump_symbols(debug_fd);
-		Dump_iq(debug_fd);
+		
+		info_msg("Dumping the Global queue");
+		fprintf(debug_fd, "GLOBAL QUEUE\n");
+		fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+		Dump_iq(debug_fd, global_inst_q);
+		
+		fputs("\n\n", debug_fd);
+		fflush(debug_fd);
+		
+		info_msg("Dumping the sub queue");
+		fprintf(debug_fd, "SUB QUEUE\n");
+		fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+		Dump_iq(debug_fd, sub_inst_q);
+		
 		info_msg("Closing debug file");
 		fclose(debug_fd);
 		
 	}
 	
 	if(errors){
-		notice_msg("Errors were found. Exiting...");
+		notice_msg("Parse errors were found. Exiting...");
 		exit(EXIT_FAILURE);
 	}
 }

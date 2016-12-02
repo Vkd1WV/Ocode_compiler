@@ -280,7 +280,7 @@ void x86 (char * filename, bool B64, const DS blk_q){
 	FILE * out_fd;
 	DS blk;
 	
-	puts("Generating x86 code...");
+	info_msg("Generating x86 code...");
 	
 	out_fd = fopen(filename, "w");
 	put_header(out_fd, B64);
@@ -302,6 +302,8 @@ void x86 (char * filename, bool B64, const DS blk_q){
 	else fprintf(out_fd,"align 4\n");
 	
 	//TODO: static variables
+	
+	info_msg("Finished generating x86 code");
 }
 
 

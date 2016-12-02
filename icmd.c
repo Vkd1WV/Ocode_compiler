@@ -59,16 +59,12 @@ void Dump_symbols(FILE * fd){
 	info_msg("Finished Symbols");
 }
 
-void Dump_iq(FILE * fd){
+void Dump_iq(FILE * fd, DS q){
 	icmd * iop;
-	
-	info_msg("Dumping the Global queue");
-	fprintf(fd, "GLOBAL QUEUE\n");
-	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	
 	if(verbosity >= V_DEBUG) fflush(fd);
 	
-	iop = (icmd*) DS_first(global_inst_q);
+	iop = (icmd*) DS_first(q);
 	
 	do {
 		sprintf(err_array, "Printing iop at: %p", (void*)iop);
@@ -76,23 +72,7 @@ void Dump_iq(FILE * fd){
 		
 		Print_icmd(fd, iop);
 		if(verbosity >= V_DEBUG) fflush(fd);
-	} while (( iop = (icmd*) DS_next(global_inst_q) ));
-	
-	fputs("\n\n", fd);
-	fflush(fd);
-	
-	info_msg("Dumping the sub queue");
-	fprintf(fd, "SUB QUEUE\n");
-	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
-	
-	fflush(fd);
-	
-	iop = (icmd*) DS_first(sub_inst_q);
-	do {
-		Print_icmd(fd, iop);
-	} while (( iop = (icmd*) DS_next(sub_inst_q) ));
-	
-	fflush(fd);
+	} while (( iop = (icmd*) DS_next(q) ));
 }
 
 /********************************** NAMES *************************************/

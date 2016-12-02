@@ -43,7 +43,7 @@ HEADERS:=global.h yuck.h parse.h icmd.h opt.h out/out.h
 LIBS   :=-ldata
 
 SRC    := \
-	cmd_line.yuck globals.c main.c \
+	Makefile cmd_line.yuck main.c \
 	scanner.l \
 	parse_declarations.c parse_expressions.c parse_statements.c parse.c \
 	icmd.c\
@@ -66,6 +66,9 @@ occ: $(OBJECTS)
 parse.o: parse_declarations.c parse_expressions.c parse_statements.c parse.c
 	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
+global.c: Makefile
+	echo "#define _GLOBALS_C\n#include \"global.h\"" > $@
+
 scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
 
@@ -87,7 +90,7 @@ yuck.o: yuck.c yuck.h
 ################################## UTILITIES ###################################
 
 CLEANFILES:= *.o ./out/*.o *.opp occ ./tests/*.dbg ./tests/*.asm ./tests/*.pexe
-VERYCLEANFILES:= $(CLEANFILES) scanner.c yuck.h yuck.c
+VERYCLEANFILES:= $(CLEANFILES) global.c scanner.c yuck.h yuck.c
 
 .PHONEY: clean todolist test very-clean
 very-clean:
