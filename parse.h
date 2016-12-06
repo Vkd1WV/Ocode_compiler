@@ -168,17 +168,13 @@ extern FILE *  yyin;
 
 
 token_t yylex(void);
-char * get_name(void);
+//char * get_name(void);
 
 
 /******************************************************************************/
 //                          GLOBAL INLINE FUNCTIONS
 /******************************************************************************/
 
-
-static inline void get_token(void){
-	token=yylex();
-}
 
 static inline void parse_error(const char * message){
 	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
@@ -187,19 +183,13 @@ static inline void parse_error(const char * message){
 	longjmp(anewline, 1);
 }
 
-static inline void expected(const char* thing){
-	char temp_array[ERR_ARR_SZ];
-	sprintf(temp_array, "Expected %s, found %s", thing, yytext);
-	parse_error(temp_array);
-}
-
 
 /******************************************************************************/
 //                             GLOBAL PROTOTYPES
 /******************************************************************************/
 
 
-void Parse(yuck_t * arg_pt);
+void Parse(Program_data data, FILE * arg_pt);
 
 
 #endif // _PARSER_H

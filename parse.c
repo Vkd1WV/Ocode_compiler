@@ -10,6 +10,19 @@
 
 
 /******************************************************************************/
+//                   GLOBAL VARIABLES IN THE PARSER MODULE
+/******************************************************************************/
+
+
+//token_t token;     ///< global lookahead token
+
+DS      symbols;       ///< symbol table
+DS      global_inst_q; ///< a global instruction queue
+DS      sub_inst_q;    ///< an instruction queue for subroutines
+char *  name_array;    ///< dynamic array for symbol and label names
+
+
+/******************************************************************************/
 //                             INLINE FUNCTIONS
 /******************************************************************************/
 
@@ -17,19 +30,52 @@
 /************************ ERROR REPORTING & RECOVERY **************************/
 
 static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
-	printf("PARSER CRITICAL ERROR: %s, on line %d.\n", message, yylineno);
+	if (verbosity >= V_ERROR){
+		fprintf(
+			stderr,
+			"PARSER CRITICAL ERROR: %s, on line %d.\n",
+			message,
+			yylineno
+		);
 	Print_sym(stderr, arg1);
 	Print_sym(stderr, arg2);
+	}
+	
 	exit(EXIT_FAILURE);
 }
 
 static inline void parse_warn(const char * message){
-	printf("WARNING: %s, on line %d.\n", message, yylineno);
+	if(verbosity >= V_WARN)
+		fprintf(stderr, "WARNING: %s, on line %d.\n", message, yylineno);
 }
 
 static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
-	if (arg1->type != arg2->type)
+	if(verbosity >= V_WARN && arg1->type != arg2->type)
 		parse_warn("Incompatible types in comparison");
+}
+
+static inline void get_token(void){
+	token=yylex();
+}
+
+static inline void expected(const char* thing){
+	char temp_array[ERR_ARR_SZ];
+	sprintf(temp_array, "Expected %s, found %s", thing, yytext);
+	parse_error(temp_array);
+}
+
+static inline void debug_sym(const char * message, sym_pt sym){
+	if (verbosity >= V_DEBUG){
+		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
+		Print_sym(stderr, sym);
+	}
+}
+
+static inline void debug_iop(const char * message, icmd * iop){
+	if (verbosity >= V_DEBUG){
+		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
+		Print_icmd(stderr, iop);
+	}
 }
 
 /********************************* GETTERS ************************************/
@@ -60,12 +106,53 @@ static inline void Match(token_t t){
 	}
 }
 
+static inline char * get_name(void){
+	static char * buffer;
+	static size_t buf_lngth;
+	size_t lngth;
+	
+	if (token != T_NAME) expected("a name");
+	
+	lngth = strlen(yytext)+1; // +1 for the \0
+	
+	// size the buffer if necessary
+	if(!buffer){
+		buffer = malloc(lngth);
+		buf_lngth = lngth;
+	}
+	else if (lngth > buf_lngth){
+		buffer = realloc(buffer, lngth);
+		buf_lngth = lngth;
+	}
+	
+	if (!buffer) crit_error("Out of Memory");
+	
+	strncpy(buffer, yytext, lngth);
+	
+	get_token();
+	return buffer;
+}
+
 
 /******************************************************************************/
 //                           PRIVATE PROTOTYPES
 /******************************************************************************/
 
 
+// Emmiters
+name_dx add_name (char * name);
+name_dx new_label(void); ///< get a new unique label
+sym_pt  new_var  (sym_type);  ///< Create a unique temporary symbol
+void    emit_iop (
+	name_dx      label,
+	op_code      op,
+	name_dx      target,
+	const sym_pt out,
+	const sym_pt left,
+	const sym_pt right
+);
+
+// Declarations
 void Decl_Symbol  (void);
 void Decl_Operator(void);
 
@@ -92,7 +179,7 @@ sym_pt Boolean          (void);
 
 static sym_pt Assign(sym_pt target);
 
-
+// Statements
 void Label (void    );
 void Jump  (void    );
 void If    (uint lvl); // only control statements need to know the block_lvl
@@ -110,6 +197,7 @@ void Statement (uint lvl);
 #include "parse_declarations.c"
 #include "parse_expressions.c"
 #include "parse_statements.c"
+#include "emitters.c"
 
 
 /******************************************************************************/
@@ -117,35 +205,18 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-void Parse(yuck_t * arg_pt){
+void Parse(Program_data data, FILE * in_fd){
 	bool errors;
 	
-	// Set the infile
-	if(arg_pt->nargs){
-		yyin = fopen(*arg_pt->args, "r");
-		if(!yyin) crit_error("No such file");
-		sprintf(err_array, "Reading from: %s\n", *arg_pt->args);
-		info_msg(err_array);
-	}
-	else info_msg("Reading from: stdin");
-	
-	// Set the debug file
-	if (arg_pt->dashd_flag){
-		char *dbgfile;
-		
-		dbgfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
-		if(! dbgfile) crit_error("Out of Memory");
-		
-		dbgfile = strcpy(dbgfile, *arg_pt->args);
-		dbgfile = strncat(dbgfile, default_dbg, strlen(default_dbg));
-		debug_fd = fopen(dbgfile, "w");
-		
-		fprintf(debug_fd,"#Omnicode Intermediate File\n");
-		
-		free(dbgfile);
-	}
+	// set various global pointers
+	yyin          = in_fd;
+	symbols       = data.symbols;
+	global_inst_q = data.main_q;
+	sub_inst_q    = data.sub_q;
+	name_array    = data.names;
 	
 	get_token(); // Initialize the lookahead token
+	
 	emit_iop(add_name("_#GLOBAL_START"), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
@@ -159,32 +230,8 @@ void Parse(yuck_t * arg_pt){
 	// Close the infile
 	fclose(yyin);
 	
-	// write to the debug file
-	if (debug_fd){
-		
-		info_msg("Producing debug file");
-		Dump_symbols(debug_fd);
-		
-		info_msg("Dumping the Global queue");
-		fprintf(debug_fd, "GLOBAL QUEUE\n");
-		fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
-		Dump_iq(debug_fd, global_inst_q);
-		
-		fputs("\n\n", debug_fd);
-		fflush(debug_fd);
-		
-		info_msg("Dumping the sub queue");
-		fprintf(debug_fd, "SUB QUEUE\n");
-		fprintf(debug_fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
-		Dump_iq(debug_fd, sub_inst_q);
-		
-		info_msg("Closing debug file");
-		fclose(debug_fd);
-		
-	}
-	
 	if(errors){
-		notice_msg("Parse errors were found. Exiting...");
+		warn_msg("Parse errors were found. Exiting...");
 		exit(EXIT_FAILURE);
 	}
 }

@@ -35,8 +35,7 @@
 //                             GLOBAL PROTOTYPES
 /******************************************************************************/
 
-void Dump_blkq(FILE * fd, DS blkq);
-DS Optomize(DS q1, DS q2);
+void Optomize(Program_data prog);
 
 
 #endif // _OPT_H

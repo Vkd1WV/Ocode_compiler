@@ -36,8 +36,8 @@
 /******************************************************************************/
 
 
-void x86 (char * filename, bool B64, const DS blk_q);
-void pexe (char * filename, const DS blk_q);
+void x86  (char * filename, const Program_data prog, bool B64);
+void pexe (char * filename, const Program_data prog          );
 
 
 #endif // _CODE_GEN_H

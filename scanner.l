@@ -274,7 +274,7 @@ asm    return T_ASM;
 {HEX} {
 	yynumber=0;
 	// this is a global from tokens.h used to pass numbers to parser.c
-	int max=strlen(yytext);
+	size_t max=strlen(yytext);
 	// yytext is where the matched text from the scanner is stored
 	
 	if (max-(unsigned)2 > sizeof(umax)*2) // subtracting 2 for the '0x'
@@ -303,7 +303,7 @@ asm    return T_ASM;
 
 \' { BEGIN(CHAR); }
 <CHAR>(\\.|[^'])\' { // an escaped anything \\. or a non-quote [^']
-	int len = strlen(yytext);
+	size_t len = strlen(yytext);
 	
 	if (len == 2){
 		yynumber = yytext[0];
@@ -382,35 +382,6 @@ asm    return T_ASM;
 <*>. {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
 	parse_error("unknown token");
-}
-
-%%
-
-char * get_name(void){
-	static char * buffer;
-	static unsigned int buf_lngth;
-	unsigned int lngth;
-	
-	if (token != T_NAME) expected("a name");
-	
-	lngth = strlen(yytext)+1; // +1 for the \0
-	
-	// size the buffer if necessary
-	if(!buffer){
-		buffer = malloc(lngth);
-		buf_lngth = lngth;
-	}
-	else if (lngth > buf_lngth){
-		buffer = realloc(buffer, lngth);
-		buf_lngth = lngth;
-	}
-	
-	if (!buffer) crit_error("Out of Memory");
-	
-	strncpy(buffer, yytext, lngth);
-	
-	get_token();
-	return buffer;
 }
 
 

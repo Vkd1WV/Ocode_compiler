@@ -104,44 +104,23 @@ static void Next_use(DS blk){
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
-void Dump_blkq(FILE * fd, DS blkq){
+
+void Optomize(Program_data prog){
 	DS blk;
 	
-	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
-	if (!blkq) err_msg("Internal: Dump_blkq(): received NULL block queue");
+	info_msg("Optomizing...");
 	
-	info_msg("Dumping the block queue");
-	
-	blk = (DS) DS_first(blkq);
-	
-	do {
-		Dump_iq(fd, blk);
-	} while(( blk = (DS) DS_next(blkq) ));
-	
-	info_msg("Finished dumping the block queue");
-}
-
-
-DS Optomize(DS q1, DS q2){
-	DS blk_q, blk;
-	
-	blk_q = DS_new_list(sizeof(DS));
-	
-	info_msg("Optomizing");
-	
-	while (( blk = Mk_blk(q1) )){
+	while (( blk = Mk_blk(prog.main_q) )){
 		Next_use(blk);
-		DS_nq(blk_q, blk);
+		DS_nq(prog.block_q, blk);
 	}
 	
-	while (( blk = Mk_blk(q2) )){
+	while (( blk = Mk_blk(prog.sub_q) )){
 		Next_use(blk);
-		DS_nq(blk_q, blk);
+		DS_nq(prog.block_q, blk);
 	}
 	
-	if (debug_fd) Dump_blkq(debug_fd, blk_q);
-	
-	return blk_q;
+	info_msg("Finished Optomizing");
 }
 
 

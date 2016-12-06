@@ -19,9 +19,8 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wsuggest-attribute=noreturn -Wsuggest-attribute=format \
 	-Wtrampolines -Wstack-protector \
 	-Wwrite-strings -Wno-discarded-qualifiers \
-	-Wc++-compat \
 	-Wconversion -Wdisabled-optimization \
-	# -Wpadded
+	# -Wc++-compat -Wpadded
 
 CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wmissing-declarations \
@@ -39,22 +38,25 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=global.h yuck.h parse.h icmd.h opt.h out/out.h
+HEADERS:=global.h yuck.h parse.h prog_data.h opt.h gen.h
 LIBS   :=-ldata
+
+PARSER:= \
+	parse.c \
+	parse_declarations.c parse_expressions.c parse_statements.c emitters.c
 
 SRC    := \
 	Makefile cmd_line.yuck main.c \
 	scanner.l \
-	parse_declarations.c parse_expressions.c parse_statements.c parse.c \
-	icmd.c\
+	$(PARSER) \
 	opt.c \
-	./out/pexe.c ./out/arm.c ./out/x86.c
+	gen-pexe.c gen-arm.c gen-x86.c
 
 OBJECTS:= \
 	yuck.o global.o main.o \
-	scanner.o parse.o icmd.o \
+	scanner.o parse.o \
 	opt.o \
-	./out/pexe.o ./out/x86.o #./out/arm.o
+	gen-pexe.o gen-x86.o #gen-arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 
@@ -63,7 +65,7 @@ ALLFILES:= $(SRC) $(HEADERS)
 occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-parse.o: parse_declarations.c parse_expressions.c parse_statements.c parse.c
+parse.o: $(PARSER) $(HEADERS)
 	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
 global.c: Makefile
@@ -89,12 +91,12 @@ yuck.o: yuck.c yuck.h
 
 ################################## UTILITIES ###################################
 
-CLEANFILES:= *.o ./out/*.o *.opp occ ./tests/*.dbg ./tests/*.asm ./tests/*.pexe
-VERYCLEANFILES:= $(CLEANFILES) global.c scanner.c yuck.h yuck.c
+CLEANFILES:= \
+	*.o *.o *.opp occ \
+	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
+	global.c scanner.c yuck.h yuck.c
 
-.PHONEY: clean todolist test very-clean
-very-clean:
-	rm -f $(VERYCLEANFILES)
+.PHONEY: clean todolist test
 
 clean:
 	rm -f $(CLEANFILES)

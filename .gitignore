@@ -8,3 +8,9 @@ occ
 
 # Debug files
 *.dbg
+
+# Automatically generated files
+global.c
+yuck.c
+yuck.h
+scanner.c

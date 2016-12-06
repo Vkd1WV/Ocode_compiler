@@ -23,12 +23,10 @@ typedef enum {
 	DI, // Destination Index
 	BP, // General Purpose
 	SP, // Stack Pointer
-	R8, R9, R10, R11, R12, R13, R14, R15
+	R8, R9, R10, R11, R12, R13, R14, R15,
+	NUM_X86_REG
 } reg_t;
 
-#define NUM_X86_REG 16
-
-sym_pt reg_d[NUM_X86_REG];
 
 /* If within a function the stack is only used for storing automaic variables the the value of SP does not change until the function returns. in which case if parameters are passed in the registers then the BP can be general purpose. */
 
@@ -39,9 +37,27 @@ typedef enum {
 	NUM_X86_INST
 } x86_inst;
 
+
+/******************************************************************************/
+//                  GLOBAL CONSTANTS IN THE GEN-X86 MODULE
+/******************************************************************************/
+
+
 const char * inst_array[NUM_X86_INST] = {
 	"mov", "add", "sub"
 };
+
+
+/******************************************************************************/
+//                  GLOBAL VARIABLES IN THE GEN-X86 MODULE
+/******************************************************************************/
+
+
+/**	the register descriptor.
+ *	keeps track of what value is in each register at any time
+ */
+sym_pt reg_d[NUM_X86_REG];
+
 
 
 /******************************************************************************/
@@ -62,7 +78,7 @@ static char * str_num(umax num){
 static char * str_name(name_dx dx){
 	char * in_name;
 	static char * out_name;
-	unsigned int length;
+	size_t length;
 	
 	in_name = dx_to_name(dx);
 	length = strlen(in_name) + 2; // $ and \0
@@ -92,6 +108,7 @@ static char * str_reg(int_size width, reg_t reg, bool B64){
 	case w_byte4: array[1] = 'e'; array[3] = 'x'; break;
 	case w_byte8:
 	case w_max  : array[1] = 'r'; array[3] = 'x'; break;
+	case w_NUM:
 	case w_undef:
 	default     : crit_error("something done broke in put_reg()");
 	}
@@ -113,6 +130,7 @@ static char * str_reg(int_size width, reg_t reg, bool B64){
 	case R13: array[2] = '1'; array[3] = '3'; break;
 	case R14: array[2] = '1'; array[3] = '4'; break;
 	case R15: array[2] = '1'; array[3] = '5'; break;
+	case NUM_X86_REG:
 	default: crit_error("something done broke in put_reg()");
 	}
 	
@@ -212,16 +230,19 @@ static void put_op(icmd * op){
 	case I_JZ  :
 		break;
 	
+	case I_CALL:
+		break;
+	
+	case I_RTRN:
+		break;
+	
 	case I_BLK :
 		break;
 	
 	case I_EBLK:
 		break;
 	
-	case I_CALL:
-		break;
-	
-	case I_RTRN:
+	case I_CMNT:
 		break;
 	
 	case NUM_I_CODES:
@@ -271,12 +292,12 @@ static void Gen_blk(FILE * out_fd, DS blk){
 
 
 /******************************************************************************/
-//                             PUBLIC FUNCTIONS
+//                             PUBLIC FUNCTION
 /******************************************************************************/
 
 /**	Produces a NASM file from the block queue
 */
-void x86 (char * filename, bool B64, const DS blk_q){
+void x86 (char * filename, const Program_data prog, bool B64){
 	FILE * out_fd;
 	DS blk;
 	
@@ -289,11 +310,11 @@ void x86 (char * filename, bool B64, const DS blk_q){
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
 	// This is the text or code section
-	blk = (DS) DS_last(blk_q);
+	blk = (DS) DS_first(prog.block_q);
 	
 	do{
 		Gen_blk(out_fd, blk);
-	} while(( blk = (DS) DS_previous(blk_q) ));
+	} while(( blk = (DS) DS_next(prog.block_q) ));
 	
 	
 	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");

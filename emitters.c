@@ -14,16 +14,6 @@
 /******************************************************************************/
 
 
-const char * op_code_dex[NUM_I_CODES] = {
-	"I_NOP", "I_ASS", "I_REF", "I_DREF", "I_NEG", "I_NOT" , "I_INV" , "I_INC",
-	"I_DEC",
-	"I_MUL",
-	"I_DIV", "I_MOD", "I_EXP", "I_LSH" , "I_RSH", "I_ADD" , "I_SUB" , "I_BAND",
-	"I_BOR", "I_XOR", "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  , "I_LTE" , "I_GTE" ,
-	"I_AND", "I_OR" , "I_JMP", "I_JZ"  , "I_BLK", "I_EBLK", "I_CALL", "I_RTRN"
-};
-
-
 /******************************************************************************/
 //                             INLINE FUNCTIONS
 /******************************************************************************/
@@ -38,42 +28,6 @@ const char * op_code_dex[NUM_I_CODES] = {
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
-
-// Dump the symbol Table
-void Dump_symbols(FILE * fd){
-	sym_pt sym;
-	
-	info_msg("Dumping Symbols");
-	fputs("# SYMBOL TABLE", fd);
-	fprintf(fd,"\nName:\t   Type Width Flags Dref\n");
-	
-	sym = (sym_pt) DS_first(symbols);
-	do {
-		Print_sym(fd, sym);
-	} while(( sym = (sym_pt) DS_next(symbols) ));
-	
-	fputs("\n\n", fd);
-	
-	fflush(fd);
-	
-	info_msg("Finished Symbols");
-}
-
-void Dump_iq(FILE * fd, DS q){
-	icmd * iop;
-	
-	if(verbosity >= V_DEBUG) fflush(fd);
-	
-	iop = (icmd*) DS_first(q);
-	
-	do {
-		sprintf(err_array, "Printing iop at: %p", (void*)iop);
-		debug_msg(err_array);
-		
-		Print_icmd(fd, iop);
-		if(verbosity >= V_DEBUG) fflush(fd);
-	} while (( iop = (icmd*) DS_next(q) ));
-}
 
 /********************************** NAMES *************************************/
 
@@ -142,12 +96,9 @@ sym_pt new_var(sym_type type){
 	return (sym_pt)DS_insert(symbols, &new_symbol);
 }
 
-
-/******************************** EMITTERS ************************************/
-
-void emit_cmnt(const char* comment){
-	if (debug_fd) fprintf(debug_fd, "\t# %s\n", comment);
-}
+/*void emit_cmnt(const char* comment){*/
+/*	if (debug_fd) fprintf(debug_fd, "\t# %s\n", comment);*/
+/*}*/
 
 void emit_iop(
 	name_dx      label,

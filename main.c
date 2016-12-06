@@ -6,28 +6,23 @@
  *
  ******************************************************************************/
 
-
 #include "global.h"
 
-// file name defaults
-const char * default_out  = "out"  ;
+// Default output files
 const char * default_dbg  = ".dbg" ;
+const char * default_out  = "out"  ;
 const char * default_asm  = ".asm" ;
 const char * default_pexe = ".pexe";
 
-static void Initialize(yuck_t * arg_pt){
+
+static inline void Set_files(FILE ** in_fd, FILE ** debug_fd, yuck_t * arg_pt){
 	uint sum;
+	char *dbgfile;
 	
-	if (arg_pt->nargs > 1) notice_msg("Too many arguments...Ignoring.");
+	// default verbosity
+	verbosity = DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag;
 	
-	// set the global verbosity
-	switch(arg_pt->dashv_flag){
-	case 2: verbosity = V_DEBUG; break;
-	case 1: verbosity = V_INFO ; break;
-	case 0:
-	default: verbosity = V_NOTE; break;
-	}
-	
+	if (arg_pt->nargs > 1) warn_msg("Too many arguments...Ignoring.");
 	
 	if(verbosity >= V_DEBUG) printf("\
 ARGUMENTS PASSED\n\
@@ -38,7 +33,6 @@ dashq_flag        :\t%u\n\
 dashD_arg         :\t%s\n\
 dashd_flag        :\t%u\n\
 dashp_flag        :\t%u\n\
-dasha_flag        :\t%u\n\
 x86_long_flag     :\t%u\n\
 x86_protected_flag:\t%u\n\
 arm_v7_flag       :\t%u\n\
@@ -50,7 +44,6 @@ arm_v8_flag       :\t%u\n\n" ,
 			arg_pt->dashD_arg  ,
 			arg_pt->dashd_flag ,
 			arg_pt->dashp_flag ,
-			arg_pt->dasha_flag ,
 			arg_pt->x86_long_flag     ,
 			arg_pt->x86_protected_flag,
 			arg_pt->arm_v7_flag       ,
@@ -61,29 +54,49 @@ arm_v8_flag       :\t%u\n\n" ,
 	sum = arg_pt->x86_long_flag + arg_pt->x86_protected_flag;
 	sum += arg_pt->arm_v7_flag + arg_pt->arm_v8_flag;
 	
-	if(arg_pt->dasha_flag && sum != 1)
+	// if too many targets
+	if(sum > 1)
 		crit_error("Must specify exactly one target architecture.");
 	
-	// initialize the symbol table
-	symbols = DS_new_bst(
-		sizeof(struct sym),
-		false,
-		&sym_key,
-		&cmp_sym
-	);
+	// if no target has been selected
+	if(sum < 1 && !arg_pt->dashp_flag) {
+		info_msg("Using default target x86-long");
+		arg_pt->x86_long_flag = true;
+	}
 	
-	// initialize the intermediate code queues
-	global_inst_q = DS_new_list(sizeof(icmd));
-	sub_inst_q    = DS_new_list(sizeof(icmd));
+	// Set the infile
+	if(arg_pt->nargs){
+		*in_fd = fopen(*arg_pt->args, "r");
+		if(!*in_fd) crit_error("No such file");
+		sprintf(err_array, "Reading from: %s\n", *arg_pt->args);
+		info_msg(err_array);
+	}
+	else {
+		*in_fd = stdin;
+		info_msg("Reading from: stdin");
+	}
+	
+	// Set the debug file
+	if (arg_pt->dashd_flag){
+		dbgfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
+		if(! dbgfile) crit_error("Out of Memory");
+		
+		dbgfile = strcpy(dbgfile, *arg_pt->args);
+		dbgfile = strncat(dbgfile, default_dbg, strlen(default_dbg));
+		*debug_fd = fopen(dbgfile, "w");
+		
+		free(dbgfile);
+	}
+	
 }
 
 
-static void Generate_code(yuck_t * arg_pt, DS blk_q){
+static inline void Generate_code(yuck_t * arg_pt, Program_data prog){
+	uint sum;
+	char *pexefile, *asmfile;
 	
 	// pexe
 	if (arg_pt->dashp_flag){
-		char *pexefile;
-		
 		pexefile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_pexe)+1);
 		if(! pexefile) crit_error("Out of Memory");
 		
@@ -93,17 +106,19 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		sprintf(err_array, "pexefile is: '%s'", pexefile);
 		info_msg(err_array);
 		
-		pexe(pexefile, blk_q);
+		pexe(pexefile, prog);
 		
 		free(pexefile);
 	}
 	
+	sum = arg_pt->x86_long_flag + arg_pt->x86_protected_flag;
+	sum += arg_pt->arm_v7_flag + arg_pt->arm_v8_flag;
+	
 	// asm
-	if (arg_pt->dasha_flag || !arg_pt->dashp_flag){
-		char *asmfile;
-		
+	if (sum){
+		// set the assembler output file
 		if (arg_pt->nargs){
-			asmfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_asm)+1);
+			asmfile=(char*) malloc(strlen(*arg_pt->args)+strlen(default_asm)+1);
 			if(! asmfile) crit_error("Out of Memory");
 			asmfile = strcpy(asmfile, *arg_pt->args);
 		}
@@ -118,49 +133,42 @@ static void Generate_code(yuck_t * arg_pt, DS blk_q){
 		sprintf(err_array, "asmfile is: '%s'", asmfile);
 		info_msg(err_array);
 		
-		if(arg_pt->x86_long_flag) x86(asmfile, true, blk_q);
-		else if(arg_pt->x86_protected_flag) x86(asmfile, false, blk_q);
+		if(arg_pt->x86_long_flag) x86(asmfile, prog, true);
+		else if(arg_pt->x86_protected_flag) x86(asmfile, prog, false);
+		else err_msg("Unimplemented Target");
 		
 		free(asmfile);
 	}
 }
 
 
-static void Cleanup(yuck_t * arg_pt, DS structure){
-	DS blk;
-
-	info_msg("Cleanup...");
-	yuck_free(arg_pt);
-	debug_msg("Deleting the symbol table");
-	DS_delete(symbols);
-	debug_msg("Deleting the Global Queue");
-	DS_delete(global_inst_q);
-	debug_msg("Deleting the Sub queue");
-	DS_delete(sub_inst_q);
-	
-	debug_msg("Deleting the blocks");
-	while(( blk = (DS) DS_first(structure) )) DS_delete(blk);
-	debug_msg("Deleting the block queue");
-	DS_delete(structure);
-	
-	debug_msg("Deleting the name array");
-	free(name_array);
-}
-
-
 int main (int argc, char** argv){
 	yuck_t arg_pt[1];
-	DS blk_q;
+	FILE *in_fd, *debug_fd;
+	Program_data prog_data;
 	
 	yuck_parse(arg_pt, argc, argv);
-	Initialize(arg_pt);
-	Parse(arg_pt);
+	Set_files(&in_fd, &debug_fd, arg_pt);
 	
-	blk_q = Optomize(global_inst_q, sub_inst_q);
+	Init_program_data(&prog_data);
 	
-	Generate_code(arg_pt, blk_q);
+	Parse(prog_data, in_fd);
 	
-	Cleanup(arg_pt, blk_q);
+	if (debug_fd)
+		Dump_parser(debug_fd, prog_data);
+	
+	Optomize(prog_data);
+	
+	if (debug_fd) Dump_blkq(debug_fd, prog_data);
+	
+	info_msg("Closing debug file");
+	fclose(debug_fd);
+	
+	Generate_code(arg_pt, prog_data);
+	
+	info_msg("Cleanup...");
+	yuck_free(arg_pt);
+	Clear_program_data(prog_data);
 	
 	return EXIT_SUCCESS;
 }

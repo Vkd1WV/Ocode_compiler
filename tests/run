@@ -1,6 +1,37 @@
 #!/bin/bash
 
 for file in ./tests/*.oc; do
-	echo -e "\nrunning $file\n"
+	echo -e "\nTESTS: running $file\n"
 	./occ -vvpad --x86-long $file
+	./occ -vv $file
+	
+	#without debuging info
+	./occ --x86-long $file
+	./occ --x86-protected $file
+	./occ -p $file
+	./occ $file
+	
+	#with info
+	./occ -v --x86-long $file
+	./occ -v --x86-protected $file
+	./occ -v -p $file
+	./occ -v $file
+	
+	#with debug file
+	./occ -d --x86-long $file
+	./occ -d --x86-protected $file
+	./occ -d -p $file
+	./occ -d $file
+	
+	#with debug
+	./occ -vv --x86-long $file
+	./occ -vv --x86-protected $file
+	./occ -vv -p $file
+	./occ -vv $file
+	
+	#with both
+	./occ -vvd --x86-long $file
+	./occ -vvd --x86-protected $file
+	./occ -vvd -p $file
+	./occ -vvd $file
 done

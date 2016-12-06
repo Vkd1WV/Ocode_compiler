@@ -39,7 +39,6 @@ typedef enum {
 	V_QUIET,
 	V_ERROR,
 	V_WARN,
-	V_NOTE,
 	V_INFO,
 	V_DEBUG
 } verb_t;
@@ -50,12 +49,9 @@ typedef enum {
 /******************************************************************************/
 
 
+#define DEFAULT_VERBOSITY (verb_t)V_WARN
 #define ERR_ARR_SZ  100  ///< temp arrays used in error reporting
 
-extern const char * default_out;
-extern const char * default_dbg;
-extern const char * default_asm;
-extern const char * default_pexe;
 
 /******************************************************************************/
 //                             GLOBAL VARIABLES
@@ -69,11 +65,9 @@ extern const char * default_pexe;
 #endif
 
 
-verb_t verbosity;
-
+EXTERN verb_t  verbosity; ///< set in Set_files() and never changed again
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
-EXTERN FILE *  debug_fd;  ///< contains a text representation of the instruction queue
-EXTERN char err_array[ERR_ARR_SZ];
+EXTERN char    err_array[ERR_ARR_SZ]; ///< Temporary string for messages
 
 
 #undef EXTERN
@@ -85,7 +79,8 @@ EXTERN char err_array[ERR_ARR_SZ];
 
 
 static inline void crit_error(const char* message){
-	fprintf(stderr, "CRITICAL ERROR: %s.\n", message);
+	if (verbosity >= V_ERROR)
+		fprintf(stderr, "CRITICAL ERROR: %s.\n", message);
 	exit(EXIT_FAILURE);
 }
 
@@ -97,11 +92,6 @@ static inline void err_msg(const char * message){
 static inline void warn_msg(const char * message){
 	if (verbosity >= V_WARN)
 		fprintf(stderr, "ERROR: %s.\n", message);
-}
-
-static inline void notice_msg(const char * message){
-	if (verbosity >= V_NOTE)
-		fprintf(stderr, "NOTICE: %s.\n", message);
 }
 
 static inline void info_msg(const char * message){
@@ -120,12 +110,11 @@ static inline void debug_msg(const char * message){
 /******************************************************************************/
 
 
-#include "yuck.h"   // includes type definitions
-//#include "tokens.h"
+#include "yuck.h"
+#include "prog_data.h"
 #include "parse.h"
-#include "icmd.h"
 #include "opt.h"
-#include "out/out.h"
+#include "gen.h"
 
 
 #endif // _GLOBAL_H

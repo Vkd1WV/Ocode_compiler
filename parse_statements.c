@@ -29,7 +29,11 @@ void If(uint lvl){
 	name_dx if_label, else_label;
 	
 	Match(T_IF);
-	emit_cmnt("start of IF statement");
+	emit_iop(
+		NO_NAME,
+		I_CMNT, add_name("start of IF statement"),
+		NULL, NULL, NULL
+	);
 	if_label = new_label();
 	
 	condition = Boolean();
@@ -40,7 +44,11 @@ void If(uint lvl){
 	
 	if(token == T_ELSE){
 		Match(T_ELSE);
-		emit_cmnt("start of ELSE statement");
+		emit_iop(
+			NO_NAME,
+			I_CMNT, add_name("start of ELSE statement"),
+			NULL, NULL, NULL
+		);
 		else_label = new_label();
 		emit_iop(NO_NAME, I_JMP, else_label, NULL, NULL, NULL);
 		emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
@@ -48,11 +56,19 @@ void If(uint lvl){
 		Statement(lvl);
 		
 		emit_iop(else_label, I_NOP, NO_NAME, NULL, NULL, NULL);
-		emit_cmnt("End of ELSE");
+		emit_iop(
+			NO_NAME,
+			I_CMNT, add_name("End of ELSE"),
+			NULL, NULL, NULL
+		);
 	}
 	else emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
 	
-	emit_cmnt("End of IF Statement\n");
+	emit_iop(
+		NO_NAME,
+		I_CMNT, add_name("End of IF Statement\n"),
+		NULL, NULL, NULL
+	);
 }
 
 void While(uint lvl){
@@ -60,7 +76,11 @@ void While(uint lvl){
 	sym_pt result;
 	
 	Match(T_WHILE);
-	emit_cmnt("Start of WHILE loop");
+	emit_iop(
+		NO_NAME,
+		I_CMNT, add_name("Start of WHILE loop"),
+		NULL, NULL, NULL
+	);
 	repeat_label = new_label();
 	skip_label   = new_label();
 	
@@ -74,7 +94,11 @@ void While(uint lvl){
 	
 	emit_iop(NO_NAME, I_JMP, repeat_label, NULL, NULL, NULL);
 	emit_iop(skip_label, I_NOP, NO_NAME, NULL, NULL, NULL);
-	emit_cmnt("End of WHILE loop\n");
+	emit_iop(
+		NO_NAME,
+		I_CMNT, add_name("End of WHILE loop\n"),
+		NULL, NULL, NULL
+	);
 }
 
 
