@@ -38,7 +38,7 @@ LFLAGS:=#-d
 
 ################################## FILES #######################################
 
-HEADERS:=global.h yuck.h parse.h prog_data.h opt.h gen.h
+HEADERS:=global.h yuck.h prog_data.h
 LIBS   :=-ldata
 
 PARSER:= \
@@ -65,7 +65,7 @@ ALLFILES:= $(SRC) $(HEADERS)
 occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-parse.o: $(PARSER) $(HEADERS)
+parse.o: $(PARSER) $(HEADERS) scanner.h
 	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
 global.c: Makefile
@@ -78,7 +78,7 @@ yuck.c yuck.h: occ.yuck
 	yuck gen -Hyuck.h -o yuck.c $<
 
 # suppress warnings for third party slop
-scanner.o: $(HEADERS) scanner.c
+scanner.o: $(HEADERS) scanner.c scanner.h
 	$(CC) $(CFLAGS) -w -c -o $@ scanner.c
 yuck.o: yuck.c yuck.h
 	$(CC) $(CFLAGS) -w -c $<

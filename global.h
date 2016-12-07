@@ -74,7 +74,7 @@ EXTERN char    err_array[ERR_ARR_SZ]; ///< Temporary string for messages
 
 
 /******************************************************************************/
-//                                PROTOTYPES
+//                         GLOBAL INLINE FUNCTIONS
 /******************************************************************************/
 
 
@@ -110,11 +110,19 @@ static inline void debug_msg(const char * message){
 /******************************************************************************/
 
 
-#include "yuck.h"
 #include "prog_data.h"
-#include "parse.h"
-#include "opt.h"
-#include "gen.h"
+
+
+/******************************************************************************/
+//                        GLOBAL FUNCTION PROTOTYPES
+/******************************************************************************/
+
+void Parse(Program_data data, FILE * arg_pt);
+
+void Optomize(Program_data prog);
+
+void x86  (char * filename, const Program_data prog, bool B64);
+void pexe (char * filename, const Program_data prog          );
 
 
 #endif // _GLOBAL_H

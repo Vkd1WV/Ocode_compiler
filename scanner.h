@@ -10,6 +10,11 @@
 #define _PARSER_H
 
 
+/*	Most of this file is just an interface with scanner.c and doesn't need to be
+ *	global. The Parse() prototype can go to global.c and this can be renamed
+ *	scanner.h and only included in parse.c
+ */
+
 /******************************************************************************/
 //                            TYPE DEFINITIONS
 /******************************************************************************/
@@ -142,22 +147,20 @@ typedef enum {
 /******************************************************************************/
 
 
-#ifdef _GLOBALS_C
+#ifdef _SCANNER_L
 	#define EXTERN
 #else
 	#define EXTERN extern
+	
+	// Global variables provided by the scanner
+	extern int     yylineno;
+	extern char *  yytext;
+	extern FILE *  yyin;
 #endif
 
 EXTERN token_t token;     ///< global lookahead token
 EXTERN uint    block_lvl; ///< number of leading tabs on the current line
 EXTERN umax    yynumber;  ///< numbers passed to the parser by T_NUM
-
-// Global variables provided by the scanner
-#ifndef _SCANNER_L
-extern int     yylineno;
-extern char *  yytext;
-extern FILE *  yyin;
-#endif
 
 #undef EXTERN
 
@@ -168,7 +171,6 @@ extern FILE *  yyin;
 
 
 token_t yylex(void);
-//char * get_name(void);
 
 
 /******************************************************************************/
@@ -189,7 +191,7 @@ static inline void parse_error(const char * message){
 /******************************************************************************/
 
 
-void Parse(Program_data data, FILE * arg_pt);
+
 
 
 #endif // _PARSER_H

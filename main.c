@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include "global.h"
+#include "yuck.h"
 
 // Default output files
 const char * default_dbg  = ".dbg" ;
