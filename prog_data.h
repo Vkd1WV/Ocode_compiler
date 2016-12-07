@@ -225,29 +225,29 @@ static inline void Init_program_data(Program_data * data_pt){
 	);
 }
 
-static inline void Clear_program_data(Program_data data_pt){
+static inline void Clear_program_data(Program_data * data_pt){
 	DS blk;
 
 	debug_msg("Deleting the name array");
-	free(data_pt.names);
+	free(data_pt->names);
 	
 	debug_msg("Deleting the blocks");
-	while(( blk = (DS) DS_first(data_pt.block_q) )) DS_delete(blk);
+	while(( blk = (DS) DS_first(data_pt->block_q) )) DS_delete(blk);
 	debug_msg("Deleting the block queue");
-	DS_delete(data_pt.block_q);
+	DS_delete(data_pt->block_q);
 	
 	debug_msg("Deleting the main Queue");
-	DS_delete(data_pt.main_q);
+	DS_delete(data_pt->main_q);
 	debug_msg("Deleting the Sub queue");
-	DS_delete(data_pt.sub_q);
+	DS_delete(data_pt->sub_q);
 	debug_msg("Deleting the symbol table");
-	DS_delete(data_pt.symbols);
+	DS_delete(data_pt->symbols);
 }
 
 /********************** PRINT INTERMEDIATE REPRESENTATION *********************/
 
 static inline void Print_icmd(FILE * fd, icmd * iop){
-	if(!iop) fputs("NULL", fd);
+	if(!iop) fputs("NULL\n", fd);
 	else
 		fprintf(fd, "%4s:\t%s\t%4s\n",
 			dx_to_name(iop->label),
@@ -283,54 +283,60 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 static inline void Dump_iq(FILE * fd, DS q){
 	icmd * iop;
 	
-	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
-	if (!q) err_msg("Internal: Dump_blkq(): received NULL queue");
+	if (!fd) err_msg("Internal: Dump_iq(): received NULL file descriptor");
+	if (!q) err_msg("Internal: Dump_iq(): received NULL queue");
 	
 	if(verbosity >= V_DEBUG) fflush(fd);
+	
+	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
 	
 	iop = (icmd*) DS_first(q);
 	
 	do {
+		#ifdef IOP_ADDR
 		sprintf(err_array, "Printing iop at: %p", (void*)iop);
 		debug_msg(err_array);
+		#endif
 		
 		Print_icmd(fd, iop);
 		if(verbosity >= V_DEBUG) fflush(fd);
 	} while (( iop = (icmd*) DS_next(q) ));
 }
 
-static inline void Dump_blkq(FILE * fd, Program_data data){
+static inline void Dump_blkq(FILE * fd, Program_data * data){
 	DS blk;
 	
 	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
-	if (!data.block_q)
+	if (!data->block_q)
 		err_msg("Internal: Dump_blkq(): received NULL block queue");
 	
 	info_msg("Dumping the block queue");
 	
-	blk = (DS) DS_first(data.block_q);
+	blk = (DS) DS_first(data->block_q);
 	
 	do {
 		Dump_iq(fd, blk);
-	} while(( blk = (DS) DS_next(data.block_q) ));
+	} while(( blk = (DS) DS_next(data->block_q) ));
 	
 	info_msg("Finished dumping the block queue");
 }
 
 // Dump the symbol Table
-static inline void Dump_symbols(FILE * fd, Program_data data){
+static inline void Dump_symbols(FILE * fd, Program_data * data){
 	sym_pt sym;
 	
 	if (!fd) err_msg("Internal: Dump_symbols(): received NULL file descriptor");
+	if (!data->symbols)
+		err_msg("Internal: Dump_symbols(): received NULL symbols");
 	
 	info_msg("Dumping Symbols...");
 	fputs("# SYMBOL TABLE", fd);
 	fprintf(fd,"\nName:\t   Type Width Flags Dref\n");
 	
-	sym = (sym_pt) DS_first(data.symbols);
+	sym = (sym_pt) DS_first(data->symbols);
 	do {
 		Print_sym(fd, sym);
-	} while(( sym = (sym_pt) DS_next(data.symbols) ));
+	} while(( sym = (sym_pt) DS_next(data->symbols) ));
 	
 	fputs("\n\n", fd);
 	
@@ -339,22 +345,37 @@ static inline void Dump_symbols(FILE * fd, Program_data data){
 	info_msg("Finished Symbols");
 }
 
-static inline void Dump_parser(FILE * fd, Program_data data){
-	info_msg("Dumping the symbol table");
+static inline void Dump_all(FILE * fd, Program_data * data){
+	info_msg("Dumping all program data");
+	
+	sprintf(err_array, "The symbols has %u", DS_count(data->symbols));
+	info_msg(err_array);
 	Dump_symbols(fd, data);
 	
-	info_msg("Dumping the global queue");
-	fprintf(fd, "GLOBAL QUEUE\n");
-	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
-	Dump_iq(fd, data.main_q);
+	sprintf(err_array, "The main_q has %u instructions", DS_count(data->main_q));
+	info_msg(err_array);
+	fprintf(fd, "MAIN QUEUE\n");
+	Dump_iq(fd, data->main_q);
 	
 	fputs("\n\n", fd);
 	fflush(fd);
 	
-	info_msg("Dumping the sub queue");
+	sprintf(err_array, "The sub_q has %u instructions", DS_count(data->sub_q));
+	info_msg(err_array);
 	fprintf(fd, "SUB QUEUE\n");
-	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
-	Dump_iq(fd, data.sub_q);
+	Dump_iq(fd, data->sub_q);
+	
+	fputs("\n\n", fd);
+	fflush(fd);
+	
+	sprintf(err_array, "The block_q has %u blocks", DS_count(data->block_q));
+	info_msg(err_array);
+	fprintf(fd, "BLOCK QUEUE\n");
+	Dump_blkq(fd, data);
+	
+	fflush(fd);
+	
+	info_msg("Finished dumping program data");
 }
 
 

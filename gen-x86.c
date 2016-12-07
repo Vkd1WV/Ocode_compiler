@@ -297,7 +297,7 @@ static void Gen_blk(FILE * out_fd, DS blk){
 
 /**	Produces a NASM file from the block queue
 */
-void x86 (char * filename, const Program_data prog, bool B64){
+void x86 (char * filename, const Program_data * prog, bool B64){
 	FILE * out_fd;
 	DS blk;
 	
@@ -310,11 +310,11 @@ void x86 (char * filename, const Program_data prog, bool B64){
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
 	// This is the text or code section
-	blk = (DS) DS_first(prog.block_q);
+	blk = (DS) DS_first(prog->block_q);
 	
 	do{
 		Gen_blk(out_fd, blk);
-	} while(( blk = (DS) DS_next(prog.block_q) ));
+	} while(( blk = (DS) DS_next(prog->block_q) ));
 	
 	
 	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");

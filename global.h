@@ -117,12 +117,12 @@ static inline void debug_msg(const char * message){
 //                        GLOBAL FUNCTION PROTOTYPES
 /******************************************************************************/
 
-void Parse(Program_data data, FILE * arg_pt);
+void Parse(Program_data * data, FILE * arg_pt);
 
-void Optomize(Program_data prog);
+void Optomize(Program_data * prog);
 
-void x86  (char * filename, const Program_data prog, bool B64);
-void pexe (char * filename, const Program_data prog          );
+void x86  (char * filename, const Program_data * prog, bool B64);
+void pexe (char * filename, const Program_data * prog          );
 
 
 #endif // _GLOBAL_H

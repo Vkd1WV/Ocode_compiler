@@ -31,9 +31,10 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wwrite-strings \
 	-Wconversion
 
+DEBUG_OPT:= #-DDBG_EMIT_IOP -DIOP_ADDR
 
-CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g -DDEBUG
-CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g -DDEBUG
+CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
+CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
 LFLAGS:=#-d
 
 ################################## FILES #######################################
@@ -83,7 +84,7 @@ scanner.o: $(HEADERS) scanner.c scanner.h
 yuck.o: yuck.c yuck.h
 	$(CC) $(CFLAGS) -w -c $<
 
-%.o: %.c %.h $(HEADERS)
+%.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
 %.opp: %.cpp %.hpp $(HEADERS)

@@ -29,7 +29,7 @@ typedef struct pexe_header{
 /**	Create a Portable Executable file from the intermediate represetation
 	Takes the output file name as a parameter. stack or register based VM?
  */
-void pexe (char * filename, const Program_data prog){
+void pexe (char * filename, const Program_data * prog){
 	FILE* fd;
 	
 	sprintf(err_array, "Creating pexe file: '%s'", filename);

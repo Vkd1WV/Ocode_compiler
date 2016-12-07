@@ -17,10 +17,10 @@
 
 //token_t token;     ///< global lookahead token
 
-DS      symbols;       ///< symbol table
-DS      global_inst_q; ///< a global instruction queue
-DS      sub_inst_q;    ///< an instruction queue for subroutines
-char *  name_array;    ///< dynamic array for symbol and label names
+DS     symbols;       ///< symbol table
+DS     global_inst_q; ///< a global instruction queue
+DS     sub_inst_q;    ///< an instruction queue for subroutines
+char * name_array;    ///< dynamic array for symbol and label names
 
 
 /******************************************************************************/
@@ -206,15 +206,14 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-void Parse(Program_data data, FILE * in_fd){
+void Parse(Program_data * data, FILE * in_fd){
 	bool errors;
 	
 	// set various global pointers
 	yyin          = in_fd;
-	symbols       = data.symbols;
-	global_inst_q = data.main_q;
-	sub_inst_q    = data.sub_q;
-	name_array    = data.names;
+	symbols       = data->symbols;
+	global_inst_q = data->main_q;
+	sub_inst_q    = data->sub_q;
 	
 	get_token(); // Initialize the lookahead token
 	
@@ -235,6 +234,8 @@ void Parse(Program_data data, FILE * in_fd){
 		warn_msg("Parse errors were found. Exiting...");
 		exit(EXIT_FAILURE);
 	}
+	
+	data->names = name_array;
 }
 
 

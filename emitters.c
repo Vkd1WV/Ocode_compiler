@@ -115,9 +115,11 @@ void emit_iop(
 	iop->op     = op;
 	iop->target = target;
 	
+	#ifdef DBG_EMIT_IOP
 	debug_sym("emit_iop()        : out         ", out);
 	debug_sym("emit_iop()        : left        ", left);
 	debug_sym("emit_iop()        : right       ", right);
+	#endif
 	
 	switch (op){
 	case I_NOP :
@@ -189,12 +191,17 @@ void emit_iop(
 		crit_error(err_array);
 	}
 	
+	#ifdef DBG_EMIT_IOP
 	debug_iop("emit_iop()        :Adding iop   ", iop);
+	#endif
 	
 	// queue up this operation
 	temp= DS_nq(global_inst_q, iop);
+	
+	#ifdef IOP_ADDR
 	sprintf(err_array, "iop saved at: %p", temp);
 	debug_msg(err_array);
+	#endif
 	
 }
 

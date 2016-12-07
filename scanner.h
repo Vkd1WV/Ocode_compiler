@@ -6,13 +6,12 @@
  *
  ******************************************************************************/
 
-#ifndef _PARSER_H
-#define _PARSER_H
+#ifndef _SCANNER_H
+#define _SCANNER_H
 
 
-/*	Most of this file is just an interface with scanner.c and doesn't need to be
- *	global. The Parse() prototype can go to global.c and this can be renamed
- *	scanner.h and only included in parse.c
+/*	This file is just an interface between parser.c and scanner.c and doesn't
+ *	need to be global.
  */
 
 /******************************************************************************/
@@ -186,14 +185,6 @@ static inline void parse_error(const char * message){
 }
 
 
-/******************************************************************************/
-//                             GLOBAL PROTOTYPES
-/******************************************************************************/
-
-
-
-
-
-#endif // _PARSER_H
+#endif // _SCANNER_H
 
 

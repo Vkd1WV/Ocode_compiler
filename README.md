@@ -29,15 +29,15 @@ I'm proving I can build my own programming language. I am not currently licencin
 
 `oc file` -> scanner -> `token`
 
-`token`   -> parser  -> `name_array, symbols, global_inst_q, sub_inst_q, & dbg file`
+`token`   -> parser  -> `Program_data`
 
-`symbols, global_inst_q, sub_inst_q` -> optomizer -> `symbols, blk_q`
+`Program_data` -> optomizer -> `Program_data`
 
-`name_array, symbols, blk_q` -> pexe -> `pexe file`
+`Program_data` -> pexe -> `pexe file`
 
-`name_array, symbols, blk_q` -> arm  -> `arm.asm`
+`Program_data` -> arm  -> `arm.asm`
 
-`name_array, symbols, blk_q` -> x86  -> `x86.asm`
+`Program_data` -> x86  -> `x86.asm`
 
 For simplicity assembly and linking are not built-in.
 
@@ -86,6 +86,12 @@ return function
 
  # literal numbers
  % temp variables / register place holders.
+
+## TO DO
+*	handle scope rules in the parser, either with a global char* or passing them
+*	set declaration initializations in the symbol table rather than using T_ASS
+*	The optomizer is producing an empty block queue
+*	segfault when not building with the -d option
 
 ## Other junk
 

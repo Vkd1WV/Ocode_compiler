@@ -105,19 +105,32 @@ static void Next_use(DS blk){
 /******************************************************************************/
 
 
-void Optomize(Program_data prog){
+void Optomize(Program_data * prog){
 	DS blk;
 	
 	info_msg("Optomizing...");
-	
-	while (( blk = Mk_blk(prog.main_q) )){
+	debug_msg("main_q");
+	while (( blk = Mk_blk(prog->main_q) )){
+		
+		if (verbosity >= V_DEBUG){
+			fprintf(stderr, "\nPrinting block of size %u.\n", DS_count(blk));
+			Dump_iq(stderr, blk);
+		}
+		
 		Next_use(blk);
-		DS_nq(prog.block_q, blk);
+		DS_nq(prog->block_q, blk);
 	}
 	
-	while (( blk = Mk_blk(prog.sub_q) )){
+	debug_msg("sub_q");
+	while (( blk = Mk_blk(prog->sub_q) )){
+		
+		if (verbosity >= V_DEBUG){
+			fprintf(stderr, "\nPrinting block of size %u.\n", DS_count(blk));
+			Dump_iq(stderr, blk);
+		}
+		
 		Next_use(blk);
-		DS_nq(prog.block_q, blk);
+		DS_nq(prog->block_q, blk);
 	}
 	
 	info_msg("Finished Optomizing");

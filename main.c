@@ -25,7 +25,7 @@ static inline void Set_files(FILE ** in_fd, FILE ** debug_fd, yuck_t * arg_pt){
 	
 	if (arg_pt->nargs > 1) warn_msg("Too many arguments...Ignoring.");
 	
-	if(verbosity >= V_DEBUG) printf("\
+	if(verbosity >= V_DEBUG) fprintf(stderr, "\
 ARGUMENTS PASSED\n\
 nargs             :\t%lu\n\
 args              :\t%s\n\
@@ -69,7 +69,7 @@ arm_v8_flag       :\t%u\n\n" ,
 	if(arg_pt->nargs){
 		*in_fd = fopen(*arg_pt->args, "r");
 		if(!*in_fd) crit_error("No such file");
-		sprintf(err_array, "Reading from: %s\n", *arg_pt->args);
+		sprintf(err_array, "Reading from: %s", *arg_pt->args);
 		info_msg(err_array);
 	}
 	else {
@@ -88,11 +88,12 @@ arm_v8_flag       :\t%u\n\n" ,
 		
 		free(dbgfile);
 	}
+	else *debug_fd = NULL;
 	
 }
 
 
-static inline void Generate_code(yuck_t * arg_pt, Program_data prog){
+static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 	uint sum;
 	char *pexefile, *asmfile;
 	
@@ -146,17 +147,17 @@ static inline void Generate_code(yuck_t * arg_pt, Program_data prog){
 int main (int argc, char** argv){
 	yuck_t arg_pt[1];
 	FILE *in_fd, *debug_fd;
-	Program_data prog_data;
+	Program_data prog_data[1];
 	
 	yuck_parse(arg_pt, argc, argv);
 	Set_files(&in_fd, &debug_fd, arg_pt);
 	
-	Init_program_data(&prog_data);
+	Init_program_data(prog_data);
 	
 	Parse(prog_data, in_fd);
 	
 	if (debug_fd)
-		Dump_parser(debug_fd, prog_data);
+		Dump_all(debug_fd, prog_data);
 	
 	Optomize(prog_data);
 	
@@ -170,6 +171,7 @@ int main (int argc, char** argv){
 	info_msg("Cleanup...");
 	yuck_free(arg_pt);
 	Clear_program_data(prog_data);
+	info_msg("FINISHED");
 	
 	return EXIT_SUCCESS;
 }
