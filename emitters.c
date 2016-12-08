@@ -109,7 +109,9 @@ void emit_iop(
 	const sym_pt right
 ){
 	icmd iop[1];
-	void * temp;
+	#ifdef IOP_ADDR
+		void * temp;
+	#endif
 	
 	iop->label  = label;
 	iop->op     = op;
@@ -196,7 +198,10 @@ void emit_iop(
 	#endif
 	
 	// queue up this operation
-	temp= DS_nq(global_inst_q, iop);
+	#ifdef IOP_ADDR
+		temp=
+	#endif
+	DS_nq(global_inst_q, iop);
 	
 	#ifdef IOP_ADDR
 	sprintf(err_array, "iop saved at: %p", temp);

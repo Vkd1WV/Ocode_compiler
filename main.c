@@ -16,9 +16,8 @@ const char * default_asm  = ".asm" ;
 const char * default_pexe = ".pexe";
 
 
-static inline void Set_files(FILE ** in_fd, FILE ** debug_fd, yuck_t * arg_pt){
+static inline void Set_files(char ** infilename, yuck_t * arg_pt){
 	uint sum;
-	char *dbgfile;
 	
 	// default verbosity
 	verbosity = DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag;
@@ -66,36 +65,31 @@ arm_v8_flag       :\t%u\n\n" ,
 	}
 	
 	// Set the infile
-	if(arg_pt->nargs){
-		*in_fd = fopen(*arg_pt->args, "r");
-		if(!*in_fd) crit_error("No such file");
-		sprintf(err_array, "Reading from: %s", *arg_pt->args);
-		info_msg(err_array);
-	}
-	else {
-		*in_fd = stdin;
-		info_msg("Reading from: stdin");
-	}
+	if(arg_pt->nargs) *infilename = *arg_pt->args;
+	else *infilename = NULL;
 	
 	// Set the debug file
 	if (arg_pt->dashd_flag){
-		dbgfile = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
-		if(! dbgfile) crit_error("Out of Memory");
+		make_debug = true;
 		
-		dbgfile = strcpy(dbgfile, *arg_pt->args);
-		dbgfile = strncat(dbgfile, default_dbg, strlen(default_dbg));
-		*debug_fd = fopen(dbgfile, "w");
+		debug_file = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
+		if(!debug_file) crit_error("Out of Memory");
 		
-		free(dbgfile);
+		debug_file = strcpy(debug_file, *arg_pt->args);
+		debug_file = strncat(debug_file, default_dbg, strlen(default_dbg));
+		
+		// clear the file
+		fclose(fopen(debug_file, "w"));
 	}
-	else *debug_fd = NULL;
-	
+	else make_debug = false;
 }
 
 
 static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 	uint sum;
 	char *pexefile, *asmfile;
+	
+	info_msg("Generate_code(): start");
 	
 	// pexe
 	if (arg_pt->dashp_flag){
@@ -141,37 +135,34 @@ static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 		
 		free(asmfile);
 	}
+	
+	info_msg("Generate_code(): stop");
 }
 
 
 int main (int argc, char** argv){
 	yuck_t arg_pt[1];
-	FILE *in_fd, *debug_fd;
+	char * infile;
 	Program_data prog_data[1];
 	
 	yuck_parse(arg_pt, argc, argv);
-	Set_files(&in_fd, &debug_fd, arg_pt);
+	Set_files(&infile, arg_pt);
 	
 	Init_program_data(prog_data);
 	
-	Parse(prog_data, in_fd);
+	Parse(prog_data, infile);
 	
-	if (debug_fd)
-		Dump_all(debug_fd, prog_data);
+	if (make_debug) Dump_first(debug_file, prog_data);
 	
 	Optomize(prog_data);
 	
-	if (debug_fd) Dump_blkq(debug_fd, prog_data);
-	
-	info_msg("Closing debug file");
-	fclose(debug_fd);
+	if (make_debug) Dump_second(debug_file, prog_data);
 	
 	Generate_code(arg_pt, prog_data);
 	
-	info_msg("Cleanup...");
 	yuck_free(arg_pt);
+	if(make_debug) free(debug_file);
 	Clear_program_data(prog_data);
-	info_msg("FINISHED");
 	
 	return EXIT_SUCCESS;
 }

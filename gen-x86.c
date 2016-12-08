@@ -299,9 +299,9 @@ static void Gen_blk(FILE * out_fd, DS blk){
 */
 void x86 (char * filename, const Program_data * prog, bool B64){
 	FILE * out_fd;
-	DS blk;
+	DS_pt blk_pt;
 	
-	info_msg("Generating x86 code...");
+	info_msg("\tx86(): start");
 	
 	out_fd = fopen(filename, "w");
 	put_header(out_fd, B64);
@@ -310,11 +310,13 @@ void x86 (char * filename, const Program_data * prog, bool B64){
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
 	// This is the text or code section
-	blk = (DS) DS_first(prog->block_q);
+	blk_pt = (DS) DS_first(prog->block_q);
+	
+	if(!blk_pt) crit_error("x86(): Empty block queue");
 	
 	do{
-		Gen_blk(out_fd, blk);
-	} while(( blk = (DS) DS_next(prog->block_q) ));
+		Gen_blk(out_fd, *blk_pt);
+	} while(( blk_pt = (DS_pt) DS_next(prog->block_q) ));
 	
 	
 	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");
@@ -324,7 +326,7 @@ void x86 (char * filename, const Program_data * prog, bool B64){
 	
 	//TODO: static variables
 	
-	info_msg("Finished generating x86 code");
+	info_msg("\tx86(): stop");
 }
 
 

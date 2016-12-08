@@ -66,6 +66,8 @@ typedef enum {
 
 
 EXTERN verb_t  verbosity; ///< set in Set_files() and never changed again
+EXTERN char *  debug_file;
+EXTERN bool    make_debug;
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
 EXTERN char    err_array[ERR_ARR_SZ]; ///< Temporary string for messages
 
@@ -117,7 +119,7 @@ static inline void debug_msg(const char * message){
 //                        GLOBAL FUNCTION PROTOTYPES
 /******************************************************************************/
 
-void Parse(Program_data * data, FILE * arg_pt);
+void Parse(Program_data * data, char * infilename);
 
 void Optomize(Program_data * prog);
 

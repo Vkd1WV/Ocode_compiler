@@ -25,6 +25,8 @@ typedef struct {
 	DS     symbols;
 } Program_data;
 
+typedef DS * DS_pt;
+
 /******************************* NAME ARRAY ***********************************/
 
 typedef unsigned int name_dx; ///< indexes into the name_array
@@ -160,6 +162,8 @@ typedef struct icode {
 	bool arg2_live;
 } icmd;
 
+typedef icmd * iop_pt;
+
 
 /******************************************************************************/
 //                            GLOBAL CONSTANTS
@@ -213,37 +217,6 @@ static inline const void * sym_key(const void * symbol){
 	return dx_to_name(((sym_pt)symbol)->name);
 }
 
-static inline void Init_program_data(Program_data * data_pt){
-	data_pt->block_q = (DS) DS_new_list(sizeof(DS));
-	data_pt->main_q  = (DS) DS_new_list(sizeof(icmd));
-	data_pt->sub_q   = (DS) DS_new_list(sizeof(icmd));
-	data_pt->symbols = (DS) DS_new_bst(
-		sizeof(struct sym),
-		false,
-		&sym_key,
-		&cmp_sym
-	);
-}
-
-static inline void Clear_program_data(Program_data * data_pt){
-	DS blk;
-
-	debug_msg("Deleting the name array");
-	free(data_pt->names);
-	
-	debug_msg("Deleting the blocks");
-	while(( blk = (DS) DS_first(data_pt->block_q) )) DS_delete(blk);
-	debug_msg("Deleting the block queue");
-	DS_delete(data_pt->block_q);
-	
-	debug_msg("Deleting the main Queue");
-	DS_delete(data_pt->main_q);
-	debug_msg("Deleting the Sub queue");
-	DS_delete(data_pt->sub_q);
-	debug_msg("Deleting the symbol table");
-	DS_delete(data_pt->symbols);
-}
-
 /********************** PRINT INTERMEDIATE REPRESENTATION *********************/
 
 static inline void Print_icmd(FILE * fd, icmd * iop){
@@ -280,102 +253,185 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 
 /**************** DUMP INTERMEDIATE REPRESENTATION TO A FILE ******************/
 
+// Dump the symbol Table
+static inline void Dump_symbols(FILE * fd, DS symbol_list){
+	sym_pt sym;
+	
+	debug_msg("\tDump_symbols(): start");
+	if (!fd) err_msg("Internal: Dump_symbols(): received NULL file descriptor");
+	
+	if (DS_count(symbol_list)){
+		fputs("Name:\t   Type Width Flags Dref\n", fd);
+		
+		sym = (sym_pt) DS_first(symbol_list);
+		do {
+			Print_sym(fd, sym);
+		} while(( sym = (sym_pt) DS_next(symbol_list) ));
+		
+		#ifdef FLUSH_FILES
+			fflush(fd);
+		#endif
+	}
+	else{
+		info_msg("\tDump_symbols(): The Symbol list is empty");
+		fputs("Empty\n", fd);
+	}
+	
+	debug_msg("\tDump_symbols(): stop");
+}
+
 static inline void Dump_iq(FILE * fd, DS q){
 	icmd * iop;
 	
+	debug_msg("\tDump_iq(): start");
 	if (!fd) err_msg("Internal: Dump_iq(): received NULL file descriptor");
-	if (!q) err_msg("Internal: Dump_iq(): received NULL queue");
 	
-	if(verbosity >= V_DEBUG) fflush(fd);
+	#ifdef FLUSH_FILES
+		fflush(fd);
+	#endif
 	
-	fprintf(fd, "LBL:\tI_OP\tRESULT\tARG1\tARG2\n");
+	if( !DS_isempty(q) ){
+		fputs("LBL:\tI_OP\tRESULT\tARG1\tARG2\n", fd);
+		
+		iop = (icmd*) DS_first(q);
+		do {
+			#ifdef IOP_ADDR
+			sprintf(err_array, "Printing iop at: %p", (void*)iop);
+			debug_msg(err_array);
+			#endif
+		
+			Print_icmd(fd, iop);
+			
+			#ifdef FLUSH_FILES
+				fflush(fd);
+			#endif
+		} while (( iop = (icmd*) DS_next(q) ));
+	}
+	else {
+		info_msg("\tDump_iq(): The queue is empty");
+		fputs("Empty\n", fd);
+	}
 	
-	iop = (icmd*) DS_first(q);
+	debug_msg("\tDump_iq(): stop");
+}
+
+static inline void Dump_blkq(FILE * fd, DS blkq){
+	DS_pt blk_pt;
 	
-	do {
-		#ifdef IOP_ADDR
-		sprintf(err_array, "Printing iop at: %p", (void*)iop);
+	debug_msg("\tDump_blkq(): start");
+	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
+	
+	if(DS_count(blkq)){
+		blk_pt = (DS_pt) DS_first(blkq);
+		do {
+			if(!blk_pt) info_msg("\tDump_blkq(): found an empty block");
+			else Dump_iq(fd, *blk_pt);
+		} while(( blk_pt = (DS_pt) DS_next(blkq) ));
+	}
+	else {
+		info_msg("\tDump_blkq(): The block queue is empty");
+		fputs("Empty\n", fd);
+	}
+	
+	debug_msg("\tDump_blkq(): stop");
+}
+
+
+static inline void Dump_first(char * file, Program_data * prog){
+	FILE * fd;
+	
+	info_msg("Dump_first(): start");
+	
+	fd = fopen(file, "a");
+	if(!fd) {
+		warn_msg("Internal: Dump_first(): no such file");
+		return;
+	}
+	
+	fputs("\nSymbol Table\n", fd);
+	Dump_symbols(fd, prog->symbols);
+	
+	fputs("\nMain Queue\n", fd);
+	Dump_iq(fd, prog->main_q);
+	
+	fputs("\nSub Queue\n", fd);
+	Dump_iq(fd, prog->sub_q);
+	
+	fclose(fd);
+	
+	info_msg("Dump_first(): stop");
+}
+
+static inline void Dump_second(char * file, Program_data * prog){
+	FILE * fd;
+	
+	info_msg("Dump_second(): start");
+	
+	fd = fopen(file, "a");
+	if(!fd) {
+		warn_msg("Internal: Dump_second(): no such file");
+		return;
+	}
+	
+	fputs("\n== AFTER OPTOMIZATION ==\n", fd);
+	fputs("\nBlock Queue\n", fd);
+	Dump_blkq(fd, prog->block_q);
+	
+	fclose(fd);
+	
+	info_msg("Dump_second(): stop");
+}
+
+/************************** INITIALIZE AND DELETE *****************************/
+
+static inline void Init_program_data(Program_data * data_pt){
+	sprintf(err_array, "sizeof(DS): %lu", sizeof(DS));
+	debug_msg(err_array);
+	sprintf(err_array, "sizeof(icmd): %lu", sizeof(icmd));
+	debug_msg(err_array);
+	sprintf(err_array, "sizeof(struct sym): %lu", sizeof(struct sym));
+	debug_msg(err_array);
+
+	data_pt->block_q = (DS) DS_new_list(sizeof(DS));
+	data_pt->main_q  = (DS) DS_new_list(sizeof(icmd));
+	data_pt->sub_q   = (DS) DS_new_list(sizeof(icmd));
+	data_pt->symbols = (DS) DS_new_bst(
+		sizeof(struct sym),
+		false,
+		&sym_key,
+		&cmp_sym
+	);
+}
+
+static inline void Clear_program_data(Program_data * data_pt){
+	DS_pt blk_pt;
+
+	debug_msg("Deleting the name array");
+	free(data_pt->names);
+	
+	
+	debug_msg("Deleting the blocks");
+	sprintf(err_array, "There are %u blocks", DS_count(data_pt->block_q));
+	debug_msg(err_array);
+	
+	while(( blk_pt = (DS_pt) DS_dq(data_pt->block_q) )){
+		#ifdef BLK_ADDR
+		sprintf(err_array, "got block: %p", (void*) (*blk_pt));
 		debug_msg(err_array);
 		#endif
-		
-		Print_icmd(fd, iop);
-		if(verbosity >= V_DEBUG) fflush(fd);
-	} while (( iop = (icmd*) DS_next(q) ));
-}
-
-static inline void Dump_blkq(FILE * fd, Program_data * data){
-	DS blk;
+		DS_delete(*blk_pt);
+		debug_msg("deleted");
+	}
 	
-	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
-	if (!data->block_q)
-		err_msg("Internal: Dump_blkq(): received NULL block queue");
+	debug_msg("Deleting the block queue");
+	DS_delete(data_pt->block_q);
 	
-	info_msg("Dumping the block queue");
-	
-	blk = (DS) DS_first(data->block_q);
-	
-	do {
-		Dump_iq(fd, blk);
-	} while(( blk = (DS) DS_next(data->block_q) ));
-	
-	info_msg("Finished dumping the block queue");
-}
-
-// Dump the symbol Table
-static inline void Dump_symbols(FILE * fd, Program_data * data){
-	sym_pt sym;
-	
-	if (!fd) err_msg("Internal: Dump_symbols(): received NULL file descriptor");
-	if (!data->symbols)
-		err_msg("Internal: Dump_symbols(): received NULL symbols");
-	
-	info_msg("Dumping Symbols...");
-	fputs("# SYMBOL TABLE", fd);
-	fprintf(fd,"\nName:\t   Type Width Flags Dref\n");
-	
-	sym = (sym_pt) DS_first(data->symbols);
-	do {
-		Print_sym(fd, sym);
-	} while(( sym = (sym_pt) DS_next(data->symbols) ));
-	
-	fputs("\n\n", fd);
-	
-	fflush(fd);
-	
-	info_msg("Finished Symbols");
-}
-
-static inline void Dump_all(FILE * fd, Program_data * data){
-	info_msg("Dumping all program data");
-	
-	sprintf(err_array, "The symbols has %u", DS_count(data->symbols));
-	info_msg(err_array);
-	Dump_symbols(fd, data);
-	
-	sprintf(err_array, "The main_q has %u instructions", DS_count(data->main_q));
-	info_msg(err_array);
-	fprintf(fd, "MAIN QUEUE\n");
-	Dump_iq(fd, data->main_q);
-	
-	fputs("\n\n", fd);
-	fflush(fd);
-	
-	sprintf(err_array, "The sub_q has %u instructions", DS_count(data->sub_q));
-	info_msg(err_array);
-	fprintf(fd, "SUB QUEUE\n");
-	Dump_iq(fd, data->sub_q);
-	
-	fputs("\n\n", fd);
-	fflush(fd);
-	
-	sprintf(err_array, "The block_q has %u blocks", DS_count(data->block_q));
-	info_msg(err_array);
-	fprintf(fd, "BLOCK QUEUE\n");
-	Dump_blkq(fd, data);
-	
-	fflush(fd);
-	
-	info_msg("Finished dumping program data");
+	debug_msg("Deleting the main Queue");
+	DS_delete(data_pt->main_q);
+	debug_msg("Deleting the Sub queue");
+	DS_delete(data_pt->sub_q);
+	debug_msg("Deleting the symbol table");
+	DS_delete(data_pt->symbols);
 }
 
 

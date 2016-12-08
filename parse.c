@@ -206,14 +206,24 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-void Parse(Program_data * data, FILE * in_fd){
+void Parse(Program_data * data, char * infilename){
 	bool errors;
 	
 	// set various global pointers
-	yyin          = in_fd;
 	symbols       = data->symbols;
 	global_inst_q = data->main_q;
 	sub_inst_q    = data->sub_q;
+	
+	if(infilename){
+		sprintf(err_array, "Reading from: %s", infilename);
+		info_msg(err_array);
+		yyin = fopen(infilename, "r");
+		if(!yyin) {
+			sprintf(err_array, "No such file: %s", infilename);
+			crit_error(err_array);
+		}
+	}
+	else info_msg("Reading from: stdin");
 	
 	get_token(); // Initialize the lookahead token
 	

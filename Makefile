@@ -31,7 +31,7 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wwrite-strings \
 	-Wconversion
 
-DEBUG_OPT:= #-DDBG_EMIT_IOP -DIOP_ADDR
+DEBUG_OPT:= #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
 
 CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
 CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g $(DEBUG_OPT)

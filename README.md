@@ -90,8 +90,6 @@ return function
 ## TO DO
 *	handle scope rules in the parser, either with a global char* or passing them
 *	set declaration initializations in the symbol table rather than using T_ASS
-*	The optomizer is producing an empty block queue
-*	segfault when not building with the -d option
 
 ## Other junk
 
