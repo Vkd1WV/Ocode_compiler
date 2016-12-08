@@ -253,23 +253,10 @@ static void put_op(icmd * op){
 static void put_header(FILE * outfile, bool B64){
 	fprintf(outfile,"; a NASM assembler file created by the Omega Compiler\n");
 	
-	// Set width
-	if(B64)
-		fprintf(
-			outfile,
-			"BITS 64 ; tell nasm that we are building for long mode\n"
-		);
-	else
-		fprintf(
-			outfile,
-			"BITS 32 ; tell nasm that we are building for protected mode\n"
-		);
-	
-	fprintf(outfile,"global\t_start\n");
+	fprintf(outfile,"global\t%s\n", START_LBL);
 	
 	// executable code
-	fprintf(outfile,"\nsection .text\t; Program code\n");
-	fprintf(outfile,"_start:\n");
+	
 }
 
 static void Gen_blk(FILE * out_fd, DS blk){
@@ -304,15 +291,16 @@ void x86 (char * filename, const Program_data * prog, bool B64){
 	info_msg("\tx86(): start");
 	
 	out_fd = fopen(filename, "w");
-	put_header(out_fd, B64);
 	
 	// Initialize the register descriptor
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
 	// This is the text or code section
-	blk_pt = (DS) DS_first(prog->block_q);
+	blk_pt = (DS_pt) DS_first(prog->block_q);
 	
 	if(!blk_pt) crit_error("x86(): Empty block queue");
+	
+	fprintf(out_fd,"\nsection .text\t; Program code\n");
 	
 	do{
 		Gen_blk(out_fd, *blk_pt);

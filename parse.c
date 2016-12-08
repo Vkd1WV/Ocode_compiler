@@ -227,7 +227,7 @@ void Parse(Program_data * data, char * infilename){
 	
 	get_token(); // Initialize the lookahead token
 	
-	emit_iop(add_name("_#GLOBAL_START"), I_NOP, NO_NAME, NULL, NULL, NULL);
+	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	

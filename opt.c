@@ -76,47 +76,107 @@ static DS Mk_blk(DS q){
 //static void Dead_code(DS blk){}
 //static void Remove_dead_symbols(){}
 
-static void Next_use(DS blk){
-	icmd * iop;
+// Determine whether each symbol is live in each instruction
+static void Liveness(DS blk){
+	iop_pt iop;
 	
-	iop = (icmd*)DS_first(blk);
-	if(!iop) crit_error("Internal: Next_use() received an empty block");
+	info_msg("Liveness(): start");
+	
+	iop = (iop_pt)DS_first(blk);
+	if(!iop) crit_error("Internal: Liveness() received an empty block");
 	
 	do {
-		if(iop->op > I_DEC){ // if a binary op
-			if(
-				!iop->arg2_lit &&
-				iop->arg2.symbol->temp &&
-				!iop->arg2.symbol->live
-			)
-			iop->arg2_live = false;
-			else iop->arg2_live = true;
-		}
+		switch(iop->op){
+		case I_NOP:
+			break;
 		
-		if(iop->op != I_NOP){
-			// set liveness in iop
-			if(iop->result->temp && !iop->result->live)
-				iop->result_live = false;
-			else iop->result_live = true;
+		case I_ASS :
+		case I_REF :
+		case I_DREF:
+		case I_NEG :
+		case I_NOT :
+		case I_INV :
+		case I_INC :
+		case I_DEC : // Unary Ops
 			
-			if(
-				!iop->arg1_lit &&
-				iop->arg1.symbol->temp &&
-				!iop->arg1.symbol->live
-			)
-				iop->arg1_live = false;
-			else iop->arg1_live = true;
+			// if the result is dead remove the op
+			if(iop->result->temp && !iop->result->live){
+				DS_remove(blk);
+				break;
+			}
 			
+			// now we know the result is live
+			iop->result_live = true;
+			iop->result->live = false;
 			
-			
-			// set liveness in symbols
-			if (iop->result->temp) iop->result->live = false;
-			else iop->result->live = true;
-		
+			if(!iop->arg1_lit && iop->arg1.symbol->live) iop->arg1_live = true;
 			if(!iop->arg1_lit) iop->arg1.symbol->live = true;
-			if(iop->op > I_DEC && !iop->arg2_lit) iop->arg2.symbol->live = true;
+			
+			break;
+		
+		case I_MUL:
+		case I_DIV:
+		case I_MOD:
+		case I_EXP:
+		case I_LSH:
+		case I_RSH:
+		case I_ADD :
+		case I_SUB :
+		case I_BAND:
+		case I_BOR :
+		case I_XOR :
+		case I_EQ :
+		case I_NEQ:
+		case I_LT :
+		case I_GT :
+		case I_LTE:
+		case I_GTE:
+		case I_AND:
+		case I_OR : // Binary Ops
+			
+			// if the result is dead remove the op
+			if(iop->result->temp && !iop->result->live){
+				DS_remove(blk);
+				break;
+			}
+			
+			// now we know the result is live
+			iop->result_live = true;
+			iop->result->live = false;
+			
+			if(!iop->arg1_lit && iop->arg1.symbol->live) iop->arg1_live = true;
+			if(!iop->arg2_lit && iop->arg2.symbol->live) iop->arg2_live = true;
+			
+			if(!iop->arg1_lit) iop->arg1.symbol->live = true;
+			if(!iop->arg2_lit) iop->arg2.symbol->live = true;
+			
+			break;
+	
+		case I_JMP :
+		case I_JZ  :
+			break;
+	
+		case I_CALL:
+			break;
+	
+		case I_RTRN:
+			break;
+	
+		case I_BLK :
+			break;
+	
+		case I_EBLK:
+			break;
+	
+		case I_CMNT:
+			break;
+	
+		case NUM_I_CODES:
+		default: crit_error("Liveness(): got a bad op");
 		}
 	} while(( iop = (icmd*)DS_next(blk) ));
+	
+	info_msg("Liveness(): stop");
 }
 
 
@@ -143,37 +203,34 @@ void Optomize(Program_data * prog){
 			debug_msg(err_array);
 			#endif
 			
-			sprintf(
-				err_array,
-				"Optomize(): Printing block of size %u",
-				DS_count(blk)
-			);
-			debug_msg(err_array);
-			
-			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);
+/*			sprintf(*/
+/*				err_array,*/
+/*				"Optomize(): Printing block of size %u",*/
+/*				DS_count(blk)*/
+/*			);*/
+/*			debug_msg(err_array);*/
+/*			*/
+/*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
-			//Next_use(blk);
-			sprintf(
-				err_array,
-				"Block queue has %u, adding one",
-				DS_count(prog->block_q)
-			);
-			debug_msg(err_array);
+			Liveness(blk);
+/*			sprintf(*/
+/*				err_array,*/
+/*				"Block queue has %u, adding one",*/
+/*				DS_count(prog->block_q)*/
+/*			);*/
+/*			debug_msg(err_array);*/
 			
 			DS_nq(prog->block_q, &blk);
 			
-			sprintf(
-				err_array,
-				"Block queue has %u now",
-				DS_count(prog->block_q)
-			);
-			debug_msg(err_array);
+/*			sprintf(*/
+/*				err_array,*/
+/*				"Block queue has %u now",*/
+/*				DS_count(prog->block_q)*/
+/*			);*/
+/*			debug_msg(err_array);*/
 			
-			if( blk != * (DS_pt) DS_first(prog->block_q) ){
-				err_msg("Queued block does not match first block");
-			}
-			else info_msg("\t\tEURIKA they match");
-			
+			if( blk != * (DS_pt) DS_first(prog->block_q) )
+				err_msg("Internal: Queued block does not match first block");
 		}
 	}
 	else info_msg("Optomize(): The main queue is empty");
@@ -187,7 +244,7 @@ void Optomize(Program_data * prog){
 				Dump_iq(stderr, blk);
 			}
 		
-			//Next_use(blk);
+			Liveness(blk);
 			DS_nq(prog->block_q, blk);
 		}
 	}
