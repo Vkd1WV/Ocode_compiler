@@ -6,8 +6,10 @@ junk
 # Executables
 occ
 
-# Debug files
+# compiler outfiles
 *.dbg
+*.asm
+*.pexe
 
 # Automatically generated files
 global.c

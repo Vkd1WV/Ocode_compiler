@@ -952,6 +952,7 @@ static sym_pt Assign(sym_pt target){
 	get_token();
 	result=Boolean();
 	
+	// FIXME: this check is bad
 	if (result->size > target->size)
 		parse_warn("Assignment target is of a smaller type than the expression");
 	if (!is_init(result)) parse_error("Using an uninitialized value");
@@ -1008,7 +1009,7 @@ static sym_pt Assign(sym_pt target){
 	
 	target->init = true;
 	
-	return result;
+	return target;
 }
 
 
