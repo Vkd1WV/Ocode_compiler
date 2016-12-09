@@ -206,7 +206,7 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-void Parse(Program_data * data, char * infilename){
+bool Parse(Program_data * data, char * infilename){
 	bool errors;
 	
 	// set various global pointers
@@ -235,17 +235,19 @@ void Parse(Program_data * data, char * infilename){
 		Statement(0);
 	} while (token != T_EOF);
 	
-	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
-	
 	// Close the infile
 	fclose(yyin);
 	
+	data->names = name_array;
+	
 	if(errors){
-		warn_msg("Parse errors were found. Exiting...");
-		exit(EXIT_FAILURE);
+		warn_msg("Parse(): errors were found");
+		return true;
 	}
 	
-	data->names = name_array;
+	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
+	
+	return false;
 }
 
 

@@ -220,13 +220,35 @@ static inline const void * sym_key(const void * symbol){
 /********************** PRINT INTERMEDIATE REPRESENTATION *********************/
 
 static inline void Print_icmd(FILE * fd, icmd * iop){
-	if(!iop) fputs("NULL\n", fd);
-	else
-		fprintf(fd, "%4s:\t%s\t%4s\n",
+	char *result, *arg1, *arg2;
+	const char *none = "NONE", *lit = "lit";
+	
+	if(!iop) fputs("Print_icmd(): NULL\n", fd);
+	else{
+		if(iop->target != NO_NAME) result = dx_to_name(iop->target);
+		else if(iop->result) result = dx_to_name(iop->result->name);
+		else result = none;
+		
+		if(iop->arg1_lit) arg1 = lit;
+		else if (iop->arg1.symbol) arg1 = dx_to_name(iop->arg1.symbol->name);
+		else arg1 = none;
+		
+		if(iop->arg2_lit) arg2 = lit;
+		else if (iop->arg2.symbol) arg2 = dx_to_name(iop->arg2.symbol->name);
+		else arg2 = none;
+		
+		fprintf(fd, "%6s:\t%s\t%c %6s\t%c %6s\t%c %6s\n",
 			dx_to_name(iop->label),
 			op_code_dex[iop->op],
-			dx_to_name(iop->target)
+			iop->result_live? 'l' : 'd',
+			result,
+			iop->arg1_live? 'l' : 'd',
+			arg1,
+			iop->arg2_live? 'l' : 'd',
+			arg2
 		);
+		
+	}
 }
 
 static inline void Print_sym(FILE * fd, sym_pt sym){
@@ -291,7 +313,7 @@ static inline void Dump_iq(FILE * fd, DS q){
 	#endif
 	
 	if( !DS_isempty(q) ){
-		fputs("LBL:\tI_OP\tRESULT\tARG1\tARG2\n", fd);
+		fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
 		
 		iop = (icmd*) DS_first(q);
 		do {
@@ -374,6 +396,10 @@ static inline void Dump_second(char * file, Program_data * prog){
 	}
 	
 	fputs("\n== AFTER OPTOMIZATION ==\n", fd);
+	
+	fputs("\nSymbol Table\n", fd);
+	Dump_symbols(fd, prog->symbols);
+	
 	fputs("\nBlock Queue\n", fd);
 	Dump_blkq(fd, prog->block_q);
 	

@@ -144,15 +144,16 @@ int main (int argc, char** argv){
 	yuck_t arg_pt[1];
 	char * infile;
 	Program_data prog_data[1];
+	bool errors;
 	
 	yuck_parse(arg_pt, argc, argv);
 	Set_files(&infile, arg_pt);
 	
 	Init_program_data(prog_data);
 	
-	Parse(prog_data, infile);
-	
+	errors = Parse(prog_data, infile);
 	if (make_debug) Dump_first(debug_file, prog_data);
+	if(errors) return EXIT_FAILURE;
 	
 	Optomize(prog_data);
 	

@@ -1,65 +1,172 @@
-#Omnicode Intermidiate File
-I_ASS	 var1	#   5	
-I_ASS	 var2	#   1	
-I_REF	%0002	 var2	
-I_ASS	  pt1	%0002	
-I_NOT	%0003	 var1	
-I_INV	%0004	 var2	
-I_NEG	%0005	 var3	
-I_MUL	%0008	#   3	#   c
-I_DREF	 var1	  pt1	
-I_MUL	%0009	%0008	var1
-I_DIV	%0011	 var1	#  82
-I_MOD	%0012	 var2	var1
-I_LSH	%0015	#   3	# 101
-I_RSH	%0017	 var2	#   1
-I_SUB	%0020	#   1	#   1
-I_NEG	%0022	#   1	
-I_ADD	%0024	%0022	#   1
-I_BAND	%0027	#   4	#   0
-I_BOR	%0028	 var1	var2
-I_XOR	%0029	 var2	var3
-I_EQ	%0030	 var1	var3
-I_GT	%0031	 var2	var1
-I_LT	%0032	 var3	var1
-I_NEQ	%0033	 var3	var1
-I_GTE	%0036	#   3	#   3
-I_LTE	%0039	#   4	#   5
-I_AND	%0042	#   4	#   0
-I_OR	%0045	#   0	#   0
-I_ASS	 var2	#   4	
-I_MUL	%0047	#   4	var2
 
+Symbol Table
+Name:	   Type Width Flags Dref
+_#0000:	lit_int       tc i  (nil)
+_#0001:	lit_int       tc i  (nil)
+_#0002:	lit_int       tc i  (nil)
+_#0003:	    ref       t  i  0x241ba58
+_#0004:	    int undef t  i  (nil)
+_#0005:	    int undef t  i  (nil)
+_#0006:	lit_int       tc i  (nil)
+_#0007:	    int undef t  i  (nil)
+_#0008:	lit_int       tc i  (nil)
+_#0010:	    int undef t  i  (nil)
+_#0011:	lit_int       tc i  (nil)
+_#0012:	    int undef t  i  (nil)
+_#0013:	    int undef t  i  (nil)
+_#0014:	lit_int       tc i  (nil)
+_#0015:	lit_int       tc i  (nil)
+_#0016:	lit_int       tc i  (nil)
+_#0017:	lit_int       tc i  (nil)
+_#0018:	    int undef t  i  (nil)
+_#0019:	lit_int       tc i  (nil)
+_#0020:	lit_int       tc i  (nil)
+_#0021:	lit_int       tc i  (nil)
+_#0022:	lit_int       tc i  (nil)
+_#0023:	lit_int       tc i  (nil)
+_#0024:	lit_int       tc i  (nil)
+_#0025:	lit_int       tc i  (nil)
+_#0026:	lit_int       tc i  (nil)
+_#0027:	lit_int       tc i  (nil)
+_#0028:	lit_int       tc i  (nil)
+_#0029:	lit_int       tc i  (nil)
+_#0030:	    int undef t  i  (nil)
+_#0031:	    int undef t  i  (nil)
+_#0032:	    int     1 t  i  (nil)
+_#0033:	    int     1 t  i  (nil)
+_#0034:	    int     1 t  i  (nil)
+_#0035:	    int     1 t  i  (nil)
+_#0036:	lit_int       tc i  (nil)
+_#0037:	lit_int       tc i  (nil)
+_#0038:	lit_int       tc i  (nil)
+_#0039:	lit_int       tc i  (nil)
+_#0040:	lit_int       tc i  (nil)
+_#0041:	lit_int       tc i  (nil)
+_#0042:	lit_int       tc i  (nil)
+_#0043:	lit_int       tc i  (nil)
+_#0044:	lit_int       tc i  (nil)
+_#0045:	lit_int       tc i  (nil)
+_#0046:	lit_int       tc i  (nil)
+_#0047:	lit_int       tc i  (nil)
+_#0048:	lit_int       tc i  (nil)
+_#0049:	    int undef t  i  (nil)
+_#0050:	lit_int       tc i  (nil)
+_#0051:	    int undef t  i  (nil)
+_#0052:	lit_int       tc i  (nil)
+_#0053:	    int undef t  i  (nil)
+ pt1:	    ref        c i  0x241bc60
+ pt2:	    ref             0x241be00
+var1:	    int  word  c i  (nil)
+var2:	    int  word    i  (nil)
+var3:	    int  word    i  (nil)
 
-# SYMBOL TABLE
-#Name	Type	const	Init	Dref
-%0002:	   3	    0	   0	0x12bbb08
-%0003:	   1	    0	   0	(nil)
-%0004:	   1	    0	   0	(nil)
-%0005:	   1	    0	   0	(nil)
-%0008:	   1	    0	   0	(nil)
-%0009:	   1	    0	   0	(nil)
-%0011:	   1	    0	   0	(nil)
-%0012:	   1	    0	   0	(nil)
-%0015:	   1	    0	   0	(nil)
-%0017:	   1	    0	   0	(nil)
-%0020:	   1	    0	   0	(nil)
-%0022:	   1	    0	   0	(nil)
-%0024:	   1	    0	   0	(nil)
-%0027:	   1	    0	   0	(nil)
-%0028:	   1	    0	   0	(nil)
-%0029:	   1	    0	   0	(nil)
-%0030:	   1	    0	   0	(nil)
-%0031:	   1	    0	   0	(nil)
-%0032:	   1	    0	   0	(nil)
-%0033:	   1	    0	   0	(nil)
-%0036:	   1	    0	   0	(nil)
-%0039:	   1	    0	   0	(nil)
-%0042:	   1	    0	   0	(nil)
-%0045:	   1	    0	   0	(nil)
-%0047:	   1	    0	   0	(nil)
-pt1:	   3	    1	   1	0x12bbc20
-pt2:	   3	    0	   0	0x12bbd80
-var1:	   2	    1	   1	(nil)
-var2:	   2	    0	   1	(nil)
-var3:	   2	    0	   1	(nil)
+Main Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
+_#START:	I_NOP	d   NONE	d   NONE	d   NONE
+(null):	I_ASS	d   var1	d    lit	d   NONE
+(null):	I_ASS	d   var2	d    lit	d   NONE
+(null):	I_ASS	d   var3	d    lit	d   NONE
+(null):	I_REF	d _#0003	d   var2	d   NONE
+(null):	I_ASS	d    pt1	d _#0003	d   NONE
+(null):	I_NOT	d _#0004	d   var1	d   NONE
+(null):	I_INV	d _#0005	d   var2	d   NONE
+(null):	I_SUB	d _#0007	d    lit	d   var3
+(null):	I_DREF	d (null)	d    pt1	d   NONE
+(null):	I_MUL	d _#0010	d    lit	d (null)
+(null):	I_DIV	d _#0012	d   var1	d    lit
+(null):	I_MOD	d _#0013	d   var2	d   var1
+(null):	I_RSH	d _#0018	d   var2	d    lit
+(null):	I_BOR	d _#0030	d   var1	d   var2
+(null):	I_XOR	d _#0031	d   var2	d   var3
+(null):	I_EQ	d _#0032	d   var1	d   var3
+(null):	I_GT	d _#0033	d   var2	d   var1
+(null):	I_LT	d _#0034	d   var3	d   var1
+(null):	I_NEQ	d _#0035	d   var3	d   var1
+(null):	I_ASS	d   var2	d    lit	d   NONE
+(null):	I_MUL	d _#0049	d    lit	d   var2
+(null):	I_ASS	d   var3	d _#0049	d   NONE
+(null):	I_LSH	d _#0051	d   var3	d    lit
+(null):	I_ADD	d _#0053	d _#0051	d    lit
+(null):	I_ASS	d   var2	d _#0053	d   NONE
+(null):	I_RTRN	d   NONE	d   NONE	d   NONE
+
+Sub Queue
+Empty
+
+== AFTER OPTOMIZATION ==
+
+Symbol Table
+Name:	   Type Width Flags Dref
+_#0000:	lit_int       tc i  (nil)
+_#0001:	lit_int       tc i  (nil)
+_#0002:	lit_int       tc i  (nil)
+_#0003:	    ref       t  i  0x241ba58
+_#0006:	lit_int       tc i  (nil)
+_#0007:	    int undef t  i  (nil)
+_#0008:	lit_int       tc i  (nil)
+_#0010:	    int undef t  i  (nil)
+_#0011:	lit_int       tc i  (nil)
+_#0012:	    int undef t  i  (nil)
+_#0013:	    int undef t  i  (nil)
+_#0014:	lit_int       tc i  (nil)
+_#0015:	lit_int       tc i  (nil)
+_#0016:	lit_int       tc i  (nil)
+_#0017:	lit_int       tc i  (nil)
+_#0018:	    int undef t  i  (nil)
+_#0019:	lit_int       tc i  (nil)
+_#0020:	lit_int       tc i  (nil)
+_#0021:	lit_int       tc i  (nil)
+_#0022:	lit_int       tc i  (nil)
+_#0023:	lit_int       tc i  (nil)
+_#0024:	lit_int       tc i  (nil)
+_#0025:	lit_int       tc i  (nil)
+_#0026:	lit_int       tc i  (nil)
+_#0027:	lit_int       tc i  (nil)
+_#0028:	lit_int       tc i  (nil)
+_#0029:	lit_int       tc i  (nil)
+_#0030:	    int undef t  i  (nil)
+_#0031:	    int undef t  i  (nil)
+_#0032:	    int     1 t  i  (nil)
+_#0033:	    int     1 t  i  (nil)
+_#0034:	    int     1 t  i  (nil)
+_#0035:	    int     1 t  i  (nil)
+_#0036:	lit_int       tc i  (nil)
+_#0037:	lit_int       tc i  (nil)
+_#0038:	lit_int       tc i  (nil)
+_#0039:	lit_int       tc i  (nil)
+_#0040:	lit_int       tc i  (nil)
+_#0041:	lit_int       tc i  (nil)
+_#0042:	lit_int       tc i  (nil)
+_#0043:	lit_int       tc i  (nil)
+_#0044:	lit_int       tc i  (nil)
+_#0045:	lit_int       tc i  (nil)
+_#0046:	lit_int       tc i  (nil)
+_#0047:	lit_int       tc i  (nil)
+_#0048:	lit_int       tc i  (nil)
+_#0049:	    int undef t  i  (nil)
+_#0050:	lit_int       tc i  (nil)
+_#0051:	    int undef t  i  (nil)
+_#0052:	lit_int       tc i  (nil)
+_#0053:	    int undef t  i  (nil)
+ pt1:	    ref        c i  0x241bc60
+ pt2:	    ref             0x241be00
+var1:	    int  word  c i  (nil)
+var2:	    int  word    i  (nil)
+var3:	    int  word    i  (nil)
+
+Block Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
+_#START:	I_NOP	d   NONE	d   NONE	d   NONE
+(null):	I_ASS	l   var1	d    lit	d   NONE
+(null):	I_ASS	l   var2	d    lit	d   NONE
+(null):	I_ASS	l   var3	d    lit	d   NONE
+(null):	I_REF	l _#0003	d   var2	d   NONE
+(null):	I_ASS	l    pt1	d _#0003	d   NONE
+(null):	I_DREF	l (null)	d    pt1	d   NONE
+(null):	I_ASS	l   var2	d    lit	d   NONE
+(null):	I_MUL	l _#0049	d    lit	d   var2
+(null):	I_ASS	l   var3	d _#0049	d   NONE
+(null):	I_LSH	l _#0051	d   var3	d    lit
+(null):	I_ADD	l _#0053	d _#0051	d    lit
+(null):	I_ASS	l   var2	d _#0053	d   NONE
+(null):	I_RTRN	d   NONE	d   NONE	d   NONE

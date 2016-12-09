@@ -52,7 +52,7 @@ typedef enum {
 #define DEFAULT_VERBOSITY (verb_t)V_WARN
 #define ERR_ARR_SZ  100  ///< temp arrays used in error reporting
 
-#define START_LBL "_#GLOBAL_START"
+#define START_LBL "_#START"
 
 
 /******************************************************************************/
@@ -121,7 +121,7 @@ static inline void debug_msg(const char * message){
 //                        GLOBAL FUNCTION PROTOTYPES
 /******************************************************************************/
 
-void Parse(Program_data * data, char * infilename);
+bool Parse(Program_data * data, char * infilename);
 
 void Optomize(Program_data * prog);
 

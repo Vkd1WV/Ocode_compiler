@@ -188,10 +188,8 @@ static sym_pt Unary(void){
 			break;
 		
 		case st_lit_int:
-			result = new_var(st_lit_int);
-			result->init = true;
-			result->constant = true;
-			result->value = !arg->value;
+			arg->value = !arg->value;
+			result = arg;
 			break;
 		
 		case st_ref:
@@ -220,10 +218,8 @@ static sym_pt Unary(void){
 			break;
 		
 		case st_lit_int:
-			result = new_var(st_lit_int);
-			result->init = true;
-			result->constant = true;
-			result->value = ~arg->value;
+			arg->value = ~arg->value;
+			result = arg;
 			break;
 		
 		case st_ref:
@@ -287,10 +283,10 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value * arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -312,10 +308,10 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value / arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -337,10 +333,10 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value % arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -394,10 +390,10 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value << arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -419,10 +415,10 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value >> arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -485,10 +481,10 @@ static sym_pt Expression(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value + arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
@@ -538,10 +534,10 @@ static sym_pt Expression(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value - arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
@@ -565,10 +561,10 @@ static sym_pt Expression(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value & arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -589,10 +585,10 @@ static sym_pt Expression(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value | arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -613,10 +609,10 @@ static sym_pt Expression(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = arg1->value ^ arg2->value;
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -675,10 +671,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value == arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -724,10 +720,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value != arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -773,10 +769,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value < arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -822,10 +818,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value > arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -871,10 +867,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value <= arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -920,10 +916,10 @@ static sym_pt Equation(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value >= arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -1063,10 +1059,10 @@ sym_pt Boolean(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value && arg2->value);
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);
@@ -1113,10 +1109,11 @@ sym_pt Boolean(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
-				result->init = true;
-				result->constant = true;
+				result = arg1;
 				result->value = (arg1->value || arg2->value);
+				
+				if(DS_find(symbols, dx_to_name(arg2->name)))
+					DS_remove(symbols);
 			}
 			else{
 				result = new_var(st_int);

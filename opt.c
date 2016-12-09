@@ -77,12 +77,12 @@ static DS Mk_blk(DS q){
 //static void Remove_dead_symbols(){}
 
 // Determine whether each symbol is live in each instruction
-static void Liveness(DS blk){
+static void Liveness(DS blk, DS symbols){
 	iop_pt iop;
 	
 	info_msg("Liveness(): start");
 	
-	iop = (iop_pt)DS_first(blk);
+	iop = (iop_pt)DS_last(blk);
 	if(!iop) crit_error("Internal: Liveness() received an empty block");
 	
 	do {
@@ -101,6 +101,11 @@ static void Liveness(DS blk){
 			
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
+				// remove the temp symbol
+				if(DS_find(symbols, dx_to_name(iop->result->name)))
+					DS_remove(symbols);
+				
+				// and the iop
 				DS_remove(blk);
 				break;
 			}
@@ -136,6 +141,11 @@ static void Liveness(DS blk){
 			
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
+				// remove the temp symbol
+				if(DS_find(symbols, dx_to_name(iop->result->name)))
+					DS_remove(symbols);
+				
+				// and the iop
 				DS_remove(blk);
 				break;
 			}
@@ -174,7 +184,7 @@ static void Liveness(DS blk){
 		case NUM_I_CODES:
 		default: crit_error("Liveness(): got a bad op");
 		}
-	} while(( iop = (icmd*)DS_next(blk) ));
+	} while(( iop = (icmd*)DS_previous(blk) ));
 	
 	info_msg("Liveness(): stop");
 }
@@ -212,7 +222,7 @@ void Optomize(Program_data * prog){
 /*			*/
 /*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
-			Liveness(blk);
+			Liveness(blk, prog->symbols);
 /*			sprintf(*/
 /*				err_array,*/
 /*				"Block queue has %u, adding one",*/
@@ -244,7 +254,7 @@ void Optomize(Program_data * prog){
 				Dump_iq(stderr, blk);
 			}
 		
-			Liveness(blk);
+			Liveness(blk, prog->symbols);
 			DS_nq(prog->block_q, blk);
 		}
 	}

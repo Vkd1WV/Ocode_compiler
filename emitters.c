@@ -116,6 +116,16 @@ void emit_iop(
 	iop->label  = label;
 	iop->op     = op;
 	iop->target = target;
+	iop->result = out;
+	
+	// just to be safe initializations
+	iop->result_live = false;
+	iop->arg1_live   = false;
+	iop->arg2_live   = false;
+	iop->arg1.symbol = NULL;
+	iop->arg2.symbol = NULL;
+	iop->arg1_lit    = false;
+	iop->arg2_lit    = false;
 	
 	#ifdef DBG_EMIT_IOP
 	debug_sym("emit_iop()        : out         ", out);
@@ -125,7 +135,8 @@ void emit_iop(
 	
 	switch (op){
 	case I_NOP :
-	case I_RTRN: break;
+	case I_RTRN:
+		break;
 	
 	// Binaries
 	case I_MUL :
@@ -150,6 +161,9 @@ void emit_iop(
 		if (right->type == st_lit_int){
 			iop->arg2_lit   = true;
 			iop->arg2.value = right->value;
+			
+			// remove the lit symbol
+			if( DS_find(symbols, dx_to_name(right->name)) ) DS_remove(symbols);
 		}
 		else iop->arg2.symbol = right;
 		
@@ -163,17 +177,21 @@ void emit_iop(
 		if (left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
+			
+			// remove the lit symbol
+			if( DS_find(symbols, dx_to_name(left->name)) ) DS_remove(symbols);
 		}
 		else iop->arg1.symbol = left;
-		
-		iop->result = out;
 		break;
 		
 	case I_JMP :
 	case I_JZ  :
-		if (left->type == st_lit_int){
+		if (left && left->type == st_lit_int){
 			iop->arg1_lit   = true;
 			iop->arg1.value = left->value;
+			
+			// remove the lit symbol
+			if( DS_find(symbols, dx_to_name(left->name)) ) DS_remove(symbols);
 		}
 		else iop->arg1.symbol = left;
 		break;
