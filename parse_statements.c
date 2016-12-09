@@ -108,6 +108,7 @@ void While(uint lvl){
 
 
 void Statement (uint lvl){ // any single line. always ends with NL
+	sym_pt result;
 	
 	if (token == T_NL){
 		get_token();
@@ -140,7 +141,13 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		
 		case T_NAME: // call sub or declare var of type_def
 		default:
-			Boolean();
+			result = Boolean();
+			if(result->type == st_lit_int){
+				parse_warn("Statement with no effect");
+				if(DS_find(symbols, dx_to_name(result->name)))
+					DS_remove(symbols);
+			}
+			
 			Match(T_NL);
 	}
 }

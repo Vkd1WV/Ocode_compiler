@@ -164,6 +164,7 @@ void emit_iop(
 			
 			// remove the lit symbol
 			if( DS_find(symbols, dx_to_name(right->name)) ) DS_remove(symbols);
+			else err_msg("emit_iop(): Internal: couldn't find symbol");
 		}
 		else iop->arg2.symbol = right;
 		
@@ -180,6 +181,7 @@ void emit_iop(
 			
 			// remove the lit symbol
 			if( DS_find(symbols, dx_to_name(left->name)) ) DS_remove(symbols);
+			else err_msg("emit_iop(): Internal: couldn't find symbol");
 		}
 		else iop->arg1.symbol = left;
 		break;
@@ -192,6 +194,7 @@ void emit_iop(
 			
 			// remove the lit symbol
 			if( DS_find(symbols, dx_to_name(left->name)) ) DS_remove(symbols);
+			else err_msg("emit_iop(): Internal: couldn't find symbol");
 		}
 		else iop->arg1.symbol = left;
 		break;
