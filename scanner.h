@@ -179,7 +179,7 @@ token_t yylex(void);
 
 static inline void parse_error(const char * message){
 	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
-	while( (token = yylex()) != T_NL );
+	if(token != T_EOF) while( (token = yylex()) != T_NL );
 	fprintf(stderr, "continuing...\n");
 	longjmp(anewline, 1);
 }

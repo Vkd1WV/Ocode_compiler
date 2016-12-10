@@ -261,7 +261,7 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 	
 	if(!sym) fputs("NULL\n", fd);
 	else
-		fprintf(fd, "%4s:\t%7s %5s %s%s%s%s  %p\n",
+		fprintf(fd, "%6s:\t%7s %5s %s%s%s%s  %p\n",
 			dx_to_name(sym->name),
 			types[sym->type],
 			sym->type == st_int? widths[sym->size] : "",
@@ -283,7 +283,7 @@ static inline void Dump_symbols(FILE * fd, DS symbol_list){
 	if (!fd) err_msg("Internal: Dump_symbols(): received NULL file descriptor");
 	
 	if (DS_count(symbol_list)){
-		fputs("Name:\t   Type Width Flags Dref\n", fd);
+		fputs("  Name:\t   Type Width Flags Dref\n", fd);
 		
 		sym = (sym_pt) DS_first(symbol_list);
 		do {
@@ -291,7 +291,7 @@ static inline void Dump_symbols(FILE * fd, DS symbol_list){
 		} while(( sym = (sym_pt) DS_next(symbol_list) ));
 		
 		#ifdef FLUSH_FILES
-			fflush(fd);
+n			fflush(fd);
 		#endif
 	}
 	else{
@@ -313,8 +313,6 @@ static inline void Dump_iq(FILE * fd, DS q){
 	#endif
 	
 	if( !DS_isempty(q) ){
-		fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
-		
 		iop = (icmd*) DS_first(q);
 		do {
 			#ifdef IOP_ADDR
@@ -345,9 +343,14 @@ static inline void Dump_blkq(FILE * fd, DS blkq){
 	
 	if(DS_count(blkq)){
 		blk_pt = (DS_pt) DS_first(blkq);
+		fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2", fd);
 		do {
-			if(!blk_pt) info_msg("\tDump_blkq(): found an empty block");
-			else Dump_iq(fd, *blk_pt);
+			if(!blk_pt) err_msg("\tDump_blkq(): found an empty block");
+			
+			else{
+				fputs("\n", fd);
+				Dump_iq(fd, *blk_pt);
+			}
 		} while(( blk_pt = (DS_pt) DS_next(blkq) ));
 	}
 	else {
@@ -374,9 +377,11 @@ static inline void Dump_first(char * file, Program_data * prog){
 	Dump_symbols(fd, prog->symbols);
 	
 	fputs("\nMain Queue\n", fd);
+	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
 	Dump_iq(fd, prog->main_q);
 	
 	fputs("\nSub Queue\n", fd);
+	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
 	Dump_iq(fd, prog->sub_q);
 	
 	fclose(fd);

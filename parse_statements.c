@@ -26,79 +26,59 @@ void Jump(void){
 
 void If(uint lvl){
 	sym_pt condition;
-	name_dx if_label, else_label;
+	name_dx skip_label, else_label;
 	
 	Match(T_IF);
-	emit_iop(
-		NO_NAME,
-		I_CMNT, add_name("start of IF statement"),
-		NULL, NULL, NULL
-	);
-	if_label = new_label();
+	emit_iop(NO_NAME, I_NOP, add_name("IF"), NULL, NULL, NULL);
+	
+	else_label = new_label();
 	
 	condition = Boolean();
 	if(condition->type == st_lit_int){}
-	emit_iop(NO_NAME, I_JZ, if_label, NULL, condition, NULL);
+	emit_iop(NO_NAME, I_JZ, else_label, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
 	if(token == T_ELSE){
 		Match(T_ELSE);
-		emit_iop(
-			NO_NAME,
-			I_CMNT, add_name("start of ELSE statement"),
-			NULL, NULL, NULL
-		);
-		else_label = new_label();
-		emit_iop(NO_NAME, I_JMP, else_label, NULL, NULL, NULL);
-		emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
+		//emit_iop(NO_NAME, I_NOP, add_name("ELSE"), NULL, NULL, NULL);
+		
+		skip_label = new_label();
+		
+		emit_iop(NO_NAME, I_JMP, skip_label, NULL, NULL, NULL);
+		emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
 		
 		Statement(lvl);
 		
-		emit_iop(else_label, I_NOP, NO_NAME, NULL, NULL, NULL);
-		emit_iop(
-			NO_NAME,
-			I_CMNT, add_name("End of ELSE"),
-			NULL, NULL, NULL
-		);
+		emit_iop(skip_label, I_NOP, add_name("SKIP lbl"), NULL, NULL, NULL);
 	}
-	else emit_iop(if_label, I_NOP, NO_NAME, NULL, NULL, NULL);
+	else emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
 	
-	emit_iop(
-		NO_NAME,
-		I_CMNT, add_name("End of IF Statement\n"),
-		NULL, NULL, NULL
-	);
+	emit_iop(NO_NAME, I_NOP, add_name("END IF"), NULL, NULL, NULL);
 }
 
 void While(uint lvl){
 	name_dx repeat_label, skip_label;
-	sym_pt result;
+	sym_pt condition;
 	
 	Match(T_WHILE);
-	emit_iop(
-		NO_NAME,
-		I_CMNT, add_name("Start of WHILE loop"),
-		NULL, NULL, NULL
-	);
+	emit_iop(NO_NAME, I_NOP, add_name("WHILE"), NULL, NULL, NULL);
+	
 	repeat_label = new_label();
 	skip_label   = new_label();
 	
-	emit_iop(repeat_label, I_NOP, NO_NAME, NULL, NULL, NULL);
+	emit_iop(repeat_label, I_NOP, add_name("REPT lbl"), NULL, NULL, NULL);
 	
-	result = Boolean();
+	condition = Boolean();
+	if(condition->type == st_lit_int){}
 	
-	emit_iop(NO_NAME, I_JZ, skip_label, NULL, result, NULL);
+	emit_iop(NO_NAME, I_JZ, skip_label, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
 	emit_iop(NO_NAME, I_JMP, repeat_label, NULL, NULL, NULL);
-	emit_iop(skip_label, I_NOP, NO_NAME, NULL, NULL, NULL);
-	emit_iop(
-		NO_NAME,
-		I_CMNT, add_name("End of WHILE loop\n"),
-		NULL, NULL, NULL
-	);
+	emit_iop(skip_label, I_NOP, add_name("SKIP lbl"), NULL, NULL, NULL);
+	emit_iop(NO_NAME, I_NOP, add_name("END WHILE"), NULL, NULL, NULL);
 }
 
 

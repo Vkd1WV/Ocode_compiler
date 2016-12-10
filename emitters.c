@@ -136,6 +136,7 @@ void emit_iop(
 	switch (op){
 	case I_NOP :
 	case I_RTRN:
+	case I_CMNT:
 		break;
 	
 	// Binaries
@@ -208,8 +209,8 @@ void emit_iop(
 	case NUM_I_CODES:
 	default:
 		sprintf(err_array,
-			"Internal: emit_iop() called with cmd = %d",
-			op
+			"Internal: emit_iop() called with cmd = %s",
+			op_code_dex[op]
 		);
 		crit_error(err_array);
 	}

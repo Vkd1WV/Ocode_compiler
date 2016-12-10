@@ -1,0 +1,9 @@
+word this
+
+label here
+
+if 1
+	this:=1
+else this:=0
+
+while this jump here

@@ -36,10 +36,11 @@ DEBUG_OPT:= #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
 CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
 CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
 LFLAGS:=#-d
+LEX:= flex
 
 ################################## FILES #######################################
 
-HEADERS:=global.h yuck.h prog_data.h
+HEADERS:=global.h prog_data.h
 LIBS   :=-ldata
 
 PARSER:= \
@@ -69,6 +70,9 @@ occ: $(OBJECTS)
 parse.o: $(PARSER) $(HEADERS) scanner.h
 	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
+main.o: main.c yuck.h $(HEADERS)
+	$(CC) $(CFLAGS) -c -o $@ main.c
+
 global.c: Makefile
 	echo "#define _GLOBALS_C\n#include \"global.h\"" > $@
 
@@ -95,12 +99,17 @@ yuck.o: yuck.c yuck.h
 CLEANFILES:= \
 	*.o *.o *.opp occ \
 	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
-	global.c scanner.c yuck.h yuck.c
+	global.c
 
-.PHONEY: clean todolist test
+VERYCLEANFILES:= scanner.c yuck.h yuck.c
+
+.PHONEY: clean very-clean todolist test
 
 clean:
 	rm -f $(CLEANFILES)
+
+very-clean:
+	rm -f $(CLEANFILES) $(VERYCLEANFILES)
 
 todolist:
 	-@for file in $(ALLFILES:Makefile=); do fgrep -H -e TODO -e FIXME $$file; done; true

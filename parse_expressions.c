@@ -955,7 +955,7 @@ static sym_pt Assign(sym_pt target){
 	// FIXME: this check is bad
 	if (result->size > target->size)
 		parse_warn("Assignment target is of a smaller type than the expression");
-	if (!is_init(result)) parse_error("Using an uninitialized value");
+	if (!is_init(result)) parse_error("Assignment from an uninitialized value");
 	
 	set_init_size(target, result, NULL);
 	

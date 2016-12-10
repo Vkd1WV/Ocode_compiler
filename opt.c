@@ -73,8 +73,21 @@ static DS Mk_blk(DS q){
 	return blk;
 }
 
-//static void Dead_code(DS blk){}
-//static void Remove_dead_symbols(){}
+
+// Colapse labels
+
+
+// optomize inner loops
+static void Inner_loop(DS blk){
+	// If the end of a basic block is a jmp to its head then surely it is an inner loop
+	if(! strcmp(
+		dx_to_name(((iop_pt) DS_first(blk))->label),
+		dx_to_name(((iop_pt) DS_last(blk))->target)
+	) ){
+		//optomize the loop
+	}
+}
+
 
 // Determine whether each symbol is live in each instruction
 static void Liveness(DS blk, DS symbols){
@@ -239,7 +252,7 @@ void Optomize(Program_data * prog){
 /*			);*/
 /*			debug_msg(err_array);*/
 			
-			if( blk != * (DS_pt) DS_first(prog->block_q) )
+			if( blk != * (DS_pt) DS_last(prog->block_q) )
 				err_msg("Internal: Queued block does not match first block");
 		}
 	}
