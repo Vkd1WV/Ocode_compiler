@@ -27,6 +27,9 @@ size_t   scope_size=0, scope_pos=0;
 #define SCOPE_ARR_SZ (size_t)64 ///< the inital size of the scope stack
 #define SCOPE_SEPARATOR (char)'#'
 
+// the break and continue labels for the smallest current looping construct
+name_dx break_this = NO_NAME, continue_this = NO_NAME;
+
 
 /******************************************************************************/
 //                             INLINE FUNCTIONS
@@ -187,6 +190,8 @@ static inline void pop_scope(void){
 /******************************************************************************/
 
 
+sym_pt get_scope(void);
+
 // Emmiters
 name_dx add_name (char * name);
 name_dx new_label(void); ///< get a new unique label
@@ -229,13 +234,17 @@ sym_pt Boolean          (void);
 static sym_pt Assign(sym_pt target);
 
 // Statements
+void Label   (void);
+void Jump    (void);
+void Break   (void);
+void Continue(void);
+void Return  (void);
 void Call_sub(sym_pt sub);
-void Label   (void      );
-void Jump    (void      );
-void If      (uint   lvl); // only control statements need to know the block_lvl
-void While   (uint   lvl);
-void Do      (uint   lvl);
-void For     (uint   lvl); //for <range statement>
+void If      (uint lvl); // only control statements need to know the block_lvl
+void While   (uint lvl);
+void Do      (uint lvl);
+void For     (uint lvl); //for <range statement>
+void Switch  (uint lvl);
 
 void Statement (uint lvl);
 
@@ -255,6 +264,37 @@ void Statement (uint lvl);
 //                             PUBLIC FUNCTIONS
 /******************************************************************************/
 
+
+sym_pt get_scope(void){
+	static char * buffer;
+	static size_t buf_lngth;
+	       size_t length=0, pos=scope_pos;
+	       sym_pt sym;
+	
+	pos -= 2; // go back the null and separator
+	while(( current_scope[pos] != SCOPE_SEPARATOR )){
+		pos--;
+		length++;
+	}
+	pos++;
+	
+	if(!buffer) buffer = (char*)malloc(sizeof(char) * length+1);
+	else if (length+1 > buf_lngth)
+		buffer = (char*)realloc(buffer, sizeof(char) * length+1);
+	
+	buf_lngth = length+1;
+	if(!buffer) crit_error("Out of Memory");
+	
+	for(uint i=0; i<length; i++) buffer[i] = current_scope[pos+i];
+	buffer[length] = '\0';
+	
+	sym = DS_find(symbols, buffer);
+	
+	if(!sym)
+		crit_error("Internal: get_scope(): name in scope does not appear in symbols");
+	
+	return sym;
+}
 
 bool Parse(Program_data * data, char * infilename){
 	bool errors;

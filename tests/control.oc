@@ -7,3 +7,9 @@ if 1
 else this:=0
 
 while this jump here
+
+do
+	this:= 1
+	this:= 2
+	this:= 3
+while this

@@ -143,6 +143,7 @@ jump     return T_JMP;
 if       return T_IF;
 else     return T_ELSE;
 switch   return T_SWTCH;
+case     return T_CASE;
 default  return T_DFLT;
 while    return T_WHILE;
 do       return T_DO;

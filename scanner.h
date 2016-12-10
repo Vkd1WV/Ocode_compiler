@@ -97,6 +97,7 @@ typedef enum {
 	T_IF   ,
 	T_ELSE ,
 	T_SWTCH,
+	T_CASE ,
 	T_DFLT ,
 	T_WHILE,
 	T_DO   ,

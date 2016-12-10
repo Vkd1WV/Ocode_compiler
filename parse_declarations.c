@@ -21,12 +21,9 @@ void Qualifier_list   (sym_pt templt){
 		templt->constant = true;
 		get_token();
 	}
-/*	else if (token == T_ASM){*/
-/*		if (!( templt->type == function || templt->type == subroutine ))*/
-/*			parse_error("Invalid use of assembler qualifier in declaration");*/
-/*		templt->assembler = true;*/
-/*		get_token();*/
-/*	}*/
+	
+	// storage class specifier
+	// auto static extern register
 }
 
 void Initializer_list (sym_pt templt){
@@ -39,6 +36,8 @@ void Initializer_list (sym_pt templt){
 			parse_error("Duplicate symbol name");
 		
 		debug_sym("Initializer_list():Adding symbol", new_symbol);
+		
+		if(!new_symbol->stat){} // TODO: we have to do something special here
 		
 		if (token == T_ASS){ // Initialized value
 			get_token();
@@ -59,6 +58,10 @@ void Initializer_list (sym_pt templt){
 		else if (token == T_NL  ) { Match(T_NL)  ; break   ; }
 		else    expected("a comma or newline");
 	};
+	
+	/* Declarator list
+	 * comma separated list of declarators
+	*/
 }
 
 // Parameter lists for functions and subroutines
@@ -123,6 +126,14 @@ void Type_specifier(sym_pt templt_pt){
 		case T_PTR:  Decl_Pointer(templt_pt); break;
 		default:     Decl_Word   (templt_pt); break;
 	}
+	
+	// type specifier
+	/* int
+	 * char
+	 * float
+	 * double
+	 * struct identifier
+	*/
 }
 
 
