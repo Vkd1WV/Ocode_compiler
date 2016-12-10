@@ -29,7 +29,7 @@ typedef DS * DS_pt;
 
 /******************************* NAME ARRAY ***********************************/
 
-typedef unsigned int name_dx; ///< indexes into the name_array
+typedef size_t name_dx; ///< indexes into the name_array
 
 /********************************* SYMBOLS ************************************/
 
@@ -180,6 +180,8 @@ typedef icmd * iop_pt;
 #define UNQ_NAME_SZ 16
 #define NAME_ARR_SZ 1024 ///< Starting size for the dynamic name array
 #define NO_NAME     ((name_dx)UINT_MAX)
+
+#define START_LBL "_#START"
 
 EXTERN const char * op_code_dex[NUM_I_CODES]
 #ifdef _GLOBALS_C

@@ -117,7 +117,6 @@ typedef enum {
 	// Word declarations
 	T_8   ,
 	T_16  ,
-	T_24  ,
 	T_32  ,
 	T_64  ,
 	T_WORD,
@@ -134,7 +133,12 @@ typedef enum {
 	// Qualifers
 	T_CONST ,
 	T_STATIC,
-	T_ASM     // Assembler Routine
+	T_ASM,     // Assembler Routine
+	
+	// Parameter Modes
+	T_IN,
+	T_OUT,
+	T_BI
 
 } token_t;
 

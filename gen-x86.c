@@ -250,15 +250,6 @@ static void put_op(icmd * op){
 	}
 }
 
-static void put_header(FILE * outfile, bool B64){
-	fprintf(outfile,"; a NASM assembler file created by the Omega Compiler\n");
-	
-	fprintf(outfile,"global\t%s\n", START_LBL);
-	
-	// executable code
-	
-}
-
 static void Gen_blk(FILE * out_fd, DS blk){
 	icmd * iop;
 	

@@ -72,56 +72,7 @@ void Parameter_list   (sym_pt templt){
 /******************************************************************************/
 
 
-// Define a Datatype
-void Decl_Type (sym_pt templt){
-	templt = templt;
-}
 
-// Declare a Subroutine
-void Decl_Sub(sym_pt new_sub){
-	new_sub->type  = st_sub;
-	//new_sub->local = new_DS('l');
-	
-	get_token();
-	if(token == T_ASM) new_sub->assembler = true;
-	
-	// Name
-	new_sub->name = add_name(get_name());
-	if(! DS_insert(symbols, new_sub) )
-		parse_error("Duplicate symbol name");
-	
-	// Parameter & Return Declarations
-	
-	Statement(1);
-	
-	// End statement
-	Match(T_END);
-	Match_name(new_sub->name);
-	Match(T_NL);
-}
-
-// Declare a Function
-void Decl_Fun (sym_pt new_fun){
-	new_fun->type  = st_fun;
-	//new_fun->local = new_DS('l');
-	
-	get_token();
-	if(token == T_ASM) new_fun->assembler = true;
-	
-	// Name
-	new_fun->name = add_name(get_name());
-	if(! DS_insert(symbols, new_fun) )
-		parse_error("Duplicate symbol name");
-	
-	// Parameter & Return Declarations
-	
-	Statement(1);
-	
-	// End statement
-	Match(T_END);
-	Match_name(new_fun->name);
-	Match(T_NL);
-}
 
 // Declare a Pointer
 void Decl_Pointer (sym_pt templt){
@@ -170,21 +121,98 @@ void Type_specifier(sym_pt templt_pt){
 	
 	switch(token){
 		case T_PTR:  Decl_Pointer(templt_pt); break;
-		case T_TYPE: Decl_Type   (templt_pt); break;
-		case T_SUB:  Decl_Sub    (templt_pt); break;
-		case T_FUN:  Decl_Fun    (templt_pt); break;
 		default:     Decl_Word   (templt_pt); break;
 	}
 }
 
 
-/******************************************************************************/
-//                            PUBLIC FUNCTIONS
-/******************************************************************************/
 
+// Define a Datatype
+void Decl_Type (uint lvl){}
+
+// Declare an instance of a defined type
+void Decl_Custom(sym_pt templt){}
 
 // Declare an Operator
-void Decl_Operator(){}
+void Decl_Operator(uint lvl){}
+
+
+// Declare a Subroutine
+void Decl_Sub(uint lvl){
+	struct sym sub;
+	sym_pt new_sub = &sub;
+	
+	new_sub->type  = st_sub;
+	
+	get_token();
+	if(token == T_ASM) new_sub->assembler = true;
+	
+	// Name
+	new_sub->name = add_name(get_name());
+	if(!( new_sub = DS_insert(symbols, new_sub) )){
+		sprintf(
+			err_array,
+			"Redeclaration of subroutine %s",
+			dx_to_name(new_sub->name)
+		);
+		parse_error(err_array);
+	}
+	
+	push_scope(new_sub->name);
+	
+	Parameter_list(new_sub);
+	// Parameter Declarations
+	
+	Statement(lvl);
+	
+	pop_scope();
+	
+	// End statement
+	Match(T_END);
+	Match_name(new_sub->name);
+	Match(T_NL);
+}
+
+
+// Declare a Function
+void Decl_Fun (uint lvl){
+	struct sym fun;
+	sym_pt new_fun = &fun;
+	
+	new_fun->type  = st_fun;
+	
+	get_token();
+	if(token == T_ASM) new_fun->assembler = true;
+	
+	// Name
+	new_fun->name = add_name(get_name());
+	if(!( new_fun = DS_insert(symbols, new_fun) )){
+		sprintf(
+			err_array,
+			"Redeclaration of function %s",
+			dx_to_name(new_fun->name)
+		);
+		parse_error(err_array);
+	}
+	
+	push_scope(new_fun->name);
+	
+	// Return type
+	
+	Match(T_OBRK);
+	Parameter_list(new_fun);
+	Match(T_CBRK);
+	
+	Statement(lvl);
+	
+	pop_scope();
+	
+	// End statement
+	Match(T_END);
+	Match_name(new_fun->name);
+	Match(T_NL);
+}
+
 
 void Decl_Symbol  (void){
 	struct sym templt;

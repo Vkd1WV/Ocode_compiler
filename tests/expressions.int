@@ -1,7 +1,7 @@
 
 Symbol Table
-Name:	   Type Width Flags Dref
-_#0003:	    ref       t  i  0x10ef9a8
+  Name:	   Type Width Flags Dref
+_#0003:	    ref       t  i  0x1bf69a8
 _#0004:	    int undef t  i  (nil)
 _#0005:	    int undef t  i  (nil)
 _#0007:	    int undef t  i  (nil)
@@ -18,11 +18,11 @@ _#0030:	    int     1 t  i  (nil)
 _#0040:	    int undef t  i  (nil)
 _#0042:	    int undef t  i  (nil)
 _#0044:	    int undef t  i  (nil)
- pt1:	    ref        c i  0x10efba0
- pt2:	    ref             0x10efce0
-var1:	    int  word  c i  (nil)
-var2:	    int  word    i  (nil)
-var3:	    int  word    i  (nil)
+   pt1:	    ref        c i  0x1bf6ba0
+   pt2:	    ref             0x1bf6ce0
+  var1:	    int  word  c i  (nil)
+  var2:	    int  word    i  (nil)
+  var3:	    int  word    i  (nil)
 
 Main Queue
 LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
@@ -55,21 +55,22 @@ _#START:	I_NOP	d   NONE	d   NONE	d   NONE
 (null):	I_RTRN	d   NONE	d   NONE	d   NONE
 
 Sub Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
 Empty
 
 == AFTER OPTOMIZATION ==
 
 Symbol Table
-Name:	   Type Width Flags Dref
-_#0003:	    ref       t  i  0x10ef9a8
+  Name:	   Type Width Flags Dref
+_#0003:	    ref       t  i  0x1bf69a8
 _#0040:	    int undef t  i  (nil)
 _#0042:	    int undef t  i  (nil)
 _#0044:	    int undef t  i  (nil)
- pt1:	    ref        c i  0x10efba0
- pt2:	    ref             0x10efce0
-var1:	    int  word  c i  (nil)
-var2:	    int  word    i  (nil)
-var3:	    int  word    i  (nil)
+   pt1:	    ref        c i  0x1bf6ba0
+   pt2:	    ref             0x1bf6ce0
+  var1:	    int  word  c i  (nil)
+  var2:	    int  word    i  (nil)
+  var3:	    int  word    i  (nil)
 
 Block Queue
 LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2

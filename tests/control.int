@@ -1,0 +1,63 @@
+
+Symbol Table
+  Name:	   Type Width Flags Dref
+  this:	    int  word    i  (nil)
+
+Main Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
+_#START:	I_NOP	d   NONE	d   NONE	d   NONE
+  here:	I_NOP	d   NONE	d   NONE	d   NONE
+(null):	I_NOP	d     IF	d   NONE	d   NONE
+(null):	I_JZ	d _$0000	d    lit	d   NONE
+(null):	I_ASS	d   this	d    lit	d   NONE
+(null):	I_JMP	d _$0001	d   NONE	d   NONE
+_$0000:	I_NOP	d ELSE lbl	d   NONE	d   NONE
+(null):	I_ASS	d   this	d    lit	d   NONE
+_$0001:	I_NOP	d SKIP lbl	d   NONE	d   NONE
+(null):	I_NOP	d END IF	d   NONE	d   NONE
+(null):	I_NOP	d  WHILE	d   NONE	d   NONE
+_$0002:	I_NOP	d REPT lbl	d   NONE	d   NONE
+(null):	I_JZ	d _$0003	d   this	d   NONE
+(null):	I_JMP	d   here	d   NONE	d   NONE
+(null):	I_JMP	d _$0002	d   NONE	d   NONE
+_$0003:	I_NOP	d SKIP lbl	d   NONE	d   NONE
+(null):	I_NOP	d END WHILE	d   NONE	d   NONE
+(null):	I_RTRN	d   NONE	d   NONE	d   NONE
+
+Sub Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
+Empty
+
+== AFTER OPTOMIZATION ==
+
+Symbol Table
+  Name:	   Type Width Flags Dref
+  this:	    int  word    i  (nil)
+
+Block Queue
+LBL   :	I_OP	 RESULT 	  ARG1  	  ARG2
+_#START:	I_NOP	d   NONE	d   NONE	d   NONE
+
+  here:	I_NOP	d   NONE	d   NONE	d   NONE
+(null):	I_NOP	d     IF	d   NONE	d   NONE
+(null):	I_JZ	d _$0000	d    lit	d   NONE
+
+(null):	I_ASS	l   this	d    lit	d   NONE
+(null):	I_JMP	d _$0001	d   NONE	d   NONE
+
+_$0000:	I_NOP	d ELSE lbl	d   NONE	d   NONE
+(null):	I_ASS	l   this	d    lit	d   NONE
+
+_$0001:	I_NOP	d SKIP lbl	d   NONE	d   NONE
+(null):	I_NOP	d END IF	d   NONE	d   NONE
+(null):	I_NOP	d  WHILE	d   NONE	d   NONE
+
+_$0002:	I_NOP	d REPT lbl	d   NONE	d   NONE
+(null):	I_JZ	d _$0003	d   this	d   NONE
+
+(null):	I_JMP	d   here	d   NONE	d   NONE
+(null):	I_JMP	d _$0002	d   NONE	d   NONE
+
+_$0003:	I_NOP	d SKIP lbl	d   NONE	d   NONE
+(null):	I_NOP	d END WHILE	d   NONE	d   NONE
+(null):	I_RTRN	d   NONE	d   NONE	d   NONE

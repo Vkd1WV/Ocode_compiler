@@ -1429,99 +1429,10 @@ YY_RULE_SETUP
 #line 178 "scanner.l"
 return T_ASM;
 	YY_BREAK
-/******************************* REGISTERS ***********************************/
-/*R0  return T_R0; // A*/
-/*R1  return T_R1; // C*/
-/*R2  return T_R2; // D*/
-/*R3  return T_R3; // B*/
-/*R4  return T_R4; // SP*/
-/*R5  return T_R5; // BP*/
-/*R6  return T_R6; // SI*/
-/*R7  return T_R7; // DI*/
-/*R8  {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R8 is only availible in Long mode");*/
-/*	return T_R8;*/
-/*}*/
-/*R9  {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R9 is only availible in Long mode");*/
-/*	return T_R9;*/
-/*}*/
-/*R10 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R10 is only availible in Long mode");*/
-/*	return T_R10;*/
-/*}*/
-/*R11 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R11 is only availible in Long mode");*/
-/*	return T_R11;*/
-/*}*/
-/*R12 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R12 is only availible in Long mode");*/
-/*	return T_R12;*/
-/*}*/
-/*R13 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R13 is only availible in Long mode");*/
-/*	return T_R13;*/
-/*}*/
-/*R14 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R14 is only availible in Long mode");*/
-/*	return T_R14;*/
-/*}*/
-/*R15 {*/
-/*	if (arch == x86 && x86_mode != Long)*/
-/*		parse_error("R15 is only availible in Long mode");*/
-/*	return T_R15;*/
-/*}*/
-/*A  {*/
-/*	if (arch == x86) return T_R0;*/
-/*	printf("You really shouldn't be using register name A on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*B  {*/
-/*	if (arch == x86) return T_R4;*/
-/*	printf("You really shouldn't be using register name B on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*C  {*/
-/*	if (arch == x86) return T_R1;*/
-/*	printf("You really shouldn't be using register name C on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*D  {*/
-/*	if (arch == x86) return T_R2;*/
-/*	printf("You really shouldn't be using register name D on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*SI {*/
-/*	if (arch == x86) return T_R7;*/
-/*	printf("You really shouldn't be using register name SI on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*DI {*/
-/*	if (arch == x86) return T_R8;*/
-/*	printf("You really shouldn't be using register name DI on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*BP {*/
-/*	if (arch == x86) return T_R6;*/
-/*	printf("You really shouldn't be using register name BP on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
-/*SP {*/
-/*	if (arch == x86) return T_R5;*/
-/*	printf("You really shouldn't be using register name SP on line %d\n", yylineno);*/
-/*	REJECT;*/
-/*}*/
 /************************** PRIMARY DATA TYPES *******************************/
 case 84:
 YY_RULE_SETUP
-#line 275 "scanner.l"
+#line 182 "scanner.l"
 {
 	yynumber=0;
 	// this is a global from tokens.h used to pass numbers to parser.c
@@ -1550,23 +1461,23 @@ YY_RULE_SETUP
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 301 "scanner.l"
+#line 208 "scanner.l"
 yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 302 "scanner.l"
+#line 209 "scanner.l"
 return T_NAME;
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 305 "scanner.l"
+#line 212 "scanner.l"
 { BEGIN(CHAR); }
 	YY_BREAK
 case 88:
 /* rule 88 can match eol */
 YY_RULE_SETUP
-#line 306 "scanner.l"
+#line 213 "scanner.l"
 { // an escaped anything \\. or a non-quote [^']
 	size_t len = strlen(yytext);
 	
@@ -1607,13 +1518,13 @@ YY_RULE_SETUP
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 345 "scanner.l"
+#line 252 "scanner.l"
 { BEGIN(STRING); }
 	YY_BREAK
 case 90:
 /* rule 90 can match eol */
 YY_RULE_SETUP
-#line 346 "scanner.l"
+#line 253 "scanner.l"
 {
 	int j=0;
 	
@@ -1653,7 +1564,7 @@ YY_RULE_SETUP
 /* This needs to be the last thing */
 case 91:
 YY_RULE_SETUP
-#line 383 "scanner.l"
+#line 290 "scanner.l"
 {
 	printf("Unknown token '%s' on line %d\n", yytext, yylineno);
 	parse_error("unknown token");
@@ -1661,10 +1572,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 389 "scanner.l"
+#line 296 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 1668 "scanner.c"
+#line 1579 "scanner.c"
 case YY_STATE_EOF(INCLUDE):
 	yyterminate();
 
@@ -2679,4 +2590,4 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 389 "scanner.l"
+#line 296 "scanner.l"

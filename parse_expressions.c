@@ -54,12 +54,16 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 	
 	// check size
 	if(result->type == st_int){
-		
+		// FIXME
 	}
 	
 	// handle if one arg is literal
 	// can't really make direct comparison
 	
+}
+
+static sym_pt Call_fun(void){
+	return NULL;
 }
 
 
@@ -85,11 +89,7 @@ static sym_pt Primary(void){
 	case T_NAME:
 		if(!( sym = (sym_pt) DS_find(symbols, get_name()) ))
 			parse_error("Undeclared symbol");
-		
-		if(sym->type == st_fun){
-			// Function call
-			// sym = return value
-		}
+		if(sym->type == st_fun) sym = Call_fun();
 		break;
 		
 	case T_STR:

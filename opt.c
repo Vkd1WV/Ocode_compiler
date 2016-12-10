@@ -236,6 +236,8 @@ void Optomize(Program_data * prog){
 /*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
 			Liveness(blk, prog->symbols);
+			//Inner_loop(blk);
+			
 /*			sprintf(*/
 /*				err_array,*/
 /*				"Block queue has %u, adding one",*/
@@ -268,6 +270,7 @@ void Optomize(Program_data * prog){
 			}
 		
 			Liveness(blk, prog->symbols);
+			//Inner_loop(blk);
 			DS_nq(prog->block_q, blk);
 		}
 	}

@@ -52,8 +52,6 @@ typedef enum {
 #define DEFAULT_VERBOSITY (verb_t)V_WARN
 #define ERR_ARR_SZ  100  ///< temp arrays used in error reporting
 
-#define START_LBL "_#START"
-
 
 /******************************************************************************/
 //                             GLOBAL VARIABLES

@@ -88,9 +88,10 @@ return function
  % temp variables / register place holders.
 
 ## TO DO
-*	handle scope rules in the parser, either with a global char* or passing them
 *	set declaration initializations in the symbol table rather than using T_ASS
 *	finish gen-x86
+*	add subroutines
+*	add type definitions
 
 ## Other junk
 

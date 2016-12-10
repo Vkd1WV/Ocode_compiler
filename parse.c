@@ -22,6 +22,11 @@ DS     global_inst_q; ///< a global instruction queue
 DS     sub_inst_q;    ///< an instruction queue for subroutines
 char * name_array;    ///< dynamic array for symbol and label names
 
+char   * current_scope; ///< a text prefix for symbols to enforce scope
+size_t   scope_size=0, scope_pos=0;
+#define SCOPE_ARR_SZ (size_t)64 ///< the inital size of the scope stack
+#define SCOPE_SEPARATOR (char)'#'
+
 
 /******************************************************************************/
 //                             INLINE FUNCTIONS
@@ -134,6 +139,48 @@ static inline char * get_name(void){
 	return buffer;
 }
 
+/**************************** SCOPE FUNCTIONS *********************************/
+
+static inline void push_scope(name_dx dx){
+	size_t   name_sz;
+	char   * name = dx_to_name(dx);
+	
+	// scope_pos always equals the number of characters in current_scope
+	// scope_size-1 is the number of characters it can hold
+	
+	// initalize the scope stack
+	if(!scope_size){
+		scope_size = SCOPE_ARR_SZ;
+		current_scope = (char*) malloc(sizeof(char) * SCOPE_ARR_SZ);
+		if(!current_scope) crit_error("Out of memory");
+	}
+	
+	// Resize if necessary
+	name_sz = strlen(name)+1; // +1 for the separator
+	if(scope_pos + name_sz > scope_size-1){
+		current_scope = (char*)realloc(current_scope, (scope_size *= 2));
+		if(!current_scope) crit_error("Out of memory");
+	}
+	
+	for(uint i=0; i<name_sz; i++){
+		current_scope[scope_pos++] = name[i];
+	}
+	current_scope[scope_pos++] = SCOPE_SEPARATOR;
+	
+}
+
+static inline void pop_scope(void){
+	if(!scope_size || !scope_pos)
+		crit_error("Internal: pop_scope() called on empty scope");
+	
+	current_scope[--scope_pos] = '\0';
+	
+	while( (current_scope[--scope_pos] != SCOPE_SEPARATOR) && scope_pos )
+		current_scope[scope_pos] = '\0';
+	
+	current_scope[scope_pos] = '\0';
+}
+
 
 /******************************************************************************/
 //                           PRIVATE PROTOTYPES
@@ -154,14 +201,15 @@ void    emit_iop (
 );
 
 // Declarations
-void Decl_Symbol  (void);
-void Decl_Operator(void);
+void Decl_Symbol  (void    );
+void Decl_Operator(uint lvl);
+void Decl_Type    (uint lvl);
+void Decl_Sub     (uint lvl);
+void Decl_Fun     (uint lvl);
 
+void Decl_Custom  (sym_pt templt);
 void Decl_Word    (sym_pt templt);
 void Decl_Pointer (sym_pt templt);
-void Decl_Type    (sym_pt templt);
-void Decl_Sub     (sym_pt new_sub);
-void Decl_Fun     (sym_pt new_fun);
 
 void Type_specifier(sym_pt templt_pt);
 
@@ -181,11 +229,13 @@ sym_pt Boolean          (void);
 static sym_pt Assign(sym_pt target);
 
 // Statements
-void Label (void    );
-void Jump  (void    );
-void If    (uint lvl); // only control statements need to know the block_lvl
-void While (uint lvl);
-//void For   (uint lvl); for <range statement>
+void Call_sub(sym_pt sub);
+void Label   (void      );
+void Jump    (void      );
+void If      (uint   lvl); // only control statements need to know the block_lvl
+void While   (uint   lvl);
+void Do      (uint   lvl);
+void For     (uint   lvl); //for <range statement>
 
 void Statement (uint lvl);
 
