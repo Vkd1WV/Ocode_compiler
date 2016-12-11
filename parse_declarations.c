@@ -49,7 +49,7 @@ static void Initializer_list (sym_pt templt){
 	sym_pt new_symbol, initializer;
 	
 	while (true) {
-		templt->name = add_name(get_name());
+		set_name(templt, get_name());
 		
 		if(!( new_symbol = (sym_pt)DS_insert(symbols, templt) ))
 			parse_error("Duplicate symbol name");
@@ -161,7 +161,7 @@ void Decl_Type (uint lvl){
 	sym_pt new_type = &t;
 	
 	Match(T_TYPE);
-	new_type->name = add_name(get_name());
+	set_name(new_type, get_name());
 	
 	if(!( new_type = DS_insert(symbols, new_type) ))
 		parse_error("Duplicate type definition");
@@ -193,7 +193,7 @@ void Decl_Sub(uint lvl){
 	if(token == T_ASM) new_sub->assembler = true;
 	
 	// Name
-	new_sub->name = add_name(get_name());
+	set_name(new_sub, get_name());
 	if(!( new_sub = DS_insert(symbols, new_sub) )){
 		sprintf(
 			err_array,
@@ -233,7 +233,7 @@ void Decl_Fun (uint lvl){
 	if(token == T_ASM) new_fun->assembler = true;
 	
 	// Name
-	new_fun->name = add_name(get_name());
+	set_name(new_fun, get_name());
 	if(!( new_fun = DS_insert(symbols, new_fun) )){
 		sprintf(
 			err_array,
@@ -280,9 +280,10 @@ void Decl_Symbol  (void){
 void Decl_list(uint lvl){
 	sym_pt sym;
 	
-	do{
+	debug_msg("Decl_list(): start");
+	while(true){
 		switch (token){
-		case T_IF: continue; // must use constant expressions
+		case T_NL: get_token(); continue;
 		
 		case T_8   :
 		case T_16  :
@@ -304,10 +305,15 @@ void Decl_list(uint lvl){
 				continue;
 			}
 			// fall through
-		default: break;
+		
+		default: break; // anything that is not a declaration
 		}
-	} while (false);
+		
+		break;
+	}
+	
+	sprintf(err_array, "Decl_list(): stop with token: %d", token);
+	debug_msg(err_array);
 }
-
 
 

@@ -200,6 +200,7 @@ void Switch(uint lvl){
 /******************************************************************************/
 
 
+// lvl is the block level that the statement starts with
 void Statement (uint lvl){ // any single line. always ends with NL
 	sym_pt sym;
 	
@@ -233,7 +234,10 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_SUB :
 		case T_FUN :
 		case T_TYPE:
-		case T_OPR : parse_error("Declaration found in statement section");
+		case T_OPR :
+			sprintf(err_array, "token is: %d", token);
+			err_msg(err_array);
+			parse_error("Declaration found in statement section");
 		
 		// Control Statements
 		case T_LBL  : Label    (   ); break;

@@ -93,7 +93,7 @@ static void Inner_loop(DS blk){
 static void Liveness(DS blk, DS symbols){
 	iop_pt iop;
 	
-	info_msg("Liveness(): start");
+	debug_msg("\tLiveness(): start");
 	
 	iop = (iop_pt)DS_last(blk);
 	if(!iop) crit_error("Internal: Liveness() received an empty block");
@@ -199,7 +199,7 @@ static void Liveness(DS blk, DS symbols){
 		}
 	} while(( iop = (icmd*)DS_previous(blk) ));
 	
-	info_msg("Liveness(): stop");
+	debug_msg("\tLiveness(): stop");
 }
 
 

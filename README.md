@@ -132,4 +132,14 @@ REFERENCES
 	*	constants do not need to be dereferenced, but may for consistancy
 	*	passing anything to a function always passes the reference allows us to make explicit whether they are in or out.
 
+DECLARATIONS
+*	Mixed
+		* harder to read
+		* can be freely mixed with conditionals
+*	Separate
+		* better formatting
+		* conditional declarations need to be treated differently anyway
+
+
+
 

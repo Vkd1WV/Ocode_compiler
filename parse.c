@@ -297,17 +297,16 @@ bool Parse(Program_data * data, char * infilename){
 	
 	get_token(); // Initialize the lookahead token
 	
-	
-	// get global declarations
-	Decl_list(0);
-	
 	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	
-	do {
+	// get global declarations
+	Decl_list(0);
+	
+	while (token != T_EOF) {
 		Statement(0);
-	} while (token != T_EOF);
+	}
 	
 	// Close the infile
 	fclose(yyin);
