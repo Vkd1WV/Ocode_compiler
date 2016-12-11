@@ -165,23 +165,34 @@ void For(uint lvl){
 	Match(T_FOR);
 	
 	// FIXME
+	err_msg("Internal: For() is not completely implemented");
 	
 	Statement(lvl);
 }
 
 void Switch(uint lvl){
 	sym_pt condition;
+	name_dx break_label;
+	
+	break_label = break_this;
+	break_this = new_label();
 	
 	Match(T_SWTCH);
 	condition = Boolean();
 	if(condition->type == st_lit_int){}
 	
 	// FIXME
+	
+	err_msg("Internal: Switch() is not completely implemented");
+	
 	while(token == T_CASE) Statement(lvl);
 	Match(T_DFLT);
 	Statement(lvl);
+	
+	emit_iop(break_this, I_NOP, NO_NAME, NULL, NULL, NULL);
+	
+	break_this = break_label;
 }
-
 
 
 /******************************************************************************/
@@ -218,11 +229,11 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_64  :
 		case T_WORD:
 		case T_MAX :
-		case T_PTR : Decl_Symbol  (   ); break;
-		case T_SUB : Decl_Sub     (lvl); break;
-		case T_FUN : Decl_Fun     (lvl); break;
-		case T_TYPE: Decl_Type    (lvl); break;
-		case T_OPR : Decl_Operator(lvl); break;
+		case T_PTR :
+		case T_SUB :
+		case T_FUN :
+		case T_TYPE:
+		case T_OPR : parse_error("Declaration found in statement section");
 		
 		// Control Statements
 		case T_LBL  : Label    (   ); break;
@@ -245,11 +256,9 @@ void Statement (uint lvl){ // any single line. always ends with NL
 				Call_sub(sym);
 				break;
 			}
-			if(sym->type == st_type_def){
-				get_name();
-				Decl_Custom(sym);
-				break;
-			}
+			if(sym->type == st_type_def)
+				parse_error("Declaration found in statement section");
+			
 			// else fall through
 		default:
 			sym = Boolean();

@@ -54,6 +54,8 @@ SRC    := \
 	opt.c \
 	gen-pexe.c gen-arm.c gen-x86.c
 
+AUTOFILES:= global.c scanner.c yuck.h yuck.c
+
 OBJECTS:= \
 	yuck.o global.o main.o \
 	scanner.o parse.o \
@@ -64,6 +66,9 @@ ALLFILES:= $(SRC) $(HEADERS)
 
 ############################### PRODUCTIONS ####################################
 
+.PHONEY: all
+all: occ
+
 occ: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
@@ -73,12 +78,13 @@ parse.o: $(PARSER) $(HEADERS) scanner.h
 main.o: main.c yuck.h $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ main.c
 
+# Automatically generated files
+.PHONEY: dist
+dist: $(AUTOFILES)
 global.c: Makefile
 	echo "#define _GLOBALS_C\n#include \"global.h\"" > $@
-
 scanner.c: scanner.l $(HEADERS)
 	$(LEX) $(LFLAGS) -o $@ $<
-
 yuck.c yuck.h: occ.yuck
 	yuck gen -Hyuck.h -o yuck.c $<
 
@@ -98,10 +104,7 @@ yuck.o: yuck.c yuck.h
 
 CLEANFILES:= \
 	*.o *.o *.opp occ \
-	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
-	global.c
-
-VERYCLEANFILES:= scanner.c yuck.h yuck.c
+	./tests/*.dbg ./tests/*.asm ./tests/*.pexe
 
 .PHONEY: clean very-clean todolist test
 
@@ -109,7 +112,7 @@ clean:
 	rm -f $(CLEANFILES)
 
 very-clean:
-	rm -f $(CLEANFILES) $(VERYCLEANFILES)
+	rm -f $(CLEANFILES) $(AUTOFILES)
 
 todolist:
 	-@for file in $(ALLFILES:Makefile=); do fgrep -H -e TODO -e FIXME $$file; done; true

@@ -49,7 +49,7 @@ name_dx add_name(char * name){
 		size = NAME_ARR_SZ;
 	}
 	
-	name_sz = (name_dx)strlen(name)+scope_pos+1; // +1 for the null
+	name_sz = (name_dx)strlen(name)+1; // +1 for the null
 	
 	// resize the array if necessary
 	if(size - next < name_sz){
@@ -59,15 +59,9 @@ name_dx add_name(char * name){
 		if(!name_array) crit_error("Out of Memory");
 	}
 	
-	// Add scope prefix
-	strncpy(dx_to_name(next), current_scope, scope_pos);
-	
-	temporary = next;
-	next += scope_pos;
-	
 	// Add name
 	strncpy(dx_to_name(next), name, name_sz);
-	
+	temporary = next;
 	next += name_sz;
 	return temporary;
 }
@@ -226,19 +220,21 @@ void emit_iop(
 	debug_iop("emit_iop()        :Adding iop   ", iop);
 	#endif
 	
+	
+/*	if(scope_pos){ // we are inside a sub structure of some kind*/
+/*		#ifdef IOP_ADDR*/
+/*			temp=*/
+/*		#endif*/
+/*		DS_nq(sub_inst_q, iop);*/
+/*	}*/
+/*	else {*/
+	
 	// queue up this operation
-	if(scope_pos){ // we are inside a sub structure of some kind
-		#ifdef IOP_ADDR
-			temp=
-		#endif
-		DS_nq(sub_inst_q, iop);
-	}
-	else {
-		#ifdef IOP_ADDR
-			temp=
-		#endif
-		DS_nq(global_inst_q, iop);
-	}
+	#ifdef IOP_ADDR
+		temp=
+	#endif
+	DS_nq(global_inst_q, iop);
+	
 	
 	#ifdef IOP_ADDR
 	sprintf(err_array, "iop saved at: %p", temp);

@@ -35,6 +35,8 @@
 typedef unsigned long long umax;
 typedef unsigned int uint;
 
+#define UMAX_MAX ULL_MAX
+
 typedef enum {
 	V_QUIET,
 	V_ERROR,

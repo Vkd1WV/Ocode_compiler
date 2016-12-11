@@ -6,13 +6,32 @@
  *
  ******************************************************************************/
 
+// generates the fully qualified name
+static void set_name(sym_pt sym, char * short_name){
+	char * prefix, *buffer;
+	size_t size;
+	
+	prefix = scope_prefix();
+	
+	// make a buffer to combine them
+	size = strlen(prefix) + strlen(short_name) +1;
+	buffer = malloc(size);
+	
+	strcpy(buffer, prefix);
+	strcat(buffer, short_name);
+	
+	sym->name = add_name(buffer);
+	sym->short_name = sym->name + strlen(prefix);
+	
+	free(buffer);
+}
 
 /******************************************************************************/
 //                             DECLARATION LISTS
 /******************************************************************************/
 
 
-void Qualifier_list   (sym_pt templt){
+static void Qualifier_list   (sym_pt templt){
 	if (token == T_STATIC){
 		templt->stat = true;
 		get_token();
@@ -26,7 +45,7 @@ void Qualifier_list   (sym_pt templt){
 	// auto static extern register
 }
 
-void Initializer_list (sym_pt templt){
+static void Initializer_list (sym_pt templt){
 	sym_pt new_symbol, initializer;
 	
 	while (true) {
@@ -65,7 +84,7 @@ void Initializer_list (sym_pt templt){
 }
 
 // Parameter lists for functions and subroutines
-void Parameter_list   (sym_pt templt){
+static void Parameter_list   (sym_pt templt){
 	templt = templt;
 }
 
@@ -73,8 +92,6 @@ void Parameter_list   (sym_pt templt){
 /******************************************************************************/
 //                               DECLARATIONS
 /******************************************************************************/
-
-
 
 
 // Declare a Pointer
@@ -139,7 +156,24 @@ void Type_specifier(sym_pt templt_pt){
 
 
 // Define a Datatype
-void Decl_Type (uint lvl){}
+void Decl_Type (uint lvl){
+	struct sym t;
+	sym_pt new_type = &t;
+	
+	Match(T_TYPE);
+	new_type->name = add_name(get_name());
+	
+	if(!( new_type = DS_insert(symbols, new_type) ))
+		parse_error("Duplicate type definition");
+	
+	new_type->type = st_type_def;
+	
+	push_scope(new_type);
+	
+	Decl_list(lvl);
+	
+	pop_scope();
+}
 
 // Declare an instance of a defined type
 void Decl_Custom(sym_pt templt){}
@@ -169,10 +203,13 @@ void Decl_Sub(uint lvl){
 		parse_error(err_array);
 	}
 	
-	push_scope(new_sub->name);
+	push_scope(new_sub);
 	
-	Parameter_list(new_sub);
 	// Parameter Declarations
+	Parameter_list(new_sub);
+	
+	// Get declarations
+	Decl_list(lvl);
 	
 	Statement(lvl);
 	
@@ -206,13 +243,15 @@ void Decl_Fun (uint lvl){
 		parse_error(err_array);
 	}
 	
-	push_scope(new_fun->name);
+	push_scope(new_fun);
 	
 	// Return type
 	
 	Match(T_OBRK);
 	Parameter_list(new_fun);
 	Match(T_CBRK);
+	
+	Decl_list(lvl);
 	
 	Statement(lvl);
 	
@@ -228,8 +267,6 @@ void Decl_Fun (uint lvl){
 void Decl_Symbol  (void){
 	struct sym templt;
 	
-	//puts("Decl_Symbol");
-	
 	// Initialize the template
 	memset((void*) &templt, 0, sizeof(struct sym));
 	
@@ -238,5 +275,39 @@ void Decl_Symbol  (void){
 	Initializer_list(&templt);
 	
 } // end Decl_Symbol
+
+
+void Decl_list(uint lvl){
+	sym_pt sym;
+	
+	do{
+		switch (token){
+		case T_IF: continue; // must use constant expressions
+		
+		case T_8   :
+		case T_16  :
+		case T_32  :
+		case T_64  :
+		case T_WORD:
+		case T_MAX :
+		case T_PTR : Decl_Symbol  (   ); continue;
+		case T_SUB : Decl_Sub     (lvl); continue;
+		case T_FUN : Decl_Fun     (lvl); continue;
+		case T_TYPE: Decl_Type    (lvl); continue;
+		case T_OPR : Decl_Operator(lvl); continue;
+		case T_NAME:
+			if(!( sym = (sym_pt) Bind(yytext) ))
+				parse_error("Undeclared symbol");
+			if(sym->type == st_type_def){
+				get_name();
+				Decl_Custom(sym);
+				continue;
+			}
+			// fall through
+		default: break;
+		}
+	} while (false);
+}
+
 
 

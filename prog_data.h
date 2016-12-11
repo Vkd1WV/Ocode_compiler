@@ -58,6 +58,7 @@ typedef enum {
 
 typedef struct sym {
 	name_dx  name; ///< index into the name_array
+	name_dx  short_name;
 	sym_type type; ///< Symbol type
 	bool     temp;
 	
@@ -78,7 +79,7 @@ typedef struct sym {
 	int_size size;
 	
 	// function and subroutine
-	//DS   local;     // Local scope for functions and structures
+	//DS   local;     // Local scope for procedures and structures
 	// Parameter specification
 	// return value
 	
@@ -176,8 +177,6 @@ typedef icmd * iop_pt;
 	#define EXTERN extern
 #endif
 
-/// string length limit for unique compiler generated labels
-#define UNQ_NAME_SZ 16
 #define NAME_ARR_SZ 1024 ///< Starting size for the dynamic name array
 #define NO_NAME     ((name_dx)UINT_MAX)
 

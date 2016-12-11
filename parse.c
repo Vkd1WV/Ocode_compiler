@@ -17,15 +17,18 @@
 
 //token_t token;     ///< global lookahead token
 
-DS     symbols;       ///< symbol table
-DS     global_inst_q; ///< a global instruction queue
-DS     sub_inst_q;    ///< an instruction queue for subroutines
-char * name_array;    ///< dynamic array for symbol and label names
+static DS     symbols;       ///< symbol table
+static DS     global_inst_q; ///< a global instruction queue
+static DS     sub_inst_q;    ///< an instruction queue for subroutines
+       char * name_array;    ///< dynamic array for symbol and label names
 
-char   * current_scope; ///< a text prefix for symbols to enforce scope
-size_t   scope_size=0, scope_pos=0;
-#define SCOPE_ARR_SZ (size_t)64 ///< the inital size of the scope stack
-#define SCOPE_SEPARATOR (char)'#'
+static DS scope_stack; ///< keep track of the current scope
+
+
+// string length limit for unique compiler generated labels
+// sufficiently large for 32-bit numbers in decimal and then some.
+#define UNQ_NAME_SZ 16
+//#define COLLISION_CHAR (char)'#'
 
 // the break and continue labels for the smallest current looping construct
 name_dx break_this = NO_NAME, continue_this = NO_NAME;
@@ -144,44 +147,50 @@ static inline char * get_name(void){
 
 /**************************** SCOPE FUNCTIONS *********************************/
 
-static inline void push_scope(name_dx dx){
-	size_t   name_sz;
-	char   * name = dx_to_name(dx);
+// get the current scope prefix
+static inline const char * scope_prefix(void){
+	sym_pt * sym;
+	if(( sym = (sym_pt*)DS_first(scope_stack) ))
+		return dx_to_name((*sym)->name);
+	else return "";
+}
+
+/*
+This function returns the correct symbol for the given name in the current scope
+*/
+static inline sym_pt Bind(char * name){
+	char * buffer, * prefix;
+	sym_pt sym=NULL, scope_sym, *thing;
+	size_t name_l;
 	
-	// scope_pos always equals the number of characters in current_scope
-	// scope_size-1 is the number of characters it can hold
-	
-	// initalize the scope stack
-	if(!scope_size){
-		scope_size = SCOPE_ARR_SZ;
-		current_scope = (char*) malloc(sizeof(char) * SCOPE_ARR_SZ);
-		if(!current_scope) crit_error("Out of memory");
+	if(( thing = (sym_pt*)DS_first(scope_stack) )){
+		scope_sym = *thing;
+		prefix = dx_to_name(scope_sym->name);
+		name_l = strlen(prefix) + strlen(name) + 1;
+		buffer = (char*)malloc(name_l);
+		
+		do {
+			scope_sym = *thing;
+			prefix = dx_to_name(scope_sym->name);
+			strncpy(buffer, prefix, strlen(prefix));
+			strncat(buffer, name, strlen(name));
+			
+			if(( sym = DS_find(symbols, buffer) )) break;
+		} while (( thing = (sym_pt*)DS_next(scope_stack) ));
 	}
 	
-	// Resize if necessary
-	name_sz = strlen(name)+1; // +1 for the separator
-	if(scope_pos + name_sz > scope_size-1){
-		current_scope = (char*)realloc(current_scope, (scope_size *= 2));
-		if(!current_scope) crit_error("Out of memory");
-	}
+	// if we didn't find anything, check the global scope
+	if(!sym) sym = DS_find(symbols, name);
 	
-	for(uint i=0; i<name_sz; i++){
-		current_scope[scope_pos++] = name[i];
-	}
-	current_scope[scope_pos++] = SCOPE_SEPARATOR;
-	
+	return sym;
+}
+
+static inline void push_scope(sym_pt sym){
+	DS_push(scope_stack, &sym);
 }
 
 static inline void pop_scope(void){
-	if(!scope_size || !scope_pos)
-		crit_error("Internal: pop_scope() called on empty scope");
-	
-	current_scope[--scope_pos] = '\0';
-	
-	while( (current_scope[--scope_pos] != SCOPE_SEPARATOR) && scope_pos )
-		current_scope[scope_pos] = '\0';
-	
-	current_scope[scope_pos] = '\0';
+	DS_pop(scope_stack);
 }
 
 
@@ -190,7 +199,7 @@ static inline void pop_scope(void){
 /******************************************************************************/
 
 
-sym_pt get_scope(void);
+//sym_pt get_scope(void);
 
 // Emmiters
 name_dx add_name (char * name);
@@ -218,9 +227,7 @@ void Decl_Pointer (sym_pt templt);
 
 void Type_specifier(sym_pt templt_pt);
 
-void Qualifier_list   (sym_pt templt);
-void Initializer_list (sym_pt templt);
-void Parameter_list   (sym_pt templt);
+void Decl_list(uint lvl);
 
 // expressions in order of precedence
 static sym_pt Primary   (void);
@@ -265,37 +272,6 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-sym_pt get_scope(void){
-	static char * buffer;
-	static size_t buf_lngth;
-	       size_t length=0, pos=scope_pos;
-	       sym_pt sym;
-	
-	pos -= 2; // go back the null and separator
-	while(( current_scope[pos] != SCOPE_SEPARATOR )){
-		pos--;
-		length++;
-	}
-	pos++;
-	
-	if(!buffer) buffer = (char*)malloc(sizeof(char) * length+1);
-	else if (length+1 > buf_lngth)
-		buffer = (char*)realloc(buffer, sizeof(char) * length+1);
-	
-	buf_lngth = length+1;
-	if(!buffer) crit_error("Out of Memory");
-	
-	for(uint i=0; i<length; i++) buffer[i] = current_scope[pos+i];
-	buffer[length] = '\0';
-	
-	sym = DS_find(symbols, buffer);
-	
-	if(!sym)
-		crit_error("Internal: get_scope(): name in scope does not appear in symbols");
-	
-	return sym;
-}
-
 bool Parse(Program_data * data, char * infilename){
 	bool errors;
 	
@@ -304,6 +280,10 @@ bool Parse(Program_data * data, char * infilename){
 	global_inst_q = data->main_q;
 	sub_inst_q    = data->sub_q;
 	
+	// Initialize the scope stack
+	scope_stack = (DS)DS_new_list(sizeof(sym_pt));
+	
+	// set the infile
 	if(infilename){
 		sprintf(err_array, "Reading from: %s", infilename);
 		info_msg(err_array);
@@ -316,6 +296,10 @@ bool Parse(Program_data * data, char * infilename){
 	else info_msg("Reading from: stdin");
 	
 	get_token(); // Initialize the lookahead token
+	
+	
+	// get global declarations
+	Decl_list(0);
 	
 	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
@@ -336,6 +320,8 @@ bool Parse(Program_data * data, char * infilename){
 	}
 	
 	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
+	
+	DS_delete(scope_stack);
 	
 	return false;
 }

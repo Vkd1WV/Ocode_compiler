@@ -87,7 +87,7 @@ static sym_pt Primary(void){
 		break;
 		
 	case T_NAME:
-		if(!( sym = (sym_pt) DS_find(symbols, get_name()) ))
+		if(!( sym = (sym_pt) Bind(get_name()) ))
 			parse_error("Undeclared symbol");
 		if(sym->type == st_fun) sym = Call_fun();
 		break;
