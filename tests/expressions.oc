@@ -2,15 +2,17 @@
 
 	### Declarations
 
-word const                       var1 := 5
-word                             var2 := 1, var3:=0
-pointer const to word             pt1 := ref var2
+max const                       var1 = 5
+word                             var2 = 1, var3=0
+pointer to word             pt1
 pointer to pointer const to word pt2
 
 	### Unary Ops
 
 #@pt1
 #@pt2
+
+pt1 := ref var2
 
 not var1
  inv var2

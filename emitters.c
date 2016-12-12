@@ -137,7 +137,6 @@ void emit_iop(
 	switch (op){
 	case I_NOP :
 	case I_RTRN:
-	case I_CMNT:
 		break;
 	
 	// Binaries
@@ -203,8 +202,6 @@ void emit_iop(
 		
 	case I_INC :
 	case I_DEC :
-	case I_BLK :
-	case I_EBLK:
 	case I_CALL:
 	
 	case NUM_I_CODES:

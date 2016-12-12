@@ -24,6 +24,10 @@ static DS     sub_inst_q;    ///< an instruction queue for subroutines
 
 static DS scope_stack; ///< keep track of the current scope
 
+typedef struct{
+	sym_pt scope;
+	DS     inst_q;
+} prg_blk;
 
 // string length limit for unique compiler generated labels
 // sufficiently large for 32-bit numbers in decimal and then some.
@@ -273,7 +277,7 @@ void Statement (uint lvl);
 
 
 bool Parse(Program_data * data, char * infilename){
-	bool errors;
+	int errors;
 	
 	// set various global pointers
 	symbols       = data->symbols;
@@ -297,12 +301,31 @@ bool Parse(Program_data * data, char * infilename){
 	
 	get_token(); // Initialize the lookahead token
 	
-	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
+	
+	/*
+		Program
+			: 0 <= declarations
+			: 1 <= statements
+			;
+		Library
+			: 1 <= declarations
+			;
+	*/
+	
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	
 	// get global declarations
 	Decl_list(0);
+	
+	if(errors){
+		warn_msg("Parse(): errors were found");
+		return true;
+	}
+	
+	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
+	
+	errors=setjmp(anewline); // once global declarations are finished
 	
 	while (token != T_EOF) {
 		Statement(0);

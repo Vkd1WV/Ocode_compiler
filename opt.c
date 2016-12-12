@@ -79,12 +79,16 @@ static DS Mk_blk(DS q){
 
 // optomize inner loops
 static void Inner_loop(DS blk){
-	// If the end of a basic block is a jmp to its head then surely it is an inner loop
-	if(! strcmp(
-		dx_to_name(((iop_pt) DS_first(blk))->label),
-		dx_to_name(((iop_pt) DS_last(blk))->target)
-	) ){
-		//optomize the loop
+	char * first_lbl = dx_to_name(((iop_pt) DS_first(blk))->label );
+	char * last_targ = dx_to_name(((iop_pt) DS_last (blk))->target);
+	
+	/*
+	If the end of a basic block is a jmp to its head then surely it is an inner loop
+	*/
+	if( first_lbl && last_targ && !strcmp(first_lbl, last_targ) ){
+		info_msg("\tInner_loop(): start");
+		// aggressively optomize the loop
+		info_msg("\tInner_loop(): stop");
 	}
 }
 
@@ -185,15 +189,6 @@ static void Liveness(DS blk, DS symbols){
 		case I_RTRN:
 			break;
 	
-		case I_BLK :
-			break;
-	
-		case I_EBLK:
-			break;
-	
-		case I_CMNT:
-			break;
-	
 		case NUM_I_CODES:
 		default: crit_error("Liveness(): got a bad op");
 		}
@@ -236,7 +231,7 @@ void Optomize(Program_data * prog){
 /*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
 			Liveness(blk, prog->symbols);
-			//Inner_loop(blk);
+			Inner_loop(blk);
 			
 /*			sprintf(*/
 /*				err_array,*/

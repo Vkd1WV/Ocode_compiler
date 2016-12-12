@@ -236,15 +236,6 @@ static void put_op(icmd * op){
 	case I_RTRN:
 		break;
 	
-	case I_BLK :
-		break;
-	
-	case I_EBLK:
-		break;
-	
-	case I_CMNT:
-		break;
-	
 	case NUM_I_CODES:
 	default: crit_error("something done broke in put_operation()");
 	}

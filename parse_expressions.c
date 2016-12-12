@@ -20,7 +20,7 @@
 static inline bool is_init(sym_pt sym){
 	if(!sym) puts("ERROR: is_init() received a NULL");
 	
-	if(!sym->init){
+	if(!sym->set){
 		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, sym);
 		return false;
@@ -28,20 +28,27 @@ static inline bool is_init(sym_pt sym){
 	return true;
 }
 
+/**	Set initialization and size of the result symbol
+ */
 static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 	char message[ERR_ARR_SZ];
 	
-	// check initialization
-	if(!arg1->init){
+	/************************ Check Initialization ****************************/
+	
+	if(!arg1->set){
 		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, arg1);
 	}
-	else if(arg2 && !arg2->init){ // arg2 may be NULL
+	else if(arg2 && !arg2->set){ // arg2 may be NULL
 		parse_warn("Using uninitialized symbol");
 		Print_sym(stderr, arg2);
 	}
-	else result->init = true;
+	else result->set = true;
 	
+	
+	/***************************** Check size *********************************/
+	
+	// References
 	if(arg1->type == st_ref || (arg2 && arg2->type == st_ref))
 		if(result->type != st_ref) {
 			sprintf(
@@ -52,15 +59,74 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 			parse_warn(message);
 		}
 	
-	// check size
-	if(result->type == st_int){
-		// FIXME
+	// Integers
+	if(result->type == st_int && result->temp){
+		/*	w_max > w_word
+		 *	w_byte8 > w_byte4 > w_byte2 > w_byte
+		 *	w_undef && w_NUM are errors
+		 */
+		
+		// we know we will never receive two literals
+		if( arg1->type == st_lit_int && arg2 && arg2->type == st_lit_int )
+			crit_error("Internal: set_init_size() received two literals");
+		
+		if(!arg2) result->size = arg1->size;
+		
+		else if(arg1->type == st_lit_int)
+			result->size = arg2->size;
+		else if(arg2->type == st_lit_int)
+			result->size = arg1->size;
+		else{
+			
+			switch (arg1->size){
+			case w_byte: // always the smallest
+				if(arg2->size > w_byte) result->size = arg2->size;
+				else result->size = w_byte;
+				break;
+			
+			case w_byte2:
+				if(arg2->size > w_byte2) result->size = arg2->size;
+				else result->size = w_byte2;
+				break;
+			
+			case w_word: // at least as big as w_byte2
+				if(arg2->size <= w_word) result->size = w_word;
+				else if(arg2->size > w_byte4) result->size = arg2->size;
+				else{
+					parse_warn("size result is machine dependent");
+					result->size = w_word;
+				}
+				break;
+			
+			case w_byte4:
+				if(arg2->size < w_word) result->size = w_byte4;
+				else if(arg2->size > w_byte4) result->size = arg2->size;
+				else{
+					parse_warn("size result is machine dependent");
+					result->size = w_word;
+				}
+				break;
+			
+			case w_max: // assumed to be <= w_byte8
+				if(arg2->size <= w_max) result->size = w_max;
+				else result->size = w_byte8;
+				break;
+			
+			case w_byte8: // assumed to be >= w_max
+				result->size = w_byte8;
+				break;
+			
+			case w_undef:
+			case w_NUM:
+			default:
+				parse_error("Internal: set_init_size() received unknown size");
+			}
+			
+			
+		}
 	}
-	
-	// handle if one arg is literal
-	// can't really make direct comparison
-	
 }
+
 
 static sym_pt Call_fun(void){
 	return NULL;
@@ -81,7 +147,7 @@ static sym_pt Primary(void){
 	case T_CHAR:
 	case T_NUM:
 		sym = new_var(st_lit_int);
-		sym->init     = true;
+		sym->set     = true;
 		sym->constant = true;
 		sym->value    = get_num();
 		break;
@@ -153,7 +219,7 @@ static sym_pt Unary(void){
 		}
 		
 		result = new_var(st_ref);
-		result->init = true;
+		result->set = true;
 		result->dref = arg;
 		
 		emit_iop(NO_NAME, I_REF, NO_NAME, result, arg, NULL);
@@ -166,7 +232,7 @@ static sym_pt Unary(void){
 		
 		// Symantic Checks
 		if(arg->type != st_ref) parse_error("Invalid Target of Dereference");
-		if(!arg->init) parse_error("Dereferencing uninitialized pointer");
+		if(!arg->set) parse_error("Dereferencing uninitialized pointer");
 		if(!arg->dref) parse_error("Trying to dereference a void pointer");
 		
 		result = arg->dref;
@@ -360,7 +426,7 @@ static sym_pt Term(void){
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
 				result = new_var(st_lit_int);
-				result->init = true;
+				result->set = true;
 				result->constant = true;
 				
 				if(!arg2->value) result->value = 0;
@@ -679,7 +745,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_EQ, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -728,7 +794,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_NEQ, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -777,7 +843,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_LT, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -826,7 +892,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_GT, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -875,7 +941,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_LTE, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -924,7 +990,7 @@ static sym_pt Equation(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(is_init(arg1) && is_init(arg2)) result->init = true;
+				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				emit_iop(NO_NAME, I_GTE, NO_NAME, result, arg1, arg2);
 			}
 			break;
@@ -1007,7 +1073,7 @@ static sym_pt Assign(sym_pt target){
 	default: parse_crit(target, result, "Internal: at Assign()");
 	}
 	
-	target->init = true;
+	target->set = true;
 	
 	return target;
 }
@@ -1068,7 +1134,7 @@ sym_pt Boolean(void){
 			else{
 				result = new_var(st_int);
 				result->size = w_byte;
-				if(arg1->init && arg2->init) result->init = true;
+				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
 				emit_iop(NO_NAME, I_AND, NO_NAME, result, arg1, arg2);
 			};
@@ -1118,7 +1184,7 @@ sym_pt Boolean(void){
 			}
 			else{
 				result = new_var(st_int);
-				if(arg1->init && arg2->init) result->init = true;
+				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
 				result->size = w_byte;
 				emit_iop(NO_NAME, I_OR, NO_NAME, result, arg1, arg2);

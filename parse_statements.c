@@ -132,7 +132,7 @@ void While(uint lvl){
 }
 
 void Do(uint lvl){
-	name_dx continue_label, break_label;
+	name_dx continue_label, break_label, true_label;
 	sym_pt condition;
 	
 	// Save the previous break and continue labels
@@ -142,6 +142,7 @@ void Do(uint lvl){
 	// create new labels for this loop
 	continue_this = new_label();
 	break_this    = new_label();
+	true_label    = new_label();
 	
 	
 	Match(T_DO);
@@ -153,7 +154,7 @@ void Do(uint lvl){
 	condition = Boolean();
 	if(condition->type == st_lit_int){}
 	
-	emit_iop(NO_NAME, I_JMP, continue_this, NULL, condition, NULL);
+	emit_iop(continue_this, I_JMP, true_label, NULL, condition, NULL);
 	emit_iop(break_this, I_NOP, add_name("BRK lbl"), NULL, NULL, NULL);
 	
 	// restore previous break and continue labels

@@ -41,6 +41,8 @@ I'm proving I can build my own programming language. I am not currently licencin
 
 For simplicity assembly and linking are not built-in.
 
+Because we can nest statements we require an instruction queue stack. The first member is the global instruction queue followed by those for each declared procedure (class, function, subroutine). As each context is exited the top instruction queue must be popped and passed to the optomizer to be appended to the block queue.
+
 ## OCode
 
 I want a type checking mode between one type, and void (any type), such that I can list the allowable types. particularly for function calls, so one parameter can be used to interpret what the others should be. Like a union without having to wrap each parameter in a union before passing it.
@@ -88,8 +90,8 @@ return function
  % temp variables / register place holders.
 
 ## TO DO
-*	set declaration initializations in the symbol table rather than using T_ASS
 *	finish gen-x86
+*	build an instruction queue stack and redesign the optomizer to handle one queue at a time.
 *	add subroutines
 *	add type definitions
 

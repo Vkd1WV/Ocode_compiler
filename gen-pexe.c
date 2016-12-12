@@ -9,13 +9,32 @@
 #include "global.h"
 
 typedef struct pexe_header{
-	uint64_t magic        ; ///< Magic number
-	uint32_t version      ; ///< File version
+	uint8_t  magic0;
+	uint8_t  magic1;
+	uint8_t  magic2;
+	uint8_t  magic3;
+	uint8_t  magic4;
+	uint8_t  magic5;
+	uint16_t version; ///< File version
+	// 8 bytes total in file signature
+	
+	// locations and sizes of components
 	uint32_t name_array_sz; ///< Name Array length in bytes
-	///< File position for start of symbol table
-	///< File position for start of op queue
-	///< checksum of everything after the header
+	uint32_t off_sym;       ///< File position for start of symbol table
+	uint32_t off_instq;     ///< File position for start of op queue
+	
+	// file integity verification
+	uint64_t checksum; ///< checksum of everything after the header
 } pexe_h;
+
+// File signature
+const uint8_t  magic0 = 0xB4;
+const uint8_t  magic1  = 'P';
+const uint8_t  magic2  = 'E';
+const uint8_t  magic3  = 'X';
+const uint8_t  magic4 = 'E';
+const uint8_t  magic5 = 0xAF;
+const uint16_t version = 0x0000;
 
 //typedef struct pexe_symbol{
 //	
@@ -31,11 +50,32 @@ typedef struct pexe_header{
  */
 void pexe (char * filename, const Program_data * prog){
 	FILE* fd;
+	pexe_h header;
+	
+	//Initialize the header
+	header.magic0  = magic0;
+	header.magic1  = magic1;
+	header.magic2  = magic2;
+	header.magic3  = magic3;
+	header.magic4  = magic4;
+	header.magic5  = magic5;
+	header.version = version;
+	
+	header.name_array_sz = 0;
+	header.off_sym       = DS_count(prog->symbols);
+	header.off_instq     = DS_count(prog->block_q);
+	
+	header.checksum = 0;
+	
+	sprintf(err_array, "Size of pexe_h is: %lu", sizeof(pexe_h));
+	info_msg(err_array);
 	
 	sprintf(err_array, "Creating pexe file: '%s'", filename);
 	info_msg(err_array);
 	fd = fopen(filename, "w");
 	
+	if(( fwrite(&header, sizeof(pexe_h), 1, fd) < 1 ))
+		err_msg("pexe(): fwrite() failed");
 	
 	fclose(fd);
 }

@@ -58,17 +58,25 @@ static void Initializer_list (sym_pt templt){
 		
 		if(!new_symbol->stat){} // TODO: we have to do something special here
 		
-		if (token == T_ASS){ // Initialized value
+		if (token == T_EQ){ // Initialized value
 			get_token();
 			
 			if(new_symbol->type != st_int && new_symbol->type != st_ref)
 				parse_error("Invalid target for initialization");
-			new_symbol->init = true;
+			
 			
 			initializer=Boolean();
-			//if (!initializer->init) error("Using an uninitialized value");
+			if (!initializer->set) err_msg("Using an uninitialized value");
+			if (initializer->type != st_lit_int)
+				parse_error("Initializers must be constant expressions");
 			
-			emit_iop(NO_NAME, I_ASS, NO_NAME, new_symbol, initializer, NULL);
+			new_symbol->value = initializer->value;
+			new_symbol->set   = true;
+			new_symbol->init  = true;
+			
+			// remove the initializer
+			if( DS_find(symbols, dx_to_name(initializer->name)) )
+				DS_remove(symbols);
 		}
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");
@@ -104,7 +112,7 @@ void Decl_Pointer (sym_pt templt){
 	if (!target) crit_error("Out of memory");
 	
 	target->name = NO_NAME;
-	target->init = true; // assume it's initialized
+	target->set = true; // assume it's initialized
 	
 	templt->dref = target;
 	

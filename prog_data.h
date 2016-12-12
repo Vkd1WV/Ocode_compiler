@@ -47,11 +47,11 @@ typedef enum {
 
 typedef enum {
 	w_undef,
-	w_word,  ///< an integer of the natural width of the target processor
-	w_max,   ///< an integer of the greatest width of the target processor
 	w_byte,  ///< an 8-bit integer
 	w_byte2, ///< a 16-bit integer
+	w_word,  ///< an integer of the natural width of the target processor
 	w_byte4, ///< a 32-bit integer
+	w_max,   ///< an integer of the greatest width of the target processor
 	w_byte8, ///< a 64-bit integer
 	w_NUM
 } int_size;
@@ -67,7 +67,8 @@ typedef struct sym {
 	bool constant; // should this data ever be changed again
 	
 	// Initialized and literal
-	bool init;        // Is the data location initialized
+	bool set;         // has this data location been set before
+	bool init;        // is there a static initialization stored in `value`
 	umax value;       // integer literals or initialized
 	uint8_t * str;    // string literals and initialized arrays
 	char * assembler; // contents of an asm fun or sub
@@ -132,10 +133,6 @@ typedef enum {
 	I_CALL,
 	I_RTRN,
 	
-	// Other
-	I_CMNT,
-	I_BLK ,
-	I_EBLK,
 	NUM_I_CODES
 }op_code;
 
@@ -190,8 +187,7 @@ EXTERN const char * op_code_dex[NUM_I_CODES]
 	"I_MUL" , "I_DIV", "I_MOD" , "I_EXP", "I_LSH" , "I_RSH", "I_ADD" , "I_SUB" ,
 	"I_BAND", "I_BOR", "I_XOR" , "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  , "I_LTE" ,
 	"I_GTE" , "I_AND", "I_OR"  ,
-	"I_JMP" , "I_JZ" , "I_CALL", "I_RTRN",
-	"I_CMNT", "I_BLK", "I_EBLK"
+	"I_JMP" , "I_JZ" , "I_CALL", "I_RTRN"
 }
 #endif // _GLOBALS_C
 ;
@@ -257,19 +253,20 @@ static inline void Print_sym(FILE * fd, sym_pt sym){
 		"undef", "int", "ref", "fun", "sub", "lit_int", "lit_str", "tp_def"
 	};
 	char * widths[w_NUM] = {
-		"undef", "word", "max", "1", "2", "4", "8"
+		"undef", "byte", "byte2", "word", "byte4", "max", "byte8"
 	};
 	
 	if(!sym) fputs("NULL\n", fd);
 	else
-		fprintf(fd, "%6s:\t%7s %5s %s%s%s%s  %p\n",
+		fprintf(fd, "%6s:\t%7s %5s %s%s%s%s%s  %p\n",
 			dx_to_name(sym->name),
 			types[sym->type],
 			sym->type == st_int? widths[sym->size] : "",
 			sym->temp    ? "t": " ",
 			sym->constant? "c": " ",
 			sym->stat    ? "s": " ",
-			sym->init    ? "i": " ",
+			sym->set     ? "v": " ", // whether it currently has a value assigned
+			sym->init    ? "i": " ", // wether it has a static initialization
 			(void*) sym->dref
 		);
 }
