@@ -17,7 +17,8 @@ const char * default_pexe = ".pexe";
 
 
 static inline void Set_files(char ** infilename, yuck_t * arg_pt){
-	uint sum;
+	uint   sum;
+	char * debug_file;
 	
 	// default verbosity
 	verbosity = DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag;
@@ -80,6 +81,11 @@ arm_v8_flag       :\t%u\n\n" ,
 		
 		// clear the file
 		fclose(fopen(debug_file, "w"));
+		debug_fd = NULL;
+		
+		debug_fd = fopen(debug_file, "a");
+		
+		free(debug_file);
 	}
 	else make_debug = false;
 }
@@ -144,25 +150,30 @@ int main (int argc, char** argv){
 	yuck_t arg_pt[1];
 	char * infile;
 	Program_data prog_data[1];
-	bool errors;
 	
+	// Setup
 	yuck_parse(arg_pt, argc, argv);
 	Set_files(&infile, arg_pt);
-	
 	Init_program_data(prog_data);
 	
-	errors = Parse(prog_data, infile);
-	if (make_debug) Dump_first(debug_file, prog_data);
-	if(errors) return EXIT_FAILURE;
+	// Compile
+	if( Parse(prog_data, infile) ){
+		err_msg("Exiting");
+		yuck_free(arg_pt);
+		if(make_debug) fclose(debug_fd);
+		debug_fd = NULL;
+		Clear_program_data(prog_data);
+		return EXIT_FAILURE;
+	}
 	
-	Optomize(prog_data);
-	
-	if (make_debug) Dump_second(debug_file, prog_data);
+	if (make_debug) Dump_second(debug_fd, prog_data);
 	
 	Generate_code(arg_pt, prog_data);
 	
+	// Cleanup
 	yuck_free(arg_pt);
-	if(make_debug) free(debug_file);
+	if(make_debug) fclose(debug_fd);
+	debug_fd = NULL;
 	Clear_program_data(prog_data);
 	
 	return EXIT_SUCCESS;

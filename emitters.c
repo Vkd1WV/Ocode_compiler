@@ -230,7 +230,7 @@ void emit_iop(
 	#ifdef IOP_ADDR
 		temp=
 	#endif
-	DS_nq(global_inst_q, iop);
+	DS_nq(inst_q, iop);
 	
 	
 	#ifdef IOP_ADDR

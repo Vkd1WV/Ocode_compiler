@@ -12,10 +12,10 @@
 /******************************************************************************/
 
 
-void Call_sub(sym_pt subroutine){
+static void Call_sub(sym_pt subroutine){
 	
 	
-	// Setup Parameters
+	// TODO: Setup Parameters
 	
 	emit_iop(NO_NAME, I_CALL, subroutine->name, NULL, NULL, NULL);
 }
@@ -26,19 +26,19 @@ void Call_sub(sym_pt subroutine){
 /******************************************************************************/
 
 
-void Label(void){
+static void Label(void){
 	Match(T_LBL);
 	emit_iop(add_name( get_name() ), I_NOP, NO_NAME, NULL, NULL, NULL);
 	Match(T_NL);
 }
 
-void Jump(void){
+static void Jump(void){
 	Match(T_JMP);
 	emit_iop(NO_NAME, I_JMP, add_name(get_name()), NULL, NULL, NULL);
 	Match(T_NL);
 }
 
-void Break(void){
+static void Break(void){
 	Match(T_BRK);
 	if(break_this == NO_NAME)
 		parse_error("Break statement with no enclosing control loop");
@@ -47,7 +47,7 @@ void Break(void){
 	Match(T_NL);
 }
 
-void Continue(void){
+static void Continue(void){
 	Match(T_CNTN);
 	if(continue_this == NO_NAME)
 		parse_error("Continue statement with no enclosing control loop");
@@ -56,16 +56,19 @@ void Continue(void){
 	Match(T_NL);
 }
 
-void Return(void){
+static void Return(void){
+	sym_pt ret_val = NULL;
+	
 	Match(T_RTRN);
-	
-	// TODO: check return type and set it
-	
-	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
+	if(token != T_NL) ret_val = Boolean();
 	Match(T_NL);
+	
+	// TODO: check return type
+	
+	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, ret_val, NULL);
 }
 
-void If(uint lvl){
+static void If(uint lvl){
 	sym_pt condition;
 	name_dx skip_label, else_label;
 	
@@ -75,8 +78,16 @@ void If(uint lvl){
 	else_label = new_label();
 	
 	condition = Boolean();
-	if(condition->type == st_lit_int){}
-	emit_iop(NO_NAME, I_JZ, else_label, NULL, condition, NULL);
+	if(condition->type == st_lit_int){
+		if(!condition->value)
+			emit_iop(NO_NAME, I_JMP, else_label, NULL, NULL, NULL);
+		// else fallthrough
+		
+		// remove unneeded symbol
+		if(DS_find(symbols, dx_to_name(condition->name)))
+			DS_remove(symbols);
+	}
+	else emit_iop(NO_NAME, I_JZ, else_label, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
@@ -97,7 +108,7 @@ void If(uint lvl){
 	emit_iop(NO_NAME, I_NOP, add_name("END IF"), NULL, NULL, NULL);
 }
 
-void While(uint lvl){
+static void While(uint lvl){
 	name_dx continue_label, break_label;
 	sym_pt condition;
 	
@@ -115,9 +126,15 @@ void While(uint lvl){
 	emit_iop(continue_this, I_NOP, add_name("CONT lbl"), NULL, NULL, NULL);
 	
 	condition = Boolean();
-	if(condition->type == st_lit_int){}
-	
-	emit_iop(NO_NAME, I_JZ, break_this, NULL, condition, NULL);
+	if(condition->type == st_lit_int){
+		if(!condition->value)
+			emit_iop(NO_NAME, I_JMP, break_this, NULL, NULL, NULL);
+		
+		// remove unneeded symbol
+		if(DS_find(symbols, dx_to_name(condition->name)))
+			DS_remove(symbols);
+	}
+	else emit_iop(NO_NAME, I_JZ, break_this, NULL, condition, NULL);
 	
 	Statement(lvl);
 	
@@ -131,7 +148,7 @@ void While(uint lvl){
 	break_this    = break_label;
 }
 
-void Do(uint lvl){
+static void Do(uint lvl){
 	name_dx continue_label, break_label, true_label;
 	sym_pt condition;
 	
@@ -146,15 +163,26 @@ void Do(uint lvl){
 	
 	
 	Match(T_DO);
-	emit_iop(continue_this, I_NOP, add_name("CONT lbl"), NULL, NULL, NULL);
+	emit_iop(true_label, I_NOP, add_name("TRUE lbl"), NULL, NULL, NULL);
 	
 	Statement(lvl);
 	
+	// each continue retests the condition
+	emit_iop(continue_this, I_NOP, add_name("CONT lbl"), NULL, NULL, NULL);
 	Match(T_WHILE);
 	condition = Boolean();
-	if(condition->type == st_lit_int){}
+	Match(T_NL);
 	
-	emit_iop(continue_this, I_JMP, true_label, NULL, condition, NULL);
+	if(condition->type == st_lit_int){
+		if(condition->value)
+			emit_iop(NO_NAME, I_JMP, true_label, NULL, NULL, NULL);
+		
+		// remove unneeded symbol
+		if(DS_find(symbols, dx_to_name(condition->name)))
+			DS_remove(symbols);
+	}
+	else emit_iop(NO_NAME, I_JMP, true_label, NULL, condition, NULL);
+	
 	emit_iop(break_this, I_NOP, add_name("BRK lbl"), NULL, NULL, NULL);
 	
 	// restore previous break and continue labels
@@ -162,7 +190,7 @@ void Do(uint lvl){
 	break_this    = break_label;
 }
 
-void For(uint lvl){
+static void For(uint lvl){
 	Match(T_FOR);
 	
 	// FIXME
@@ -171,7 +199,7 @@ void For(uint lvl){
 	Statement(lvl);
 }
 
-void Switch(uint lvl){
+static void Switch(uint lvl){
 	sym_pt condition;
 	name_dx break_label;
 	
@@ -222,8 +250,8 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		}
 	}
 	
-	else switch (token){
-		
+	else
+		switch (token){
 		// Declarations
 		case T_8   :
 		case T_16  :
@@ -236,21 +264,24 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_FUN :
 		case T_TYPE:
 		case T_OPR :
-			sprintf(err_array, "token is: %d", token);
-			err_msg(err_array);
-			parse_error("Declaration found in statement section");
+			sprintf(
+				err_array,
+				"Declaration found in statement section. token is: %d",
+				token
+			);
+			parse_error(err_array);
 		
 		// Control Statements
 		case T_LBL  : Label    (   ); break;
 		case T_JMP  : Jump     (   ); break;
+		case T_BRK  : Break    (   ); break;
+		case T_CNTN : Continue (   ); break;
+		case T_RTRN : Return   (   ); break;
 		case T_IF   : If       (lvl); break;
 		case T_WHILE: While    (lvl); break;
 		case T_DO   : Do       (lvl); break;
 		case T_FOR  : For      (lvl); break;
 		case T_SWTCH: Switch   (lvl); break;
-		case T_BRK  : Break    (   ); break;
-		case T_CNTN : Continue (   ); break;
-		case T_RTRN : Return   (   ); break;
 		
 		case T_NAME: // call sub or declare var of type_def maybe
 			// we don't want to get the next token because we may fall through
@@ -274,6 +305,6 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			}
 			
 			Match(T_NL);
-	}
+		}
 }
 

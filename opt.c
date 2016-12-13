@@ -76,6 +76,14 @@ static DS Mk_blk(DS q){
 
 // Colapse labels
 
+static void Dead_blks(DS block_q){
+	/* If a block ends with an unconditional jump, and the next block has no label then it must be dead
+	*/
+	
+	/* If a block ends with a jump and the next block starts with its target, then the two lines can be removed
+	*/
+}
+
 
 // optomize inner loops
 static void Inner_loop(DS blk){
@@ -104,7 +112,9 @@ static void Liveness(DS blk, DS symbols){
 	
 	do {
 		switch(iop->op){
-		case I_NOP:
+		case I_NOP :
+		case I_CALL:
+		case I_PROC: // no arguments
 			break;
 		
 		case I_ASS :
@@ -178,17 +188,13 @@ static void Liveness(DS blk, DS symbols){
 			if(!iop->arg2_lit) iop->arg2.symbol->live = true;
 			
 			break;
-	
+		
 		case I_JMP :
 		case I_JZ  :
+		case I_RTRN: // treat them like optional unaries
+			if(!iop->arg1_lit && iop->arg1) iop->arg1.symbol->live = true;
 			break;
-	
-		case I_CALL:
-			break;
-	
-		case I_RTRN:
-			break;
-	
+		
 		case NUM_I_CODES:
 		default: crit_error("Liveness(): got a bad op");
 		}
@@ -199,18 +205,18 @@ static void Liveness(DS blk, DS symbols){
 
 
 /******************************************************************************/
-//                             PUBLIC FUNCTIONS
+//                             PUBLIC FUNCTION
 /******************************************************************************/
 
 
-void Optomize(Program_data * prog){
+void Optomize(Program_data * prog, DS inst_q){
 	DS blk;
 	
 	info_msg("Optomize(): start");
 	
-	if(!DS_isempty(prog->main_q)){
-		debug_msg("Optomize(): main_q");
-		while (( blk = Mk_blk(prog->main_q) )){
+	if(!DS_isempty(inst_q)){
+		debug_msg("Optomize(): start");
+		while (( blk = Mk_blk(inst_q) )){
 		
 			#ifdef BLK_ADDR
 			sprintf(
@@ -253,24 +259,7 @@ void Optomize(Program_data * prog){
 				err_msg("Internal: Queued block does not match first block");
 		}
 	}
-	else info_msg("Optomize(): The main queue is empty");
-	
-	if(!DS_isempty(prog->sub_q)){
-		debug_msg("sub_q");
-		while (( blk = Mk_blk(prog->sub_q) )){
-		
-			if (verbosity >= V_DEBUG){
-				fprintf(stderr, "\nPrinting block of size %u.\n", DS_count(blk));
-				Dump_iq(stderr, blk);
-			}
-		
-			Liveness(blk, prog->symbols);
-			//Inner_loop(blk);
-			DS_nq(prog->block_q, blk);
-		}
-	}
-	else info_msg("Optomize(): The sub queue is empty");
-	
+	else info_msg("Optomize(): The queue is empty");
 	
 	sprintf(
 				err_array,

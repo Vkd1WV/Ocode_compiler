@@ -35,8 +35,6 @@
 typedef unsigned long long umax;
 typedef unsigned int uint;
 
-#define UMAX_MAX ULL_MAX
-
 typedef enum {
 	V_QUIET,
 	V_ERROR,
@@ -68,8 +66,8 @@ typedef enum {
 
 
 EXTERN verb_t  verbosity; ///< set in Set_files() and never changed again
-EXTERN char *  debug_file;
 EXTERN bool    make_debug;
+EXTERN FILE *  debug_fd;
 EXTERN jmp_buf anewline;  ///< to facilitate error recovery
 EXTERN char    err_array[ERR_ARR_SZ]; ///< Temporary string for messages
 
@@ -123,7 +121,7 @@ static inline void debug_msg(const char * message){
 
 bool Parse(Program_data * data, char * infilename);
 
-void Optomize(Program_data * prog);
+void Optomize(Program_data * prog, DS inst_q);
 
 void x86  (char * filename, const Program_data * prog, bool B64);
 void pexe (char * filename, const Program_data * prog          );

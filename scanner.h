@@ -114,6 +114,9 @@ typedef enum {
 	/***************************** Declarations *******************************/
 
 	T_OPR , // Operator Declaration
+	T_SUB , // Subroutine
+	T_FUN , // Function
+	T_TYPE, // Type Declaration
 
 	// Word declarations
 	T_8   ,
@@ -127,10 +130,6 @@ typedef enum {
 	T_PTR,
 	T_TO ,
 
-	T_SUB , // Subroutine
-	T_FUN , // Function
-	T_TYPE, // Type Declaration
-
 	// Qualifers
 	T_CONST ,
 	T_STATIC,
@@ -139,7 +138,8 @@ typedef enum {
 	// Parameter Modes
 	T_IN,
 	T_OUT,
-	T_BI
+	T_BI,
+	NUM_TOKENS
 
 } token_t;
 
@@ -165,6 +165,46 @@ typedef enum {
 EXTERN token_t token;     ///< global lookahead token
 EXTERN uint    block_lvl; ///< number of leading tabs on the current line
 EXTERN umax    yynumber;  ///< numbers passed to the parser by T_NUM
+
+EXTERN const char * token_dex[NUM_TOKENS]
+#ifdef _SCANNER_L
+= {
+	// Primary
+	"T_EOF", "T_NL", "T_NUM", "T_NAME", "T_STR", "T_CHAR",
+	/****************************** Operators *********************************/
+	"(",")","{","}","[","]",
+	// Unary
+	"T_DEC  "," T_INC  "," T_REF  ","@"," T_NOT  "," T_INV  ",
+	// Additive
+	"T_PLUS "," T_MINUS"," T_BAND ", "T_BOR", "T_BXOR",
+	// Multiplicative
+	"T_MUL  "," T_MOD  "," T_DIV  "," T_EXP  "," T_LSHFT"," T_RSHFT",
+	// Comparative
+	"="," T_NEQ","<",">"," T_LTE"," T_GTE",
+	// boolean
+	"T_AND"," T_OR ",
+	// Assignment
+	":="  , "T_LSH_A", "T_RSH_A", "T_ADD_A", "T_SUB_A", "T_MUL_A", "T_DIV_A",
+	"T_MOD_A", "T_AND_A", "T_OR_A ", "T_XOR_A",
+	
+	"T_LIST ",
+	/************************** Control statements ****************************/
+	"T_LBL"  , "T_JMP" , "T_IF" , "T_ELSE", "T_SWTCH", "T_CASE", "T_DFLT",
+	"T_WHILE", "T_DO"  , "T_BRK", "T_CNTN", "T_TRY"  , "T_THRW", "T_CTCH",
+	"T_FOR"  , "T_RTRN", "T_END",
+	/***************************** Declarations *******************************/
+	"T_OPR "," T_SUB "," T_FUN "," T_TYPE",
+	// Word declarations
+	"T_8   "," T_16  "," T_32  "," T_64  "," T_WORD"," T_MAX ",
+	// pointer declaration
+	"T_PTR"," T_TO ",
+	// Qualifers
+	"T_CONST", "T_STATIC", "T_ASM",
+	// Parameter Modes
+	"T_IN", "T_OUT", "T_BI"
+}
+#endif // _SCANNER_L
+;
 
 #undef EXTERN
 

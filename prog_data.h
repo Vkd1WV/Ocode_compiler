@@ -20,8 +20,6 @@
 typedef struct {
 	char * names;
 	DS     block_q;
-	DS     main_q;
-	DS     sub_q;
 	DS     symbols;
 } Program_data;
 
@@ -33,7 +31,7 @@ typedef size_t name_dx; ///< indexes into the name_array
 
 /********************************* SYMBOLS ************************************/
 
-typedef enum {
+typedef enum{
 	st_undef,
 	st_int,      ///< an integer
 	st_ref,      ///< a reference
@@ -41,11 +39,12 @@ typedef enum {
 	st_sub,      ///< a subroutine
 	st_lit_int,  ///< a literal integer to be inserted directly
 	st_lit_str,  ///< a string literal
-	st_type_def, ///< defined type or struct or class
+	st_type_def, ///< a type definition: struct or class
+	st_cust,     ///< programmer defined types
 	st_NUM
 } sym_type;
 
-typedef enum {
+typedef enum{
 	w_undef,
 	w_byte,  ///< an 8-bit integer
 	w_byte2, ///< a 16-bit integer
@@ -55,6 +54,17 @@ typedef enum {
 	w_byte8, ///< a 64-bit integer
 	w_NUM
 } int_size;
+
+typedef enum{
+	mt_undef,
+	mt_in,    ///< read only parameter
+	mt_out,   ///< write only parameter
+	mt_bi,    ///< bi-directional parameter
+	mt_rtrn,  ///< return value
+	mt_pub,   ///< a public member
+	mt_priv,  ///< a private member
+	mt_NUM
+} member_type;
 
 typedef struct sym {
 	name_dx  name; ///< index into the name_array
@@ -79,12 +89,12 @@ typedef struct sym {
 	// Integers
 	int_size size;
 	
-	// function and subroutine
-	//DS   local;     // Local scope for procedures and structures
-	// Parameter specification
-	// return value
+	// procedures, typedefs, and customs
+	DS members; // parameters of procedures, members of typedefs and customs
+	member_type mt; // if a parameter/member, what type
+	size_t offset;  // SP offset for automatic variables
 	
-	// Used by the code generators
+	// Used by the optomizer
 	bool live;
 } * sym_pt;
 
@@ -131,6 +141,7 @@ typedef enum {
 	I_JMP ,
 	I_JZ  ,
 	I_CALL,
+	I_PROC, // first icmd of each procedure. sets auto variables
 	I_RTRN,
 	
 	NUM_I_CODES
@@ -187,7 +198,7 @@ EXTERN const char * op_code_dex[NUM_I_CODES]
 	"I_MUL" , "I_DIV", "I_MOD" , "I_EXP", "I_LSH" , "I_RSH", "I_ADD" , "I_SUB" ,
 	"I_BAND", "I_BOR", "I_XOR" , "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  , "I_LTE" ,
 	"I_GTE" , "I_AND", "I_OR"  ,
-	"I_JMP" , "I_JZ" , "I_CALL", "I_RTRN"
+	"I_JMP" , "I_JZ" , "I_PROC", "I_CALL", "I_RTRN"
 }
 #endif // _GLOBALS_C
 ;
@@ -360,39 +371,39 @@ static inline void Dump_blkq(FILE * fd, DS blkq){
 }
 
 
-static inline void Dump_first(char * file, Program_data * prog){
-	FILE * fd;
-	
-	info_msg("Dump_first(): start");
-	
-	fd = fopen(file, "a");
-	if(!fd) {
-		warn_msg("Internal: Dump_first(): no such file");
-		return;
-	}
-	
-	fputs("\nSymbol Table\n", fd);
-	Dump_symbols(fd, prog->symbols);
-	
-	fputs("\nMain Queue\n", fd);
-	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
-	Dump_iq(fd, prog->main_q);
-	
-	fputs("\nSub Queue\n", fd);
-	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
-	Dump_iq(fd, prog->sub_q);
-	
-	fclose(fd);
-	
-	info_msg("Dump_first(): stop");
-}
+//static inline void Dump_first(char * file, Program_data * prog){
+//	FILE * fd;
+//	
+//	info_msg("Dump_first(): start");
+//	
+//	fd = fopen(file, "a");
+//	if(!fd) {
+//		warn_msg("Internal: Dump_first(): no such file");
+//		return;
+//	}
+//	
+//	fputs("\nSymbol Table\n", fd);
+//	Dump_symbols(fd, prog->symbols);
+//	
+//	fputs("\nMain Queue\n", fd);
+//	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
+//	Dump_iq(fd, prog->main_q);
+//	
+//	fputs("\nSub Queue\n", fd);
+//	fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2\n", fd);
+//	Dump_iq(fd, prog->sub_q);
+//	
+//	fclose(fd);
+//	
+//	info_msg("Dump_first(): stop");
+//}
 
-static inline void Dump_second(char * file, Program_data * prog){
-	FILE * fd;
+static inline void Dump_second(FILE * fd, Program_data * prog){
+	
+	if(!make_debug) return;
 	
 	info_msg("Dump_second(): start");
 	
-	fd = fopen(file, "a");
 	if(!fd) {
 		warn_msg("Internal: Dump_second(): no such file");
 		return;
@@ -405,8 +416,6 @@ static inline void Dump_second(char * file, Program_data * prog){
 	
 	fputs("\nBlock Queue\n", fd);
 	Dump_blkq(fd, prog->block_q);
-	
-	fclose(fd);
 	
 	info_msg("Dump_second(): stop");
 }
@@ -422,8 +431,8 @@ static inline void Init_program_data(Program_data * data_pt){
 	debug_msg(err_array);
 
 	data_pt->block_q = (DS) DS_new_list(sizeof(DS));
-	data_pt->main_q  = (DS) DS_new_list(sizeof(icmd));
-	data_pt->sub_q   = (DS) DS_new_list(sizeof(icmd));
+//	data_pt->main_q  = (DS) DS_new_list(sizeof(icmd));
+//	data_pt->sub_q   = (DS) DS_new_list(sizeof(icmd));
 	data_pt->symbols = (DS) DS_new_bst(
 		sizeof(struct sym),
 		false,
@@ -455,10 +464,10 @@ static inline void Clear_program_data(Program_data * data_pt){
 	debug_msg("Deleting the block queue");
 	DS_delete(data_pt->block_q);
 	
-	debug_msg("Deleting the main Queue");
-	DS_delete(data_pt->main_q);
-	debug_msg("Deleting the Sub queue");
-	DS_delete(data_pt->sub_q);
+//	debug_msg("Deleting the main Queue");
+//	DS_delete(data_pt->main_q);
+//	debug_msg("Deleting the Sub queue");
+//	DS_delete(data_pt->sub_q);
 	debug_msg("Deleting the symbol table");
 	DS_delete(data_pt->symbols);
 }

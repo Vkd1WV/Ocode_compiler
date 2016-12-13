@@ -2,9 +2,7 @@
 
 for file in ./tests/*.oc; do
 	echo -e "\nTESTS: running $file\n"
-	./occ -vvp --x86-long $file
-	echo
-	./occ -vvpd --x86-long $file
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./occ -vvpd --x86-long $file
 	
 #	echo -e "\nTESTS: V_WARN\n"
 #	./occ --x86-long $file

@@ -51,6 +51,9 @@ const uint16_t version = 0x0000;
 void pexe (char * filename, const Program_data * prog){
 	FILE* fd;
 	pexe_h header;
+	size_t result;
+	
+	info_msg("pexe(): start");
 	
 	//Initialize the header
 	header.magic0  = magic0;
@@ -67,15 +70,29 @@ void pexe (char * filename, const Program_data * prog){
 	
 	header.checksum = 0;
 	
-	sprintf(err_array, "Size of pexe_h is: %lu", sizeof(pexe_h));
+	
+	sprintf(err_array, "pexe(): Size of pexe_h is: %lu", sizeof(pexe_h));
 	info_msg(err_array);
 	
-	sprintf(err_array, "Creating pexe file: '%s'", filename);
+	// open the file
+	sprintf(err_array, "pexe(): Creating file: '%s'", filename);
 	info_msg(err_array);
 	fd = fopen(filename, "w");
+	if(!fd){
+		err_msg("pexe(): Could not open file");
+		return;
+	}
 	
-	if(( fwrite(&header, sizeof(pexe_h), 1, fd) < 1 ))
-		err_msg("pexe(): fwrite() failed");
+	// write header
+	result = fwrite(&header, 1, sizeof(pexe_h), fd);
+	
+	sprintf(err_array, "pexe(): fwrite() returned %lu", result);
+	info_msg(err_array);
 	
 	fclose(fd);
+	fd=NULL;
+	
+	info_msg("pexe(): stop");
 }
+
+

@@ -91,9 +91,14 @@ return function
 
 ## TO DO
 *	finish gen-x86
+*	add procedures
+*	add arrays
+*	add records
+*	add type definitions (classes)
+*	Make declarations return sym_pt or DS to build member lists
+
+## Done
 *	build an instruction queue stack and redesign the optomizer to handle one queue at a time.
-*	add subroutines
-*	add type definitions
 
 ## Other junk
 

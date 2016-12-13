@@ -1,0 +1,14 @@
+
+# Testing function and subroutine definitions
+
+fun square[max a] returns max
+	return a * a
+
+
+sub call_square
+	max number = 0
+	
+	while number != 10
+		square[number]
+		++number
+

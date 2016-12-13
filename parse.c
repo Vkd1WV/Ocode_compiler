@@ -11,23 +11,28 @@
 
 
 /******************************************************************************/
-//                   GLOBAL VARIABLES IN THE PARSER MODULE
+//                      PARSER MODULE TYPE DEFINITIONS
 /******************************************************************************/
 
-
-//token_t token;     ///< global lookahead token
-
-static DS     symbols;       ///< symbol table
-static DS     global_inst_q; ///< a global instruction queue
-static DS     sub_inst_q;    ///< an instruction queue for subroutines
-       char * name_array;    ///< dynamic array for symbol and label names
-
-static DS scope_stack; ///< keep track of the current scope
 
 typedef struct{
 	sym_pt scope;
 	DS     inst_q;
 } prg_blk;
+
+
+/******************************************************************************/
+//                         PARSER MODULE VARIABLES
+/******************************************************************************/
+
+
+static DS scope_stack; ///< keep track of the current scope and inst queue
+
+static Program_data * prg_data; //used by pop_scope()
+static DS           symbols;    ///< symbol table
+static DS           inst_q;     ///< pointer to the current scope inst_q
+       char *       name_array; ///< dynamic array for symbol and label names
+
 
 // string length limit for unique compiler generated labels
 // sufficiently large for 32-bit numbers in decimal and then some.
@@ -115,11 +120,7 @@ static inline bool Match_name(name_dx dx){
 
 static inline void Match(token_t t){
 	if(token == t) get_token();
-	else{
-		char temp_array[ERR_ARR_SZ];
-		sprintf(temp_array, "0x%x", t);
-		expected(temp_array);
-	}
+	else expected(token_dex[t]);
 }
 
 static inline char * get_name(void){
@@ -153,9 +154,12 @@ static inline char * get_name(void){
 
 // get the current scope prefix
 static inline const char * scope_prefix(void){
-	sym_pt * sym;
-	if(( sym = (sym_pt*)DS_first(scope_stack) ))
-		return dx_to_name((*sym)->name);
+	prg_blk * block_pt;
+	
+	block_pt = (prg_blk*)DS_first(scope_stack);
+	
+	if(block_pt->scope)
+		return dx_to_name(block_pt->scope->name);
 	else return "";
 }
 
@@ -163,24 +167,38 @@ static inline const char * scope_prefix(void){
 This function returns the correct symbol for the given name in the current scope
 */
 static inline sym_pt Bind(char * name){
-	char * buffer, * prefix;
-	sym_pt sym=NULL, scope_sym, *thing;
-	size_t name_l;
+	static char * buffer;
+	static size_t buf_l;
+	#define BUF_SZ 64
 	
-	if(( thing = (sym_pt*)DS_first(scope_stack) )){
-		scope_sym = *thing;
-		prefix = dx_to_name(scope_sym->name);
+	char * prefix;
+	sym_pt sym=NULL;
+	size_t name_l;
+	prg_blk * block_pt;
+	
+	// initializate the buffer
+	if(!buffer){
+		buffer = (char*)malloc(BUF_SZ);
+		buf_l = BUF_SZ;
+	}
+	
+	block_pt = (prg_blk*)DS_first(scope_stack);
+	
+	// if we are not at global scope
+	if(block_pt->scope){
+		prefix = dx_to_name(block_pt->scope->name);
+		
+		// resize the buffer if necessary
 		name_l = strlen(prefix) + strlen(name) + 1;
-		buffer = (char*)malloc(name_l);
+		if(name_l > buf_l) buffer = realloc(buffer, name_l);
 		
 		do {
-			scope_sym = *thing;
-			prefix = dx_to_name(scope_sym->name);
+			prefix = dx_to_name(block_pt->scope->name);
 			strncpy(buffer, prefix, strlen(prefix));
 			strncat(buffer, name, strlen(name));
 			
 			if(( sym = DS_find(symbols, buffer) )) break;
-		} while (( thing = (sym_pt*)DS_next(scope_stack) ));
+		} while (( block_pt = (prg_blk*)DS_next(scope_stack) ));
 	}
 	
 	// if we didn't find anything, check the global scope
@@ -189,12 +207,37 @@ static inline sym_pt Bind(char * name){
 	return sym;
 }
 
+static inline sym_pt Bind_operator(token_t op){
+	return NULL;
+}
+
 static inline void push_scope(sym_pt sym){
-	DS_push(scope_stack, &sym);
+	prg_blk data;
+	prg_blk * data_pt;
+	
+	data.inst_q = DS_new_list(sizeof(icmd));
+	data.scope  = sym;
+	
+	data_pt = DS_push(scope_stack, &data);
+	
+	inst_q = data_pt->inst_q;
 }
 
 static inline void pop_scope(void){
-	DS_pop(scope_stack);
+	prg_blk * data_pt;
+	
+	data_pt = DS_pop(scope_stack);
+	
+	if(make_debug) Dump_iq(debug_fd, data_pt->inst_q);
+	
+	Optomize(prg_data, data_pt->inst_q);
+	if(!DS_isempty(data_pt->inst_q))
+		err_msg("Internal: pop_scope(): Optomize() returned non-empty queue");
+	
+	DS_delete(data_pt->inst_q);
+	
+	data_pt = DS_first(scope_stack);
+	if(data_pt) inst_q = data_pt->inst_q;
 }
 
 
@@ -218,45 +261,26 @@ void    emit_iop (
 	const sym_pt right
 );
 
-// Declarations
-void Decl_Symbol  (void    );
-void Decl_Operator(uint lvl);
-void Decl_Type    (uint lvl);
-void Decl_Sub     (uint lvl);
-void Decl_Fun     (uint lvl);
+/*// Declarations*/
+//void Decl_Symbol  (void    );
+/*void Decl_Operator(uint lvl);*/
+/*void Decl_Type    (uint lvl);*/
+/*void Decl_Sub     (uint lvl);*/
+/*void Decl_Fun     (uint lvl);*/
 
-void Decl_Custom  (sym_pt templt);
-void Decl_Word    (sym_pt templt);
-void Decl_Pointer (sym_pt templt);
+/*void Decl_Custom  (sym_pt templt);*/
+/*void Decl_Word    (sym_pt templt);*/
+/*void Decl_Pointer (sym_pt templt);*/
 
 void Type_specifier(sym_pt templt_pt);
 
 void Decl_list(uint lvl);
 
-// expressions in order of precedence
-static sym_pt Primary   (void);
-static sym_pt Unary     (void);
-static sym_pt Postfix   (void);
-static sym_pt Term      (void);
-static sym_pt Expression(void);
-static sym_pt Equation  (void);
-sym_pt Boolean          (void);
-
+// expressions
+static sym_pt Boolean          (void);
 static sym_pt Assign(sym_pt target);
 
-// Statements
-void Label   (void);
-void Jump    (void);
-void Break   (void);
-void Continue(void);
-void Return  (void);
-void Call_sub(sym_pt sub);
-void If      (uint lvl); // only control statements need to know the block_lvl
-void While   (uint lvl);
-void Do      (uint lvl);
-void For     (uint lvl); //for <range statement>
-void Switch  (uint lvl);
-
+/*// Statements*/
 void Statement (uint lvl);
 
 
@@ -272,7 +296,7 @@ void Statement (uint lvl);
 
 
 /******************************************************************************/
-//                             PUBLIC FUNCTIONS
+//                              PUBLIC FUNCTION
 /******************************************************************************/
 
 
@@ -280,12 +304,11 @@ bool Parse(Program_data * data, char * infilename){
 	int errors;
 	
 	// set various global pointers
-	symbols       = data->symbols;
-	global_inst_q = data->main_q;
-	sub_inst_q    = data->sub_q;
+	symbols  = data->symbols;
+	prg_data = data;
 	
 	// Initialize the scope stack
-	scope_stack = (DS)DS_new_list(sizeof(sym_pt));
+	scope_stack = (DS)DS_new_list(sizeof(prg_blk));
 	
 	// set the infile
 	if(infilename){
@@ -300,6 +323,7 @@ bool Parse(Program_data * data, char * infilename){
 	else info_msg("Reading from: stdin");
 	
 	get_token(); // Initialize the lookahead token
+	push_scope(NULL); // initialize the scope stack
 	
 	
 	/*
@@ -318,14 +342,9 @@ bool Parse(Program_data * data, char * infilename){
 	// get global declarations
 	Decl_list(0);
 	
-	if(errors){
-		warn_msg("Parse(): errors were found");
-		return true;
-	}
-	
 	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
 	
-	errors=setjmp(anewline); // once global declarations are finished
+	errors+=setjmp(anewline); // once global declarations are finished
 	
 	while (token != T_EOF) {
 		Statement(0);
@@ -333,19 +352,18 @@ bool Parse(Program_data * data, char * infilename){
 	
 	// Close the infile
 	fclose(yyin);
+	yyin = NULL;
 	
+	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
+	pop_scope();
 	data->names = name_array;
+	DS_delete(scope_stack);
 	
 	if(errors){
 		warn_msg("Parse(): errors were found");
 		return true;
 	}
-	
-	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
-	
-	DS_delete(scope_stack);
-	
-	return false;
+	else return false;
 }
 
 

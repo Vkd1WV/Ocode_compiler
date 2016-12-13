@@ -26,8 +26,15 @@ static void set_name(sym_pt sym, char * short_name){
 	free(buffer);
 }
 
+static DS     New_mem_list(){}
+static sym_pt First_member(DS mem_lst){}
+static sym_pt Next_member(DS mem_lst){}
+static sym_pt Add_member(sym_pt member){}
+static void   Merge_mem_lst(DS lst_a, DS lst_b){}
+
+
 /******************************************************************************/
-//                             DECLARATION LISTS
+//                           BASIC DECLARATIONS
 /******************************************************************************/
 
 
@@ -91,27 +98,13 @@ static void Initializer_list (sym_pt templt){
 	*/
 }
 
-// Parameter lists for functions and subroutines
-static void Parameter_list   (sym_pt templt){
-	templt = templt;
-}
-
-
-/******************************************************************************/
-//                               DECLARATIONS
-/******************************************************************************/
-
-
 // Declare a Pointer
-void Decl_Pointer (sym_pt templt){
+static void Decl_Pointer (sym_pt templt){
 	sym_pt target;
 	
 	templt->type = st_ref;
 	
-	target= (sym_pt) calloc(1, sizeof(struct sym));
-	if (!target) crit_error("Out of memory");
-	
-	target->name = NO_NAME;
+	target= new_var(st_undef);
 	target->set = true; // assume it's initialized
 	
 	templt->dref = target;
@@ -126,10 +119,8 @@ void Decl_Pointer (sym_pt templt){
 }
 
 // Declare a Word
-void Decl_Word(sym_pt templt){
+static void Decl_Word(sym_pt templt){
 	templt->type = st_int;
-	
-	//puts("Decl_Word");
 	
 	switch (token){
 		case T_8:    templt->size=w_byte ; break;
@@ -145,11 +136,32 @@ void Decl_Word(sym_pt templt){
 	Qualifier_list(templt);
 }
 
+static void Decl_Custom (sym_pt templt){
+	sym_pt type_def;
+	
+	type_def = (sym_pt)Bind(get_name());
+	if(!type_def)
+		crit_error("Internal: Decl_Custom(): could not bind type definition");
+	
+	templt->type = st_cust;
+	templt->members = type_def->members;
+	
+	//TODO: alias?
+	
+	Qualifier_list(templt);
+}
+
 void Type_specifier(sym_pt templt_pt){
 	
 	switch(token){
+		case T_8:
+		case T_16:
+		case T_32:
+		case T_64:
+		case T_WORD:
+		case T_MAX:  Decl_Word   (templt_pt); break;
 		case T_PTR:  Decl_Pointer(templt_pt); break;
-		default:     Decl_Word   (templt_pt); break;
+		default:     Decl_Custom (templt_pt); break;
 	}
 	
 	// type specifier
@@ -161,37 +173,48 @@ void Type_specifier(sym_pt templt_pt){
 	*/
 }
 
+static void Decl_Symbol_list(void){
+	struct sym templt;
+	
+	// Initialize the template
+	memset((void*) &templt, 0, sizeof(struct sym));
+	
+	Type_specifier(&templt);
+	
+	Initializer_list(&templt);
+	
+} // end Decl_Symbol
 
 
-// Define a Datatype
-void Decl_Type (uint lvl){
-	struct sym t;
-	sym_pt new_type = &t;
+/******************************************************************************/
+//                         PROCEDURE DECLARATIONS
+/******************************************************************************/
+
+
+// Parameter lists for functions and subroutines
+static void Parameter_list(sym_pt procedure){
+	struct sym sym[1];
 	
-	Match(T_TYPE);
-	set_name(new_type, get_name());
+	/*	
+	 *
+	 */
 	
-	if(!( new_type = DS_insert(symbols, new_type) ))
-		parse_error("Duplicate type definition");
 	
-	new_type->type = st_type_def;
-	
-	push_scope(new_type);
-	
-	Decl_list(lvl);
-	
-	pop_scope();
+/*	while (true){*/
+/*		switch(token){*/
+/*		case T_IN:*/
+/*		case T_OUT:*/
+/*		case T_BI:*/
+/*		default:*/
+/*		}*/
+/*	}*/
 }
 
-// Declare an instance of a defined type
-void Decl_Custom(sym_pt templt){}
-
 // Declare an Operator
-void Decl_Operator(uint lvl){}
-
+static void Decl_Operator(uint lvl){}
 
 // Declare a Subroutine
-void Decl_Sub(uint lvl){
+static void Decl_Sub(uint lvl){
 	struct sym sub;
 	sym_pt new_sub = &sub;
 	
@@ -231,13 +254,13 @@ void Decl_Sub(uint lvl){
 
 
 // Declare a Function
-void Decl_Fun (uint lvl){
+static void Decl_Fun (uint lvl){
 	struct sym fun;
 	sym_pt new_fun = &fun;
 	
 	new_fun->type  = st_fun;
 	
-	get_token();
+	Match(T_FUN);
 	if(token == T_ASM) new_fun->assembler = true;
 	
 	// Name
@@ -272,17 +295,35 @@ void Decl_Fun (uint lvl){
 }
 
 
-void Decl_Symbol  (void){
-	struct sym templt;
+/******************************************************************************/
+//                           TYPE DECLARATIONS
+/******************************************************************************/
+
+
+// Define a Datatype
+static void Decl_Type (uint lvl){
+	struct sym t;
+	sym_pt new_type = &t;
 	
-	// Initialize the template
-	memset((void*) &templt, 0, sizeof(struct sym));
+	Match(T_TYPE);
+	set_name(new_type, get_name());
 	
-	Type_specifier(&templt);
+	if(!( new_type = DS_insert(symbols, new_type) ))
+		parse_error("Duplicate type definition");
 	
-	Initializer_list(&templt);
+	new_type->type = st_type_def;
 	
-} // end Decl_Symbol
+	push_scope(new_type);
+	
+	Decl_list(lvl);
+	
+	pop_scope();
+}
+
+
+/******************************************************************************/
+//                               DECLARATIONS
+/******************************************************************************/
 
 
 void Decl_list(uint lvl){
@@ -293,23 +334,24 @@ void Decl_list(uint lvl){
 		switch (token){
 		case T_NL: get_token(); continue;
 		
+		case T_TYPE: Decl_Type    (lvl); continue;
+		
+		case T_SUB : Decl_Sub     (lvl); continue;
+		case T_FUN : Decl_Fun     (lvl); continue;
+		case T_OPR : Decl_Operator(lvl); continue;
+		
 		case T_8   :
 		case T_16  :
 		case T_32  :
 		case T_64  :
 		case T_WORD:
 		case T_MAX :
-		case T_PTR : Decl_Symbol  (   ); continue;
-		case T_SUB : Decl_Sub     (lvl); continue;
-		case T_FUN : Decl_Fun     (lvl); continue;
-		case T_TYPE: Decl_Type    (lvl); continue;
-		case T_OPR : Decl_Operator(lvl); continue;
+		case T_PTR : Decl_Symbol_list (   ); continue;
 		case T_NAME:
 			if(!( sym = (sym_pt) Bind(yytext) ))
 				parse_error("Undeclared symbol");
-			if(sym->type == st_type_def){
-				get_name();
-				Decl_Custom(sym);
+			if(sym->type == st_type_def){ // defined type
+				Decl_Symbol_list();
 				continue;
 			}
 			// fall through

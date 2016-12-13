@@ -233,6 +233,9 @@ static void put_op(icmd * op){
 	case I_CALL:
 		break;
 	
+	case I_PROC:
+		break;
+	
 	case I_RTRN:
 		break;
 	
@@ -295,6 +298,9 @@ void x86 (char * filename, const Program_data * prog, bool B64){
 	else fprintf(out_fd,"align 4\n");
 	
 	//TODO: static variables
+	
+	fclose(out_fd);
+	out_fd = NULL;
 	
 	info_msg("\tx86(): stop");
 }
