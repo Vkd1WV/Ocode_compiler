@@ -192,7 +192,8 @@ static void Liveness(DS blk, DS symbols){
 		case I_JMP :
 		case I_JZ  :
 		case I_RTRN: // treat them like optional unaries
-			if(!iop->arg1_lit && iop->arg1) iop->arg1.symbol->live = true;
+			if(!iop->arg1_lit && iop->arg1.symbol)
+				iop->arg1.symbol->live = true;
 			break;
 		
 		case NUM_I_CODES:

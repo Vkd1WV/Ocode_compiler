@@ -72,6 +72,7 @@ static void If(uint lvl){
 	sym_pt condition;
 	name_dx skip_label, else_label;
 	
+	debug_msg("If(): start");
 	Match(T_IF);
 	emit_iop(NO_NAME, I_NOP, add_name("IF"), NULL, NULL, NULL);
 	
@@ -106,6 +107,7 @@ static void If(uint lvl){
 	else emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
 	
 	emit_iop(NO_NAME, I_NOP, add_name("END IF"), NULL, NULL, NULL);
+	debug_msg("If(): stop");
 }
 
 static void While(uint lvl){
@@ -233,8 +235,15 @@ static void Switch(uint lvl){
 void Statement (uint lvl){ // any single line. always ends with NL
 	sym_pt sym;
 	
+	#ifdef DBG_PARSE
+	debug_msg("Statement(): start");
+	#endif
+	
 	if (token == T_NL){
 		get_token();
+		
+		sprintf(err_array, "Statement(): lvl: %u block_lvl: %u", lvl, block_lvl);
+		debug_msg(err_array);
 		if(block_lvl <= lvl); // empty statement
 		// Empty statements like this may occur as subordinates of control
 		// statements.
@@ -306,5 +315,9 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			
 			Match(T_NL);
 		}
+	
+	#ifdef DBG_PARSE
+	debug_msg("Statement(): stop");
+	#endif
 }
 

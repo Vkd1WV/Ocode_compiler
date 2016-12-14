@@ -81,7 +81,7 @@ static inline void get_token(void){
 
 static inline void expected(const char* thing){
 	char temp_array[ERR_ARR_SZ];
-	sprintf(temp_array, "Expected %s, found %s", thing, yytext);
+	sprintf(temp_array, "Expected '%s', found '%s'", thing, yytext);
 	parse_error(temp_array);
 }
 
@@ -274,6 +274,7 @@ void    emit_iop (
 
 void Type_specifier(sym_pt templt_pt);
 
+bool Declaration(uint lvl);
 void Decl_list(uint lvl);
 
 // expressions

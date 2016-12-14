@@ -1087,6 +1087,10 @@ static sym_pt Assign(sym_pt target){
 static sym_pt Boolean(void){
 	sym_pt arg1, arg2, result;
 	
+	#ifdef DBG_PARSE
+	debug_msg("Boolean(): start");
+	#endif
+	
 	arg1 = Equation();
 	
 	while(token == T_AND || token == T_OR){
@@ -1197,6 +1201,10 @@ static sym_pt Boolean(void){
 		
 		arg1 = result;
 	}
+	
+	#ifdef DBG_PARSE
+	debug_msg("Boolean(): stop");
+	#endif
 	return arg1;
 }
 

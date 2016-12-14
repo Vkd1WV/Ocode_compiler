@@ -8,6 +8,9 @@ else this:=0
 
 while this jump here
 
+do this:= 1
+while this
+
 do
 	this:= 1
 	this:= 2

@@ -150,6 +150,7 @@ int main (int argc, char** argv){
 	yuck_t arg_pt[1];
 	char * infile;
 	Program_data prog_data[1];
+	bool errors;
 	
 	// Setup
 	yuck_parse(arg_pt, argc, argv);
@@ -157,18 +158,15 @@ int main (int argc, char** argv){
 	Init_program_data(prog_data);
 	
 	// Compile
-	if( Parse(prog_data, infile) ){
-		err_msg("Exiting");
-		yuck_free(arg_pt);
-		if(make_debug) fclose(debug_fd);
-		debug_fd = NULL;
-		Clear_program_data(prog_data);
-		return EXIT_FAILURE;
+	errors = Parse(prog_data, infile);
+	
+	if(make_debug){
+		fputs("\nSYMBOLS\n", debug_fd);
+		Dump_symbols(debug_fd, prog_data->symbols);
+		Dump_second(debug_fd, prog_data);
 	}
 	
-	if (make_debug) Dump_second(debug_fd, prog_data);
-	
-	Generate_code(arg_pt, prog_data);
+	if(!errors) Generate_code(arg_pt, prog_data);
 	
 	// Cleanup
 	yuck_free(arg_pt);
@@ -176,7 +174,7 @@ int main (int argc, char** argv){
 	debug_fd = NULL;
 	Clear_program_data(prog_data);
 	
-	return EXIT_SUCCESS;
+	return errors;
 }
 
 

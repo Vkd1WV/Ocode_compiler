@@ -224,7 +224,8 @@ token_t yylex(void);
 
 static inline void parse_error(const char * message){
 	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
-	if(token != T_EOF) while( (token = yylex()) != T_NL && token != T_EOF );
+	if(token != T_EOF && token != T_NL)
+		while( (token = yylex()) != T_NL && token != T_EOF );
 	fprintf(stderr, "continuing...\n");
 	longjmp(anewline, 1);
 }

@@ -26,10 +26,10 @@ static void set_name(sym_pt sym, char * short_name){
 	free(buffer);
 }
 
-static DS     New_mem_list(){}
-static sym_pt First_member(DS mem_lst){}
-static sym_pt Next_member(DS mem_lst){}
-static sym_pt Add_member(sym_pt member){}
+static DS     New_mem_list (void){}
+static sym_pt First_member (DS mem_lst){}
+static sym_pt Next_member  (DS mem_lst){}
+static sym_pt Add_member   (sym_pt member){}
 static void   Merge_mem_lst(DS lst_a, DS lst_b){}
 
 
@@ -239,10 +239,12 @@ static void Decl_Sub(uint lvl){
 	// Parameter Declarations
 	Parameter_list(new_sub);
 	
-	// Get declarations
-	Decl_list(lvl);
+	Match(T_NL);
 	
-	Statement(lvl);
+	// Get declarations
+	Decl_list(lvl+1);
+	
+	Statement(lvl+1);
 	
 	pop_scope();
 	
@@ -281,10 +283,11 @@ static void Decl_Fun (uint lvl){
 	Match(T_OBRK);
 	Parameter_list(new_fun);
 	Match(T_CBRK);
+	Match(T_NL);
 	
-	Decl_list(lvl);
+	Decl_list(lvl+1);
 	
-	Statement(lvl);
+	Statement(lvl+1);
 	
 	pop_scope();
 	
@@ -299,6 +302,24 @@ static void Decl_Fun (uint lvl){
 //                           TYPE DECLARATIONS
 /******************************************************************************/
 
+
+static void Decl_block(uint lvl){
+	if (token == T_NL){
+		get_token();
+		if(block_lvl <= lvl) expected("A type declaration block");
+		
+		else { // subordinate block
+			lvl=block_lvl;
+			Decl_list(lvl);
+			if(block_lvl > lvl) parse_error("Unexpected nested block");
+		}
+	}
+	else Declaration(lvl);
+	
+	
+	sprintf(err_array, "Decl_block(): stop with token: %d", token);
+	debug_msg(err_array);
+}
 
 // Define a Datatype
 static void Decl_Type (uint lvl){
@@ -315,7 +336,7 @@ static void Decl_Type (uint lvl){
 	
 	push_scope(new_type);
 	
-	Decl_list(lvl);
+	Decl_block(lvl);
 	
 	pop_scope();
 }
@@ -326,43 +347,53 @@ static void Decl_Type (uint lvl){
 /******************************************************************************/
 
 
-void Decl_list(uint lvl){
+// returns whether a declaration was found
+bool Declaration(uint lvl){
 	sym_pt sym;
+
+	switch (token){
+	case T_TYPE: Decl_Type    (lvl); return true;
 	
-	debug_msg("Decl_list(): start");
-	while(true){
-		switch (token){
-		case T_NL: get_token(); continue;
-		
-		case T_TYPE: Decl_Type    (lvl); continue;
-		
-		case T_SUB : Decl_Sub     (lvl); continue;
-		case T_FUN : Decl_Fun     (lvl); continue;
-		case T_OPR : Decl_Operator(lvl); continue;
-		
-		case T_8   :
-		case T_16  :
-		case T_32  :
-		case T_64  :
-		case T_WORD:
-		case T_MAX :
-		case T_PTR : Decl_Symbol_list (   ); continue;
-		case T_NAME:
-			if(!( sym = (sym_pt) Bind(yytext) ))
-				parse_error("Undeclared symbol");
-			if(sym->type == st_type_def){ // defined type
-				Decl_Symbol_list();
-				continue;
-			}
-			// fall through
-		
-		default: break; // anything that is not a declaration
+	case T_SUB : Decl_Sub     (lvl); return true;
+	case T_FUN : Decl_Fun     (lvl); return true;
+	case T_OPR : Decl_Operator(lvl); return true;
+	
+	case T_8   :
+	case T_16  :
+	case T_32  :
+	case T_64  :
+	case T_WORD:
+	case T_MAX :
+	case T_PTR : Decl_Symbol_list (   ); return true;
+	case T_NAME:
+		if(!( sym = (sym_pt) Bind(yytext) ))
+			parse_error("Undeclared symbol");
+		if(sym->type == st_type_def){ // defined type
+			Decl_Symbol_list();
+			return true;
 		}
-		
-		break;
+		// fall through
+	
+	default: return false;
+	}
+}
+
+void Decl_list(uint lvl){
+	debug_msg("Decl_list(): start");
+	
+	if(block_lvl != lvl) parse_error("Decl_list(): No Body");
+	
+	while(block_lvl == lvl){
+		while(token == T_NL) get_token();
+		if(!Declaration(lvl)) break;
 	}
 	
-	sprintf(err_array, "Decl_list(): stop with token: %d", token);
+	sprintf(
+		err_array,
+		"Decl_list(): stop with token: %s on line %d",
+		token_dex[token],
+		yylineno
+	);
 	debug_msg(err_array);
 }
 

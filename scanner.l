@@ -34,16 +34,17 @@ WHTSPC [ \t]+
 /******************************************************************************/
 %%
 
-
-^({NEWL}) {} // ignore empty lines
-
-{NEWL}   block_lvl=0; return T_NL;
+	/* WHTSPC must come after the tab counter */
 ^[ *\t+] { // count leading tabs and pass in block_lvl
 	for(int i=0; yytext[i] != '\0'; i++)
 		if (yytext[i] == '\t') block_lvl++;
 }
+{WHTSPC}  {} // whitespace
 
-{WHTSPC} {} // ignore whitespace for now
+#.*{NEWL} { block_lvl=0; } // comments
+^({NEWL}) { block_lvl=0; }  //ignore empty lines
+{NEWL}   block_lvl=0; return T_NL;
+
 
  /* handle file inclusions */
 include{WHTSPC} { BEGIN(INCLUDE); } // file include
@@ -61,8 +62,6 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 		BEGIN(0);
 	}
 }
-
-#[^\n]* {} // comments
 
 <INITIAL><<EOF>> {
 	// if this file was an include, will return to
