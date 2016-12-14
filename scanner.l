@@ -50,12 +50,9 @@ include{WHTSPC} { BEGIN(INCLUDE); } // file include
 <INCLUDE>[^ \t\n\r]+ {
 	yyin=fopen(yytext, "r"); // open the new file
 	if (yyin == NULL){
-		printf(
-			"ERROR: file %s, included on line %d does not exist.\n",
-			yytext,
-			yylineno
-		);
-		exit(EXIT_FAILURE);
+		BEGIN(0);
+		sprintf(err_array, "file does not exist. %s included", yytext);
+		parse_error(err_array);
 	}
 	else{
 		// create a new file buffer and make it current.

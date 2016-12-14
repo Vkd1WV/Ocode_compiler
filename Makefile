@@ -104,7 +104,8 @@ yuck.o: yuck.c yuck.h
 
 CLEANFILES:= \
 	*.o *.o *.opp occ \
-	./tests/*.dbg ./tests/*.asm ./tests/*.pexe
+	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
+	*.output *.tab.c
 
 .PHONEY: clean very-clean todolist test
 

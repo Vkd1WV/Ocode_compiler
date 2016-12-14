@@ -1,12 +1,23 @@
-%token T_NL T_EOF
+%{
+/*******************************************************************************
+ *
+ *	occ : The Omega Code Compiler
+ *
+ *	Copyright (c) 2016 Ammon Dodson
+ *
+ ******************************************************************************/
+%}
+
+
+%token T_EOF 0 "End of File"
+%token T_NL
 
 %token T_NAME T_NUM T_CH T_STR //primary
-%token T_OPAR T_CPAR
 
-%token T_INC T_DEC T_REF T_DREF T_NOT T_INV  // Unary
-%token T_MOD T_LSHFT T_RSHFT // Term
-%token T_BOR T_BXOR    // Expression
-%token T_NEQ T_LT T_GT T_LTE T_GTE      // Equation
+%token T_INC T_DEC T_REF '@' T_NOT T_INV // Unary
+%token '*' '/' T_MOD '^' T_LSHFT T_RSHFT  // Term
+%token '+' '-' '&' T_BOR T_BXOR           // Expression
+%token '=' T_NEQ '<' '>' T_LTE T_GTE      // Equation
 %token T_AND T_OR
 %token T_ASS T_LSH_A T_RSH_A T_ADD_A T_SUB_A T_MUL_A T_DIV_A T_MOD_A T_AND_A
 %token T_OR_A  T_XOR_A
@@ -17,7 +28,9 @@
 %token T_SUB T_FUN T_OPR T_END T_ASM
 %token T_STATIC T_CONST
 
-%token T_LBL T_JMP T_BRK T_CNTN T_RTRN T_IF T_ELSE T_WHILE T_DO T_SWTCH
+%token T_LBL T_JMP T_BRK T_CNTN T_RTRN T_IF T_ELSE T_WHILE T_DO T_FOR T_SWTCH
+
+%start Unit
 
 %%
 
@@ -27,11 +40,11 @@
 /******************************************************************************/
 
 
-Call_fun: %empty
+Call_fun: T_NAME '[' ']'
 	;
 
 Primary
-	: '(' Boolean ')'
+	: '(' Assignment ')'
 	| T_NUM
 	| T_CH
 	| T_NAME
@@ -53,7 +66,6 @@ Postfix
 
 Term
 	: Postfix
-	| Assign
 	| Term '*'     Postfix
 	| Term '/'     Postfix
 	| Term T_MOD   Postfix
@@ -101,18 +113,11 @@ Assignment_op
 	| T_XOR_A
 	;
 
-Assign: Postfix Assignment_op Boolean
+
+Assignment
+	: Boolean
+	| Postfix Assignment_op Assignment
 	;
-
-//assignment
-//	: Postfix
-//	| Postfix assignment_list
-//	;
-
-//assignment_list
-//	: assignment_op assignment
-//	| assignment_list assignment_op assignment
-//	;
 
 
 /******************************************************************************/
@@ -205,7 +210,7 @@ Decl_list
 /******************************************************************************/
 
 
-Call_sub: %empty
+Call_sub: T_NAME
 	;
 
 Label: T_LBL T_NAME T_NL
@@ -236,7 +241,7 @@ While: T_WHILE Boolean Statement
 Do: T_DO Statement T_WHILE Boolean T_NL
 	;
 
-For: %empty
+For: T_FOR
 	;
 
 Switch: T_SWTCH Boolean
@@ -261,7 +266,7 @@ Statement
 	| For
 	| Switch
 	| Call_sub
-	| Boolean  T_NL
+	| Assignment T_NL
 	;
 
 
@@ -275,7 +280,7 @@ Statement_list
 	| Statement_list Statement
 	;
 
-unit
+Unit
 	: Decl_list T_EOF
 	| Statement_list T_EOF
 	| Decl_list Statement_list T_EOF
