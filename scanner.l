@@ -150,9 +150,16 @@ throw    return T_THRW;
 catch    return T_CTCH;
 for      return T_FOR;
 return   return T_RTRN;
-end      return T_END;
 
  /****************************** DECLARATIONS *********************************/
+
+operator return T_OPR;
+sub     return T_SUB;
+fun     return T_FUN;
+
+typedef return T_TYPE;
+
+pointer return T_PTR;
 
 byte    return T_8;
 byte2   return T_16;
@@ -160,15 +167,6 @@ byte4   return T_32;
 byte8   return T_64;
 word    return T_WORD;
 max     return T_MAX;
-
-sub     return T_SUB;
-fun     return T_FUN;
-typedef return T_TYPE;
-
-pointer return T_PTR;
-to      return T_TO;
-
-operator return T_OPR;
 
 const  return T_CONST;
 static return T_STATIC;

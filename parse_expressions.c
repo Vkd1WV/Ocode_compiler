@@ -130,7 +130,7 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 
 
 static sym_pt Call_fun(void){
-	return NULL;
+	return NULL; //FIXME: this is causing a segfault in procedure.oc
 }
 
 

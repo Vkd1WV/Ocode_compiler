@@ -314,7 +314,7 @@ n			fflush(fd);
 static inline void Dump_iq(FILE * fd, DS q){
 	icmd * iop;
 	
-	debug_msg("\tDump_iq(): start");
+	//debug_msg("\tDump_iq(): start");
 	if (!fd) err_msg("Internal: Dump_iq(): received NULL file descriptor");
 	
 	#ifdef FLUSH_FILES
@@ -341,7 +341,7 @@ static inline void Dump_iq(FILE * fd, DS q){
 		fputs("Empty\n", fd);
 	}
 	
-	debug_msg("\tDump_iq(): stop");
+	//debug_msg("\tDump_iq(): stop");
 }
 
 static inline void Dump_blkq(FILE * fd, DS blkq){
@@ -458,7 +458,7 @@ static inline void Clear_program_data(Program_data * data_pt){
 		debug_msg(err_array);
 		#endif
 		DS_delete(*blk_pt);
-		debug_msg("deleted");
+		//debug_msg("deleted");
 	}
 	
 	debug_msg("Deleting the block queue");

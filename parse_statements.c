@@ -72,7 +72,10 @@ static void If(uint lvl){
 	sym_pt condition;
 	name_dx skip_label, else_label;
 	
+	#ifdef DBG_PARSE
 	debug_msg("If(): start");
+	#endif
+	
 	Match(T_IF);
 	emit_iop(NO_NAME, I_NOP, add_name("IF"), NULL, NULL, NULL);
 	
@@ -107,7 +110,10 @@ static void If(uint lvl){
 	else emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
 	
 	emit_iop(NO_NAME, I_NOP, add_name("END IF"), NULL, NULL, NULL);
+	
+	#ifdef DBG_PARSE
 	debug_msg("If(): stop");
+	#endif
 }
 
 static void While(uint lvl){

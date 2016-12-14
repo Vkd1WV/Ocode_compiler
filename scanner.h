@@ -108,8 +108,6 @@ typedef enum {
 	T_CTCH ,
 	T_FOR  ,
 	T_RTRN ,
-	T_END  , // End of Subroutine or function definition
-
 
 	/***************************** Declarations *******************************/
 
@@ -128,7 +126,6 @@ typedef enum {
 
 	// pointer declaration
 	T_PTR,
-	T_TO ,
 
 	// Qualifers
 	T_CONST ,
@@ -191,13 +188,13 @@ EXTERN const char * token_dex[NUM_TOKENS]
 	/************************** Control statements ****************************/
 	"T_LBL"  , "T_JMP" , "T_IF" , "T_ELSE", "T_SWTCH", "T_CASE", "T_DFLT",
 	"T_WHILE", "T_DO"  , "T_BRK", "T_CNTN", "T_TRY"  , "T_THRW", "T_CTCH",
-	"T_FOR"  , "T_RTRN", "T_END",
+	"T_FOR"  , "T_RTRN",
 	/***************************** Declarations *******************************/
 	"T_OPR "," T_SUB "," T_FUN "," T_TYPE",
 	// Word declarations
 	"T_8   "," T_16  "," T_32  "," T_64  "," T_WORD"," T_MAX ",
 	// pointer declaration
-	"T_PTR"," T_TO ",
+	"T_PTR",
 	// Qualifers
 	"T_CONST", "T_STATIC", "T_ASM",
 	// Parameter Modes

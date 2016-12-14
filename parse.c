@@ -110,9 +110,9 @@ static inline umax get_num(void){
 	return num;
 }
 
-static inline bool Match_name(name_dx dx){
-	if ( token != T_NAME || strcmp(name_array+dx, yytext) ){
-		expected(name_array+dx);
+static inline bool Match_string(char * string){
+	if ( token != T_NAME || strcmp(string, yytext) ){
+		expected(string);
 	}
 	get_token();
 	return true;
@@ -184,21 +184,20 @@ static inline sym_pt Bind(char * name){
 	
 	block_pt = (prg_blk*)DS_first(scope_stack);
 	
-	// if we are not at global scope
+	// resize the buffer if necessary
 	if(block_pt->scope){
 		prefix = dx_to_name(block_pt->scope->name);
-		
-		// resize the buffer if necessary
 		name_l = strlen(prefix) + strlen(name) + 1;
 		if(name_l > buf_l) buffer = realloc(buffer, name_l);
-		
-		do {
-			prefix = dx_to_name(block_pt->scope->name);
-			strncpy(buffer, prefix, strlen(prefix));
-			strncat(buffer, name, strlen(name));
-			
-			if(( sym = DS_find(symbols, buffer) )) break;
-		} while (( block_pt = (prg_blk*)DS_next(scope_stack) ));
+	}
+	
+	// search the scope stack
+	while ( block_pt->scope ){
+		prefix = dx_to_name(block_pt->scope->name);
+		strncpy(buffer, prefix, strlen(prefix));
+		strncat(buffer, name, strlen(name));
+		if(( sym = DS_find(symbols, buffer) )) break;
+		block_pt = (prg_blk*)DS_next(scope_stack);
 	}
 	
 	// if we didn't find anything, check the global scope

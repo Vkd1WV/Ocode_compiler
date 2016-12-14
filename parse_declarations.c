@@ -26,11 +26,11 @@ static void set_name(sym_pt sym, char * short_name){
 	free(buffer);
 }
 
-static DS     New_mem_list (void){}
-static sym_pt First_member (DS mem_lst){}
-static sym_pt Next_member  (DS mem_lst){}
-static sym_pt Add_member   (sym_pt member){}
-static void   Merge_mem_lst(DS lst_a, DS lst_b){}
+/*static DS     New_mem_list (void){}*/
+/*static sym_pt First_member (DS mem_lst){}*/
+/*static sym_pt Next_member  (DS mem_lst){}*/
+/*static sym_pt Add_member   (sym_pt member){}*/
+/*static void   Merge_mem_lst(DS lst_a, DS lst_b){}*/
 
 
 /******************************************************************************/
@@ -113,7 +113,7 @@ static void Decl_Pointer (sym_pt templt){
 	
 	Qualifier_list(templt);
 	
-	Match(T_TO);
+	Match_string("to");
 	
 	Type_specifier(target);
 }
@@ -194,11 +194,13 @@ static void Decl_Symbol_list(void){
 // Parameter lists for functions and subroutines
 static void Parameter_list(sym_pt procedure){
 	struct sym sym[1];
-	
+	sym[1] = sym[1];
+	procedure = procedure;
 	/*	
 	 *
 	 */
 	
+	while(token != T_CBRK && token != T_NL) get_token();
 	
 /*	while (true){*/
 /*		switch(token){*/
@@ -211,17 +213,151 @@ static void Parameter_list(sym_pt procedure){
 }
 
 // Declare an Operator
-static void Decl_Operator(uint lvl){}
+static void Decl_Operator(uint lvl){
+	struct sym oper;
+	sym_pt new_op = &oper;
+	bool assem;
+	
+	new_op->type = st_fun;
+	
+	get_token();
+	if(token == T_ASM) assem = true;
+	
+	switch(token){
+	case T_OPAR :
+	case T_CPAR :
+	case T_OBRC :
+	case T_CBRC :
+	case T_OBRK :
+	case T_CBRK :
+	case T_DEC  :
+	case T_INC  :
+	case T_REF  :
+	case T_DREF :
+	case T_NOT  :
+	case T_INV  :
+	case T_PLUS :
+	case T_MINUS:
+	case T_BAND :
+	case T_BOR  :
+	case T_BXOR :
+	case T_MUL  :
+	case T_MOD  :
+	case T_DIV  :
+	case T_EXP  :
+	case T_LSHFT:
+	case T_RSHFT:
+	case T_EQ   :
+	case T_NEQ  :
+	case T_LT   :
+	case T_GT   :
+	case T_LTE  :
+	case T_GTE  :
+	case T_AND  :
+	case T_OR   :
+	case T_ASS  :
+	case T_LSH_A:
+	case T_RSH_A:
+	case T_ADD_A:
+	case T_SUB_A:
+	case T_MUL_A:
+	case T_DIV_A:
+	case T_MOD_A:
+	case T_AND_A:
+	case T_OR_A :
+	case T_XOR_A:
+	case T_LIST : break;
+	
+	// Everything else is an error
+	case T_EOF :
+	case T_NL  :
+	case T_NUM :
+	case T_NAME:
+	case T_STR :
+	case T_CHAR:
+		parse_error("Decl_Operator(): Cannot use a Primary type for an operator declaration");
+	case T_LBL  :
+	case T_JMP  :
+	case T_IF   :
+	case T_ELSE :
+	case T_SWTCH:
+	case T_CASE :
+	case T_DFLT :
+	case T_WHILE:
+	case T_DO   :
+	case T_BRK  :
+	case T_CNTN :
+	case T_TRY  :
+	case T_THRW :
+	case T_CTCH :
+	case T_FOR  :
+	case T_RTRN :
+	case T_OPR :
+	case T_SUB :
+	case T_FUN :
+	case T_TYPE:
+	case T_8   :
+	case T_16  :
+	case T_32  :
+	case T_64  :
+	case T_WORD:
+	case T_MAX :
+	case T_PTR:
+	case T_CONST :
+	case T_STATIC:
+	case T_ASM:
+	case T_IN:
+	case T_OUT:
+	case T_BI:
+		parse_error("Decl_Operator(): Cannot use a keyword for an operator declaration");
+	case NUM_TOKENS:
+	default: parse_error("Internal: Decl_Operator(): unknown operator");
+	}
+	
+	//Name
+	set_name(new_op, token_dex[token]);
+	get_token();
+	if(!( new_op = DS_insert(symbols, new_op) )){
+		sprintf(
+			err_array,
+			"Redeclaration of Operator %s",
+			dx_to_name(new_op->name)
+		);
+		parse_error(err_array);
+	}
+	
+	push_scope(new_op);
+	
+	// Parameters
+	
+	Match(T_NL);
+	
+	if(assem){
+		
+	}
+	else{
+		Decl_list(lvl+1);
+		Statement(lvl+1);
+	}
+	
+	pop_scope();
+	
+	// End statement
+	Match_string("end");
+	Match_string(dx_to_name(new_op->name)); // FIXME
+	Match(T_NL);
+}
 
 // Declare a Subroutine
 static void Decl_Sub(uint lvl){
 	struct sym sub;
 	sym_pt new_sub = &sub;
+	bool assem;
 	
 	new_sub->type  = st_sub;
 	
 	get_token();
-	if(token == T_ASM) new_sub->assembler = true;
+	if(token == T_ASM) assem = true;
 	
 	// Name
 	set_name(new_sub, get_name());
@@ -238,19 +374,21 @@ static void Decl_Sub(uint lvl){
 	
 	// Parameter Declarations
 	Parameter_list(new_sub);
-	
 	Match(T_NL);
 	
-	// Get declarations
-	Decl_list(lvl+1);
-	
-	Statement(lvl+1);
+	if(assem){
+		
+	}
+	else{
+		Decl_list(lvl+1);
+		Statement(lvl+1);
+	}
 	
 	pop_scope();
 	
 	// End statement
-	Match(T_END);
-	Match_name(new_sub->name);
+	Match_string("end");
+	Match_string(dx_to_name(new_sub->name));
 	Match(T_NL);
 }
 
@@ -259,11 +397,12 @@ static void Decl_Sub(uint lvl){
 static void Decl_Fun (uint lvl){
 	struct sym fun;
 	sym_pt new_fun = &fun;
+	bool assem;
 	
 	new_fun->type  = st_fun;
 	
 	Match(T_FUN);
-	if(token == T_ASM) new_fun->assembler = true;
+	if(token == T_ASM) assem = true;
 	
 	// Name
 	set_name(new_fun, get_name());
@@ -278,22 +417,28 @@ static void Decl_Fun (uint lvl){
 	
 	push_scope(new_fun);
 	
-	// Return type
-	
 	Match(T_OBRK);
 	Parameter_list(new_fun);
 	Match(T_CBRK);
+	
+	// Return type
+	Match_string("returns");
+	
 	Match(T_NL);
 	
-	Decl_list(lvl+1);
-	
-	Statement(lvl+1);
+	if(assem){
+		
+	}
+	else{
+		Decl_list(lvl+1);
+		Statement(lvl+1);
+	}
 	
 	pop_scope();
 	
 	// End statement
-	Match(T_END);
-	Match_name(new_fun->name);
+	Match_string("end");
+	Match_string(dx_to_name(new_fun->name));
 	Match(T_NL);
 }
 

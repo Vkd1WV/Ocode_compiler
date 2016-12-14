@@ -1,8 +1,10 @@
 #!/bin/bash
 
+VALGRIND="valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes"
+
 for file in ./tests/*.oc; do
 	echo -e "\nTESTS: running $file\n"
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./occ -vvpd --x86-long $file
+	 ./occ -vvpd --x86-long $file
 	
 #	echo -e "\nTESTS: V_WARN\n"
 #	./occ --x86-long $file
