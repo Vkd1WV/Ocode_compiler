@@ -139,12 +139,12 @@ static void Decl_Word(sym_pt templt){
 static void Decl_Custom (sym_pt templt){
 	sym_pt type_def;
 	
-	type_def = (sym_pt)Bind(get_name());
-	if(!type_def)
-		crit_error("Internal: Decl_Custom(): could not bind type definition");
+/*	type_def = (sym_pt)Bind(get_name());*/
+/*	if(!type_def)*/
+/*		crit_error("Internal: Decl_Custom(): could not bind type definition");*/
 	
-	templt->type = st_cust;
-	templt->members = type_def->members;
+/*	templt->type = st_cust;*/
+/*	templt->members = type_def->members;*/
 	
 	//TODO: alias?
 	
@@ -509,14 +509,14 @@ bool Declaration(uint lvl){
 	case T_64  :
 	case T_WORD:
 	case T_MAX :
-	case T_PTR : Decl_Symbol_list (   ); return true;
-	case T_NAME:
-		if(!( sym = (sym_pt) Bind(yytext) ))
-			parse_error("Undeclared symbol");
-		if(sym->type == st_type_def){ // defined type
-			Decl_Symbol_list();
-			return true;
-		}
+	case T_PTR : 
+	case T_N_TYPE: Decl_Symbol_list (   ); return true;
+/*		if(!( sym = (sym_pt) Bind(yytext) ))*/
+/*			parse_error("Undeclared symbol");*/
+/*		if(sym->type == st_type_def){ // defined type*/
+/*			Decl_Symbol_list();*/
+/*			return true;*/
+/*		}*/
 		// fall through
 	
 	default: return false;

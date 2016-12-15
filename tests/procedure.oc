@@ -10,6 +10,12 @@ fun square[max a] returns max
 sub call_square
 	max number = 0
 	
+	3*12 * @pt1
+	var1/130
+	var2 mod var1
+	3<<257
+	var2>>1
+	
 	while number != 10
 		square[number]
 		++number

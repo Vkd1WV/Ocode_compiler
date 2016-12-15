@@ -129,7 +129,7 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 }
 
 
-static sym_pt Call_fun(void){
+static sym_pt Call_fun(sym_pt function){
 	return NULL; //FIXME: this is causing a segfault in procedure.oc
 }
 
@@ -153,10 +153,8 @@ static sym_pt Primary(void){
 		sym->value    = get_num();
 		break;
 		
-	case T_NAME:
-		if(!( sym = (sym_pt) Bind(get_name()) ))
-			parse_error("Undeclared symbol");
-		if(sym->type == st_fun) sym = Call_fun();
+	case T_N_FUN: sym = yysymbol;
+		if(sym->type == st_fun) sym = Call_fun(sym);
 		break;
 		
 	case T_STR:

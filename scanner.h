@@ -23,7 +23,6 @@ typedef enum {
 	T_EOF , // yyterminate returns a 0 automatically
 	T_NL  , // sets block_lvl
 	T_NUM , // sets yynumber
-	T_NAME, // sets yytext
 	T_STR , // sets yytext
 	T_CHAR, // sets yynumber
 	/*	char will eventually be a variable width encoding, but for now it is
@@ -108,6 +107,13 @@ typedef enum {
 	T_CTCH ,
 	T_FOR  ,
 	T_RTRN ,
+	
+	/**************************** Declared Names ******************************/
+
+	T_NAME,      // sets yytext
+	T_N_SUB,  // Named subroutine
+	T_N_FUN,  // Named function or storage
+	T_N_TYPE, // Named Type
 
 	/***************************** Declarations *******************************/
 
@@ -140,7 +146,10 @@ typedef enum {
 
 } token_t;
 
-//typedef uint16_t token_t;
+typedef struct{
+	sym_pt scope;
+	DS     inst_q;
+} prg_blk;
 
 
 /******************************************************************************/
@@ -159,15 +168,18 @@ typedef enum {
 	extern FILE *  yyin;
 #endif
 
-EXTERN token_t token;     ///< global lookahead token
-EXTERN uint    block_lvl; ///< number of leading tabs on the current line
-EXTERN umax    yynumber;  ///< numbers passed to the parser by T_NUM
+EXTERN DS      scope_stack; ///< keep track of the current scope and inst queue
+EXTERN DS      symbols;     ///< symbol table
+EXTERN sym_pt  yysymbol;    ///< symbols passed to the parser by T_NAME_XXX
+EXTERN token_t token;       ///< global lookahead token
+EXTERN uint    block_lvl;   ///< number of leading tabs on the current line
+EXTERN umax    yynumber;    ///< numbers passed to the parser by T_NUM
 
 EXTERN const char * token_dex[NUM_TOKENS]
 #ifdef _SCANNER_L
 = {
 	// Primary
-	"T_EOF", "T_NL", "T_NUM", "T_NAME", "T_STR", "T_CHAR",
+	"T_EOF", "T_NL", "T_NUM", "T_STR", "T_CHAR",
 	/****************************** Operators *********************************/
 	"(",")","{","}","[","]",
 	// Unary
@@ -189,6 +201,8 @@ EXTERN const char * token_dex[NUM_TOKENS]
 	"T_LBL"  , "T_JMP" , "T_IF" , "T_ELSE", "T_SWTCH", "T_CASE", "T_DFLT",
 	"T_WHILE", "T_DO"  , "T_BRK", "T_CNTN", "T_TRY"  , "T_THRW", "T_CTCH",
 	"T_FOR"  , "T_RTRN",
+	/**************************** Declared Names ******************************/
+	"T_NAME", "T_NAME_SUB", "T_NAME_FUN", "T_NAME_TYPE",
 	/***************************** Declarations *******************************/
 	"T_OPR "," T_SUB "," T_FUN "," T_TYPE",
 	// Word declarations
@@ -212,6 +226,10 @@ EXTERN const char * token_dex[NUM_TOKENS]
 
 
 token_t yylex(void);
+
+static inline void get_token(void){
+	token=yylex();
+}
 
 
 /******************************************************************************/

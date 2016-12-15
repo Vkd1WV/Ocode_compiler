@@ -12,12 +12,12 @@
 /******************************************************************************/
 
 
-static void Call_sub(sym_pt subroutine){
+static void Call_sub(void){
 	
 	
 	// TODO: Setup Parameters
 	
-	emit_iop(NO_NAME, I_CALL, subroutine->name, NULL, NULL, NULL);
+	emit_iop(NO_NAME, I_CALL, NO_NAME, NULL, NULL, NULL);
 }
 
 
@@ -279,6 +279,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_FUN :
 		case T_TYPE:
 		case T_OPR :
+		case T_N_TYPE:
 			sprintf(
 				err_array,
 				"Declaration found in statement section. token is: %d",
@@ -297,20 +298,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 		case T_DO   : Do       (lvl); break;
 		case T_FOR  : For      (lvl); break;
 		case T_SWTCH: Switch   (lvl); break;
-		
-		case T_NAME: // call sub or declare var of type_def maybe
-			// we don't want to get the next token because we may fall through
-			if(!( sym = (sym_pt) DS_find(symbols, yytext) ))
-				parse_error("Undeclared symbol");
-			if(sym->type == st_sub){
-				get_name();
-				Call_sub(sym);
-				break;
-			}
-			if(sym->type == st_type_def)
-				parse_error("Declaration found in statement section");
-			
-			// else fall through
+		case T_N_SUB:Call_sub  (   ); break;
 		default:
 			sym = Boolean();
 			if(sym->type == st_lit_int){

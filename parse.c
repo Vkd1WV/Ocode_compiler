@@ -15,10 +15,7 @@
 /******************************************************************************/
 
 
-typedef struct{
-	sym_pt scope;
-	DS     inst_q;
-} prg_blk;
+
 
 
 /******************************************************************************/
@@ -26,10 +23,7 @@ typedef struct{
 /******************************************************************************/
 
 
-static DS scope_stack; ///< keep track of the current scope and inst queue
-
 static Program_data * prg_data; //used by pop_scope()
-static DS           symbols;    ///< symbol table
 static DS           inst_q;     ///< pointer to the current scope inst_q
        char *       name_array; ///< dynamic array for symbol and label names
 
@@ -73,10 +67,6 @@ static inline void parse_warn(const char * message){
 static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
 	if(verbosity >= V_WARN && arg1->type != arg2->type)
 		parse_warn("Incompatible types in comparison");
-}
-
-static inline void get_token(void){
-	token=yylex();
 }
 
 static inline void expected(const char* thing){
@@ -161,49 +151,6 @@ static inline const char * scope_prefix(void){
 	if(block_pt->scope)
 		return dx_to_name(block_pt->scope->name);
 	else return "";
-}
-
-/*
-This function returns the correct symbol for the given name in the current scope
-*/
-static inline sym_pt Bind(char * name){
-	static char * buffer;
-	static size_t buf_l;
-	#define BUF_SZ 64
-	
-	char * prefix;
-	sym_pt sym=NULL;
-	size_t name_l;
-	prg_blk * block_pt;
-	
-	// initializate the buffer
-	if(!buffer){
-		buffer = (char*)malloc(BUF_SZ);
-		buf_l = BUF_SZ;
-	}
-	
-	block_pt = (prg_blk*)DS_first(scope_stack);
-	
-	// resize the buffer if necessary
-	if(block_pt->scope){
-		prefix = dx_to_name(block_pt->scope->name);
-		name_l = strlen(prefix) + strlen(name) + 1;
-		if(name_l > buf_l) buffer = realloc(buffer, name_l);
-	}
-	
-	// search the scope stack
-	while ( block_pt->scope ){
-		prefix = dx_to_name(block_pt->scope->name);
-		strncpy(buffer, prefix, strlen(prefix));
-		strncat(buffer, name, strlen(name));
-		if(( sym = DS_find(symbols, buffer) )) break;
-		block_pt = (prg_blk*)DS_next(scope_stack);
-	}
-	
-	// if we didn't find anything, check the global scope
-	if(!sym) sym = DS_find(symbols, name);
-	
-	return sym;
 }
 
 static inline sym_pt Bind_operator(token_t op){

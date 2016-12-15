@@ -25,12 +25,12 @@
 
 %token T_8 T_16 T_32 T_64 T_WORD T_MAX
 %token T_TYPE T_TO T_PTR
-%token T_SUB T_FUN T_OPR T_END T_ASM
+%token T_SUB T_FUN T_OPR T_END T_ASM T_RTRNS
 %token T_STATIC T_CONST
 
 %token T_LBL T_JMP T_BRK T_CNTN T_RTRN T_IF T_ELSE T_WHILE T_DO T_FOR T_SWTCH
 
-%start Unit
+%start Decl_list
 
 %%
 
@@ -125,6 +125,45 @@ Assignment
 /******************************************************************************/
 
 
+Operator
+	: T_INC
+	| T_DEC
+	| T_REF
+	| '@'
+	| T_NOT
+	| T_INV
+	| '*'
+	| '/'
+	| T_MOD
+	| '^'
+	| T_LSHFT
+	| T_RSHFT
+	| '+'
+	| '-'
+	| '&'
+	| T_BOR
+	| T_BXOR
+	| '='
+	| T_NEQ
+	| '<'
+	| '>'
+	| T_LTE
+	| T_GTE
+	| T_AND
+	| T_OR
+	| T_ASS
+	| T_LSH_A
+	| T_RSH_A
+	| T_ADD_A
+	| T_SUB_A
+	| T_MUL_A
+	| T_DIV_A
+	| T_MOD_A
+	| T_AND_A
+	| T_OR_A
+	| T_XOR_A
+	;
+
 Size_specifier
 	: T_8
 	| T_16
@@ -134,9 +173,22 @@ Size_specifier
 	| T_MAX
 	;
 
+Storage_class
+	: T_STATIC	// Static
+				// extern
+	;
+
+Type_qualifier
+	: T_CONST	// Constant
+				// Volatile
+	;
+
 Qualifier_list
-	: T_CONST
-	| T_STATIC
+	: %empty
+	| Storage_class
+	| Type_qualifier
+	| Storage_class Type_qualifier
+	| Type_qualifier Storage_class
 	;
 
 Initializer
@@ -145,58 +197,70 @@ Initializer
 	;
 
 Initializer_list
-	: Initializer T_NL
-	| Initializer_list ',' Initializer T_NL
+	: Initializer
+	| Initializer_list ',' Initializer
 
-Specify_word: Size_specifier Qualifier_list
+Word_specifier: Size_specifier Qualifier_list
 	;
 
-Specify_custom: T_NAME Qualifier_list
+Custom_specifier: T_NAME Qualifier_list
 	;
 
-Specify_pointer: T_PTR Qualifier_list T_TO Type_specifier
+Pointer_specifier: T_PTR Qualifier_list T_TO Type_specifier
 	;
 
 Type_specifier
-	: Specify_word
-	| Specify_pointer
-	| Specify_custom
+	: Word_specifier
+	| Pointer_specifier
+	| Custom_specifier
 	;
 
-Decl_Symbol_list: Type_specifier Initializer_list
+Storage_decl: Type_specifier Initializer_list
 	;
 
-Parameter_list: %empty
+Parameter_mode
+	: T_IN
+	| T_OUT
+	| T_BI
 	;
 
-Assembler_blk: %empty
+Parameter
+	: Parameter_mode Decl_Symbol_list
+	| Parameter_mode Proc_decl
 	;
 
-Decl_Operator: %empty
+Parameter_list
+	: Parameter
+	| Parameter_list ';' Parameter
 	;
 
-Decl_Sub
-	: T_SUB       T_NAME Parameter_list Decl_list Statement T_END T_NAME T_NL
-	| T_SUB T_ASM T_NAME Parameter_list Assembler_blk       T_END T_NAME T_NL
+Proc_decl
+	: T_FUN T_NAME '[' Parameter_list ']' T_RTRNS Type_specifier
+	| T_SUB T_NAME '[' Parameter_list ']'
 	;
 
-Decl_Fun
-	: T_FUN       T_NAME '[' Parameter_list ']'
-		Decl_list Statement T_END T_NAME T_NL
-	| T_FUN T_ASM T_NAME '[' Parameter_list ']'
-		Assembler_blk       T_END T_NAME T_NL
-	;
+//Assembler_blk: %empty
+//	;
 
-Decl_Type: T_TYPE T_NAME Decl_list
+//Op_def: %empty
+//| T_OPR       Operator     '[' ']'          T_RTRNS Type_specifier
+//	| T_OPR T_ASM Operator '[' ']'              T_RTRNS Type_specifier
+//	;
+
+//Proc_def
+//	: Proc_decl Decl_list Statement T_END T_NAME T_NL
+//	;
+
+
+Type_decl: T_TYPE T_NAME Decl_list
 	;
 
 Declaration
-	: T_NL
-	| Decl_Type
-	| Decl_Sub
-	| Decl_Fun
-	| Decl_Operator
-	| Decl_Symbol_list
+	: Type_decl
+//	| Sub_def
+//	| Fun_def
+//	| Operator_Decl
+	| Storage_decl T_NL
 	;
 
 Decl_list

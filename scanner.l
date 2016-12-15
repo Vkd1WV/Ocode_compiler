@@ -12,6 +12,50 @@
 #include "global.h"
 #include "scanner.h"
 #define YY_DECL token_t yylex(void) // Eliminates spurrious warnings
+
+/*
+This function returns the correct symbol for the given name in the current scope
+*/
+static inline Bind(void){
+	static char * buffer;
+	static size_t buf_l;
+	#define BUF_SZ 64
+	
+	char * prefix;
+	sym_pt sym=NULL;
+	size_t name_l;
+	prg_blk * block_pt;
+	
+	// initializate the buffer
+	if(!buffer){
+		buffer = (char*)malloc(BUF_SZ);
+		buf_l = BUF_SZ;
+	}
+	
+	block_pt = (prg_blk*)DS_first(scope_stack);
+	
+	// resize the buffer if necessary
+	if(block_pt->scope){
+		prefix = dx_to_name(block_pt->scope->name);
+		name_l = strlen(prefix) + strlen(yytext) + 1;
+		if(name_l > buf_l) buffer = realloc(buffer, name_l);
+	}
+	
+	// search the scope stack
+	while ( block_pt->scope ){
+		prefix = dx_to_name(block_pt->scope->name);
+		strncpy(buffer, prefix, strlen(prefix));
+		strncat(buffer, yytext, strlen(yytext));
+		if(( sym = DS_find(symbols, buffer) )) break;
+		block_pt = (prg_blk*)DS_next(scope_stack);
+	}
+	
+	// if we didn't find anything, check the global scope
+	if(!sym) sym = DS_find(symbols, yytext);
+	
+	return sym;
+}
+
 %}
 
 
@@ -174,6 +218,29 @@ asm    return T_ASM;
 
  /************************** PRIMARY DATA TYPES *******************************/
 
+{NAME} {
+	Bind();
+	
+	if(!yysymbol) return T_NAME;
+	
+	switch(yysymbol->type){
+	case st_sub:      return T_N_SUB;
+	case st_type_def: return T_N_TYPE;
+	case st_cust:
+	case st_int:
+	case st_ref:
+	case st_fun: return T_N_FUN;
+	
+	case st_lit_int:
+	case st_lit_str:
+	case st_undef:
+	case st_NUM:
+	default:
+		parse_error("scanner.l: NAME: Internal: name binds to invalid type");
+	}
+}
+
+
 {HEX} {
 	yynumber=0;
 	// this is a global from tokens.h used to pass numbers to parser.c
@@ -201,7 +268,6 @@ asm    return T_ASM;
 }
 
 {DIGIT}+ yynumber = atoi( yytext ); return T_NUM ; // Decimal number constants
-{NAME}   return T_NAME;
 
 
 \' { BEGIN(CHAR); }
