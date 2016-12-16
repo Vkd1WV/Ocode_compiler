@@ -311,10 +311,7 @@ For: T_FOR
 Switch: T_SWTCH Boolean
 	;
 
-Statement_block
-	: Statement
-	| Statement_block Statement
-	;
+
 
 Statement
 	: T_NL // empty statement
@@ -333,16 +330,22 @@ Statement
 	| Assignment T_NL
 	;
 
+Statement_block
+	: Statement
+	| Statement_list Statement
+	;
+
+Statement_list
+	: Statement
+	| Statement_list Statement
+	;
 
 /******************************************************************************/
 //                                     PARSE
 /******************************************************************************/
 
 
-Statement_list
-	: Statement
-	| Statement_list Statement
-	;
+
 
 Unit
 	: Decl_list T_EOF

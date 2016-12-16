@@ -7,7 +7,7 @@ INSTALLDIR:=$(HOME)/prg
 LIBDIR:=$(INSTALLDIR)/lib
 INCDIR:=$(INSTALLDIR)/include
 
-CWARNINGS:=	-Wall -Wextra -pedantic \
+CWARNINGS:=-Wextra -pedantic \
 	-Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations \
 	-Wredundant-decls -Werror=implicit-function-declaration -Wnested-externs \
 	-Wshadow -Wbad-function-cast \
@@ -18,11 +18,11 @@ CWARNINGS:=	-Wall -Wextra -pedantic \
 	-Wsuggest-attribute=pure -Wsuggest-attribute=const \
 	-Wsuggest-attribute=noreturn -Wsuggest-attribute=format \
 	-Wtrampolines -Wstack-protector \
-	-Wwrite-strings -Wno-discarded-qualifiers \
+	-Wwrite-strings \
 	-Wconversion -Wdisabled-optimization \
 	# -Wc++-compat -Wpadded
 
-CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
+CXXWARNINGS:=-Wextra -pedantic -Wfatal-errors \
 	-Wmissing-declarations \
 	-Wredundant-decls -Wshadow \
 	-Wpointer-arith -Wcast-align \
@@ -31,16 +31,18 @@ CPPWARNINGS:=	-Wall -Wextra -pedantic -Wfatal-errors \
 	-Wwrite-strings \
 	-Wconversion
 
+THIRD_FLAGS:=-Wno-conversion -Wno-switch-default -Wno-sign-compare
+
 DEBUG_OPT:= #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES -DDBG_PARSE
 
-CFLAGS:= $(CWARNINGS) --std=c11 -I$(INCDIR) -O0 -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
-CXXFLAGS:= $(CPPWARNINGS) --std=c++14 -I$(INCDIR) -I./ -L$(LIBDIR) -g $(DEBUG_OPT)
+CFLAGS:=  --std=c11   -Wall -I$(INCDIR) -I./ -L$(LIBDIR) -g
+CXXFLAGS:=--std=c++14 -Wall -I$(INCDIR) -I./ -L$(LIBDIR) -g
 LFLAGS:=#-d
 LEX:= flex
 
 ################################## FILES #######################################
 
-HEADERS:=global.h prog_data.h
+HEADERS:=prog_data.h
 LIBS   :=-ldata
 
 PARSER:= \
@@ -49,61 +51,78 @@ PARSER:= \
 
 SRC    := \
 	Makefile cmd_line.yuck main.c \
-	scanner.l \
+	scanner.l scanner.cpp \
 	$(PARSER) \
 	opt.c \
 	gen-pexe.c gen-arm.c gen-x86.c
 
-AUTOFILES:= global.c scanner.c yuck.h yuck.c
+AUTOFILES:=lex.yy.c yuck.h yuck.c
 
 OBJECTS:= \
 	yuck.o global.o main.o \
-	scanner.o parse.o \
-	opt.o \
+	lex.yy.o scanner.o parse.o \
+	opt.o prog_data.o\
 	gen-pexe.o gen-x86.o #gen-arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 
+
+
+.PHONEY: all dist dev-occ
+all: occ scantest
+dist: CFLAGS += $(CWARNINGS)
+dist: $(AUTOFILES)
+dev-occ: CFLAGS += $(CWARNINGS) $(DEBUG_OPT)
+dev-occ: CXXFLAGS += $(CXXWARNINGS) $(DEBUG_OPT)
+dev-occ: occ
+
 ############################### PRODUCTIONS ####################################
 
-.PHONEY: all
-all: occ
+scantest: LFLAGS += -d
+scantest: CFLAGS += $(CWARNINGS) $(DEBUG_OPT)
+scantest: scantest.c scanner.o lex.yy.o global.o scanner.h
+	$(CC) $(CFLAGS) -o $@ scantest.c scanner.o global.o lex.yy.o
+
 
 occ: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 parse.o: $(PARSER) $(HEADERS) scanner.h
 	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
+scanner.o: scanner.cpp scanner.h lex.h
+	$(CXX) $(CXXFLAGS) -c -o $@ scanner.cpp
+
 main.o: main.c yuck.h $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ main.c
 
+
+
+# suppress warnings for third party slop
+lex.yy.o: lex.yy.c lex.h 
+	$(CXX) $(CXXFLAGS) -fpermissive $(THIRD_FLAGS) -c lex.yy.c
+yuck.o: yuck.c yuck.h
+	$(CC) $(CFLAGS) $(THIRD_FLAGS) -c $<
+
+
 # Automatically generated files
-.PHONEY: dist
-dist: $(AUTOFILES)
-global.c: Makefile
-	echo "#define _GLOBALS_C\n#include \"global.h\"" > $@
-scanner.c: scanner.l $(HEADERS)
-	$(LEX) $(LFLAGS) -o $@ $<
+lex.yy.c: lex.l
+	$(LEX) $(LFLAGS) $<
 yuck.c yuck.h: occ.yuck
 	yuck gen -Hyuck.h -o yuck.c $<
 
-# suppress warnings for third party slop
-scanner.o: $(HEADERS) scanner.c scanner.h
-	$(CC) $(CFLAGS) -w -c -o $@ scanner.c
-yuck.o: yuck.c yuck.h
-	$(CC) $(CFLAGS) -w -c $<
 
+# General Rules
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
-%.opp: %.cpp %.hpp $(HEADERS)
+%.o: %.cpp %.hpp $(HEADERS)
 	$(CXX) $(CPPFLAGS) -c $<
 
 ################################## UTILITIES ###################################
 
 CLEANFILES:= \
-	*.o *.o *.opp occ \
+	*.o *.o *.opp occ scantest \
 	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
 	*.output *.tab.c
 

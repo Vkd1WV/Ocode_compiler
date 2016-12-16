@@ -7,24 +7,8 @@
  ******************************************************************************/
 
 
-#ifndef _GLOBAL_H
-#define _GLOBAL_H
-
-
-/******************************************************************************/
-//                           DEPENDENCY HEADERS
-/******************************************************************************/
-
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-
-#include <data.h>
+#ifndef _ERRORS_H
+#define _ERRORS_H
 
 
 /******************************************************************************/
@@ -32,8 +16,10 @@
 /******************************************************************************/
 
 
-typedef unsigned long long umax;
-typedef unsigned int uint;
+#include <setjmp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 typedef enum {
 	V_QUIET,
@@ -58,7 +44,7 @@ typedef enum {
 /******************************************************************************/
 
 
-#ifdef _GLOBALS_C
+#ifdef _GLOBAL_C
 	#define EXTERN
 #else
 	#define EXTERN extern
@@ -107,26 +93,6 @@ static inline void debug_msg(const char * message){
 }
 
 
-/******************************************************************************/
-//                            COMPILER HEADERS
-/******************************************************************************/
-
-
-#include "prog_data.h"
-
-
-/******************************************************************************/
-//                        GLOBAL FUNCTION PROTOTYPES
-/******************************************************************************/
-
-bool Parse(Program_data * data, char * infilename);
-
-void Optomize(Program_data * prog, DS inst_q);
-
-void x86  (char * filename, const Program_data * prog, bool B64);
-void pexe (char * filename, const Program_data * prog          );
-
-
-#endif // _GLOBAL_H
+#endif // _ERRORS_H
 
 

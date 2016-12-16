@@ -6,7 +6,7 @@
  *
  ******************************************************************************/
 
-#include "global.h"
+
 #include "scanner.h"
 
 
@@ -28,9 +28,7 @@ static DS           inst_q;     ///< pointer to the current scope inst_q
        char *       name_array; ///< dynamic array for symbol and label names
 
 
-// string length limit for unique compiler generated labels
-// sufficiently large for 32-bit numbers in decimal and then some.
-#define UNQ_NAME_SZ 16
+
 //#define COLLISION_CHAR (char)'#'
 
 // the break and continue labels for the smallest current looping construct
@@ -57,6 +55,14 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 	}
 	
 	exit(EXIT_FAILURE);
+}
+
+static inline void parse_error(const char * message){
+	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
+	if(token != T_EOF && token != T_NL)
+		while( (token = yylex()) != T_NL && token != T_EOF );
+	fprintf(stderr, "continuing...\n");
+	longjmp(anewline, 1);
 }
 
 static inline void parse_warn(const char * message){
