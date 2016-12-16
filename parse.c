@@ -245,7 +245,7 @@ void Statement (uint lvl);
 #include "parse_declarations.c"
 #include "parse_expressions.c"
 #include "parse_statements.c"
-#include "emitters.c"
+//#include "emitters.c"
 
 
 /******************************************************************************/

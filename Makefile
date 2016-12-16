@@ -47,7 +47,7 @@ LIBS   :=-ldata
 
 PARSER:= \
 	parse.c \
-	parse_declarations.c parse_expressions.c parse_statements.c emitters.c
+	parse_declarations.c parse_expressions.c parse_statements.c #emitters.c
 
 SRC    := \
 	Makefile cmd_line.yuck main.c \
@@ -61,7 +61,7 @@ AUTOFILES:=lex.yy.c yuck.h yuck.c
 OBJECTS:= \
 	yuck.o global.o main.o \
 	lex.yy.o scanner.o parse.o \
-	opt.o prog_data.o\
+	opt.o prog_data.o iq.o block_q.o\
 	gen-pexe.o gen-x86.o #gen-arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
@@ -81,22 +81,22 @@ dev-occ: occ
 scantest: LFLAGS += -d
 scantest: CFLAGS += $(CWARNINGS) $(DEBUG_OPT)
 scantest: scantest.c scanner.o lex.yy.o global.o scanner.h
-	$(CC) $(CFLAGS) -o $@ scantest.c scanner.o global.o lex.yy.o
+	$(CXX) $(CXXFLAGS) -o $@ scantest.c scanner.o global.o lex.yy.o
 
 
 occ: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 parse.o: $(PARSER) $(HEADERS) scanner.h
-	$(CC) $(CFLAGS) -Wno-switch-enum -c -o $@ parse.c
+	$(CXX) $(CXXFLAGS) -Wno-switch-enum -c -o $@ parse.c
 
 scanner.o: scanner.cpp scanner.h lex.h
 	$(CXX) $(CXXFLAGS) -c -o $@ scanner.cpp
 
 main.o: main.c yuck.h $(HEADERS)
-	$(CC) $(CFLAGS) -c -o $@ main.c
-
-
+	$(CXX) $(CXXFLAGS) -c -o $@ main.c
+global.o: global.c errors.h lex.h token.h prog_def.h
+	$(CXX) $(CXXFLAGS) -c -o $@ global.c
 
 # suppress warnings for third party slop
 lex.yy.o: lex.yy.c lex.h 

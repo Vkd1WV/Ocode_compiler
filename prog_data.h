@@ -21,6 +21,7 @@
 #include <string.h>
 #include "errors.h"
 #include "prog_def.h"
+#include "block_q.h"
 
 
 /******************************************************************************/
@@ -145,12 +146,12 @@ class Program_data{
 private:
 	// DATA
 	// These are static because only one Program_data can exist at a time
-	static char * string_array;
-	static str_dx sa_size;
-	static str_dx sa_next;
+	static char *      string_array;
+	static str_dx      sa_size;
+	static str_dx      sa_next;
 	
-	static DS     block_q;
-	static DS     symbols;
+	static Block_Queue block_q;
+	static DS          symbols;
 	
 	
 	// FUNCTIONS
@@ -181,7 +182,6 @@ public:
 		if(!string_array) crit_error("Out of Memory");
 		sa_size = NAME_ARR_SZ;
 		
-		block_q = (DS) DS_new_list(sizeof(DS));
 		symbols = (DS) DS_new_bst(
 			sizeof(struct sym),
 			false,
@@ -202,6 +202,7 @@ public:
 		return (const char *) access_string(dx);
 	}
 	void dump_symbols(FILE * fd) const;
+	void Dump_block_q(FILE * fd) const;
 };
 
 

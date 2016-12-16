@@ -15,27 +15,27 @@
 
 
 Program_data::~Program_data(void){
-	DS_pt blk_pt;
+	Instruction_Queue * blk_pt;
 	
 	debug_msg("Deleting the name array");
 	free(string_array);
 	
 	
 	debug_msg("Deleting the blocks");
-	sprintf(err_array, "There are %u blocks", DS_count(block_q));
+	sprintf(err_array, "There are %u blocks", block_q.count());
 	debug_msg(err_array);
 	
-	while(( blk_pt = (DS_pt) DS_dq(block_q) )){
+	while(( blk_pt = block_q.dq() )){
 		#ifdef BLK_ADDR
 		sprintf(err_array, "got block: %p", (void*) (*blk_pt));
 		debug_msg(err_array);
 		#endif
-		DS_delete(*blk_pt);
+		delete blk_pt;
 		//debug_msg("deleted");
 	}
 	
-	debug_msg("Deleting the block queue");
-	DS_delete(block_q);
+//	debug_msg("Deleting the block queue");
+//	delete block_q;
 	debug_msg("Deleting the symbol table");
 	DS_delete(symbols);
 }
@@ -154,33 +154,5 @@ void Program_data::dump_symbols(FILE * fd) const {
 	
 	debug_msg("\tDump_symbols(): stop");
 }
-
-
-
-//void Program_data::Dump_blkq(FILE * fd) const {
-//	DS_pt blk_pt;
-//	
-//	debug_msg("\tDump_blkq(): start");
-//	if (!fd) err_msg("Internal: Dump_blkq(): received NULL file descriptor");
-//	
-//	if(!DS_isempty(block_q)){
-//		blk_pt = (DS_pt) DS_first(block_q);
-//		fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2", fd);
-//		do {
-//			if(!blk_pt) err_msg("\tDump_blkq(): found an empty block");
-//			
-//			else{
-//				fputs("\n", fd);
-//				Dump_iq(fd, *blk_pt);
-//			}
-//		} while(( blk_pt = (DS_pt) DS_next(blkq) ));
-//	}
-//	else {
-//		info_msg("\tDump_blkq(): The block queue is empty");
-//		fputs("Empty\n", fd);
-//	}
-//	
-//	debug_msg("\tDump_blkq(): stop");
-//}
 
 

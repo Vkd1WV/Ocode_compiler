@@ -8,6 +8,7 @@
 
 
 #include "iq.h"
+#include "prog_data.h"
 
 
 void Instruction_Queue::Enqueue(

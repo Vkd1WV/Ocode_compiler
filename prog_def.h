@@ -14,10 +14,11 @@
 /** Type definitions for the intermediate representation
 */
 
+#include <stdio.h>
 #include <data.h>
 #include "my_types.h"
 
-typedef DS * DS_pt;
+//typedef DS * DS_pt;
 
 /******************************* NAME ARRAY ***********************************/
 
@@ -168,14 +169,7 @@ typedef struct iop {
 
 
 #ifdef _GLOBALS_C
-	#define EXTERN
-#else
-	#define EXTERN extern
-#endif
-
-EXTERN const char * op_code_dex[NUM_I_CODES]
-#ifdef _GLOBAL_C
-	 = {
+	const char * op_code_dex[NUM_I_CODES] = {
 		"I_NOP" , "I_ASS", "I_REF" , "I_DREF", "I_NEG", "I_NOT" , "I_INV" ,
 		"I_INC", "I_DEC" ,
 		"I_MUL" , "I_DIV", "I_MOD" , "I_EXP", "I_LSH" , "I_RSH", "I_ADD" ,
@@ -184,11 +178,10 @@ EXTERN const char * op_code_dex[NUM_I_CODES]
 		"I_LTE" ,
 		"I_GTE" , "I_AND", "I_OR"  ,
 		"I_JMP" , "I_JZ" , "I_PROC", "I_CALL", "I_RTRN"
-	}
+	};
+#else
+	extern const char * op_code_dex[NUM_I_CODES];
 #endif
-;
-
-#undef EXTERN
 
 
 #endif // _PROG_DEF_H
