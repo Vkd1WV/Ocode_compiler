@@ -19,9 +19,164 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+//#include <data.h>
+typedef struct _root* DS;
+
 #include "errors.h"
-#include "prog_def.h"
-#include "block_q.h"
+#include "my_types.h"
+
+
+/******************************* NAME ARRAY ***********************************/
+
+
+typedef size_t str_dx; ///< indexes into the string_array
+
+
+/********************************* SYMBOLS ************************************/
+
+
+typedef enum{
+	st_undef,
+	st_int,      ///< an integer
+	st_ref,      ///< a reference
+	st_fun,      ///< a function
+	st_sub,      ///< a subroutine
+	st_lit_int,  ///< a literal integer to be inserted directly
+	st_lit_str,  ///< a string literal
+	st_type_def, ///< a type definition: struct or class
+	st_cust,     ///< programmer defined types
+	st_NUM
+} sym_type;
+
+typedef enum{
+	w_undef,
+	w_byte,  ///< an 8-bit integer
+	w_byte2, ///< a 16-bit integer
+	w_word,  ///< an integer of the natural width of the target processor
+	w_byte4, ///< a 32-bit integer
+	w_max,   ///< an integer of the greatest width of the target processor
+	w_byte8, ///< a 64-bit integer
+	w_NUM
+} int_size;
+
+typedef enum{
+	mt_undef,
+	mt_in,    ///< read only parameter
+	mt_out,   ///< write only parameter
+	mt_bi,    ///< bi-directional parameter
+	mt_rtrn,  ///< return value
+	mt_pub,   ///< a public member
+	mt_priv,  ///< a private member
+	mt_NUM
+} member_type;
+
+typedef struct sym {
+	str_dx  name; ///< index into the name_array
+	str_dx  short_name;
+	sym_type type; ///< Symbol type
+	bool     temp;
+	
+	// Qualifiers
+	bool stat;     // Is it a static data location
+	bool constant; // should this data ever be changed again
+	
+	// Initialized and literal
+	bool set;         // has this data location been set before
+	bool init;        // is there a static initialization stored in `value`
+	umax value;       // integer literals or initialized
+	uint8_t * str;    // string literals and initialized arrays
+	char * assembler; // contents of an asm fun or sub
+	
+	// Reference
+	struct sym* dref;
+	
+	// Integers
+	int_size size;
+	
+	// procedures, typedefs, and customs
+	DS members; // parameters of procedures, members of typedefs and customs
+	member_type mt; // if a parameter/member, what type
+	size_t offset;  // SP offset for automatic variables
+	
+	// Used by the optomizer
+	bool live;
+} * sym_pt;
+
+
+/************************* INTERMEDIATE INSTRUCTIONS **************************/
+
+
+typedef enum {
+	I_NOP,
+
+	// Unary OPS (8)
+	I_ASS ,
+	I_REF ,
+	I_DREF,
+	I_NEG ,
+	I_NOT ,
+	I_INV ,
+	I_INC ,
+	I_DEC ,
+
+	// Binary OPS (19)
+	I_MUL,
+	I_DIV,
+	I_MOD,
+	I_EXP,
+	I_LSH,
+	I_RSH,
+
+	I_ADD ,
+	I_SUB ,
+	I_BAND,
+	I_BOR ,
+	I_XOR ,
+
+	I_EQ ,
+	I_NEQ,
+	I_LT ,
+	I_GT ,
+	I_LTE,
+	I_GTE,
+
+	I_AND,
+	I_OR ,
+
+	// Flow Control (6)
+	I_JMP ,
+	I_JZ  ,
+	I_CALL,
+	I_PROC, // first icmd of each procedure. sets auto variables
+	I_RTRN,
+	
+	NUM_I_CODES
+}op_code;
+
+typedef union {
+	sym_pt symbol; ///< a variable
+	umax   value;  ///< a literal
+} intermed_arg;
+
+
+typedef struct iop {
+	str_dx      label;    ///< The label, if any, for this operation
+	str_dx      target;   ///< target of a jump
+
+	sym_pt       result;   ///< result of the operation
+	intermed_arg arg1;     ///< first argument
+	intermed_arg arg2;     ///< second argument
+	bool         arg1_lit; ///< whether arg1 is literal or a symbol
+	bool         arg2_lit; ///< whether arg2 is literal or a symbol
+	
+	op_code    op;       ///< The intermediate operator
+	
+	// Used by code generators
+	bool result_live;
+	bool arg1_live;
+	bool arg2_live;
+} * iop_pt;
 
 
 /******************************************************************************/
@@ -34,111 +189,84 @@
 
 #define START_LBL "_#START"
 
-
-/******************************************************************************/
-//                          GLOBAL INLINE FUNCTIONS
-/******************************************************************************/
-
-//extern char * name_array;
-
-///// find a name in the name_array by its str_dx
-//static inline char * dx_to_name(str_dx index){
-//	if(index == NO_NAME) return NULL;
-//	else return name_array+index;
-//}
-
-
-
-/********************** PRINT INTERMEDIATE REPRESENTATION *********************/
-
-
-
-/**************** DUMP INTERMEDIATE REPRESENTATION TO A FILE ******************/
-
-
-
-
-
-
-
-//static inline void Dump_second(FILE * fd, Program_data * prog){
-//	
-//	if(!make_debug) return;
-//	
-//	info_msg("Dump_second(): start");
-//	
-//	if(!fd) {
-//		warn_msg("Internal: Dump_second(): no such file");
-//		return;
-//	}
-//	
-//	fputs("\n== AFTER OPTOMIZATION ==\n", fd);
-//	
-//	fputs("\nSymbol Table\n", fd);
-//	Dump_symbols(fd, prog->symbols);
-//	
-//	fputs("\nBlock Queue\n", fd);
-//	Dump_blkq(fd, prog->block_q);
-//	
-//	info_msg("Dump_second(): stop");
-//}
-
-/************************** INITIALIZE AND DELETE *****************************/
-
-//static inline void Init_program_data(Program_data * data_pt){
-//	sprintf(err_array, "sizeof(DS): %lu", sizeof(DS));
-//	debug_msg(err_array);
-//	sprintf(err_array, "sizeof(icmd): %lu", sizeof(icmd));
-//	debug_msg(err_array);
-//	sprintf(err_array, "sizeof(struct sym): %lu", sizeof(struct sym));
-//	debug_msg(err_array);
-
-//	data_pt->block_q = (DS) DS_new_list(sizeof(DS));
-////	data_pt->main_q  = (DS) DS_new_list(sizeof(icmd));
-////	data_pt->sub_q   = (DS) DS_new_list(sizeof(icmd));
-//	data_pt->symbols = (DS) DS_new_bst(
-//		sizeof(struct sym),
-//		false,
-//		&sym_key,
-//		&cmp_sym
-//	);
-//}
-
-//static inline void Clear_program_data(Program_data * data_pt){
-//	DS_pt blk_pt;
-
-//	debug_msg("Deleting the name array");
-//	free(data_pt->names);
-//	
-//	
-//	debug_msg("Deleting the blocks");
-//	sprintf(err_array, "There are %u blocks", DS_count(data_pt->block_q));
-//	debug_msg(err_array);
-//	
-//	while(( blk_pt = (DS_pt) DS_dq(data_pt->block_q) )){
-//		#ifdef BLK_ADDR
-//		sprintf(err_array, "got block: %p", (void*) (*blk_pt));
-//		debug_msg(err_array);
-//		#endif
-//		DS_delete(*blk_pt);
-//		//debug_msg("deleted");
-//	}
-//	
-//	debug_msg("Deleting the block queue");
-//	DS_delete(data_pt->block_q);
-//	
-////	debug_msg("Deleting the main Queue");
-////	DS_delete(data_pt->main_q);
-////	debug_msg("Deleting the Sub queue");
-////	DS_delete(data_pt->sub_q);
-//	debug_msg("Deleting the symbol table");
-//	DS_delete(data_pt->symbols);
-//}
+#ifdef _GLOBALS_C
+	const char * op_code_dex[NUM_I_CODES] = {
+		"I_NOP" , "I_ASS", "I_REF" , "I_DREF", "I_NEG", "I_NOT" , "I_INV" ,
+		"I_INC", "I_DEC" ,
+		"I_MUL" , "I_DIV", "I_MOD" , "I_EXP", "I_LSH" , "I_RSH", "I_ADD" ,
+		"I_SUB" ,
+		"I_BAND", "I_BOR", "I_XOR" , "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  ,
+		"I_LTE" ,
+		"I_GTE" , "I_AND", "I_OR"  ,
+		"I_JMP" , "I_JZ" , "I_PROC", "I_CALL", "I_RTRN"
+	};
+#else
+	extern const char * op_code_dex[NUM_I_CODES];
+#endif
 
 
 /******************************************************************************/
 //                            CLASS DEFINITION
 /******************************************************************************/
+
+
+class Program_data;
+
+class Instruction_Queue{
+	// DATA
+private:
+	DS q;
+	Program_data * pd;
+	
+	
+	// FUNCTIONS
+public:
+	 Instruction_Queue(Program_data * prog_data);
+	~Instruction_Queue(void                    );
+	
+	bool   isempty (void) const;
+	uint   count   (void) const;
+	void   flush   (void)      ;
+	
+	iop_pt dq      (void)      ;
+	iop_pt nq      (iop_pt)    ;
+	iop_pt remove  (void)      ;
+	
+	void add_inst(
+		str_dx      label,
+		op_code    op,
+		str_dx      target,
+		const sym_pt out,
+		const sym_pt left,
+		const sym_pt right
+	);
+	
+	iop_pt first   (void) const;
+	iop_pt last    (void) const;
+	iop_pt next    (void) const;
+	iop_pt previous(void) const;
+	
+	void Print_iop(FILE * fd, iop_pt iop) const;
+	void Dump     (FILE * fd            ) const;
+};
+
+
+class Block_Queue{
+private:
+	DS bq;
+public:
+	 Block_Queue(void);
+	~Block_Queue(void);
+	
+	bool                isempty(void                 ) const;
+	uint                count  (void                 ) const;
+	Instruction_Queue * first  (void                 ) const;
+	Instruction_Queue * last   (void                 ) const;
+	Instruction_Queue * next   (void                 ) const;
+	Instruction_Queue * nq     (Instruction_Queue * q)      ;
+	Instruction_Queue * dq     (void                 )      ;
+	void                Dump   (FILE * fd            ) const;
+};
 
 
 // All program data is stored here
@@ -150,9 +278,9 @@ private:
 	static str_dx      sa_size;
 	static str_dx      sa_next;
 	
-	static Block_Queue block_q;
 	static DS          symbols;
-	
+public:
+	static Block_Queue block_q;
 	
 	// FUNCTIONS
 private:
@@ -169,40 +297,29 @@ private:
 		if(dx == NO_NAME) return NULL;
 		else return string_array+dx;
 	}
-	inline sym_pt find_sym(str_dx dx) const {
-		return (sym_pt)DS_find(symbols, get_string(dx));
-	}
+	inline sym_pt find_sym(str_dx dx) const;
 	
 	void Print_sym (FILE * fd, sym_pt sym) const;
 	
 public:
-	Program_data(void){
-		// Initialize the string array
-		string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
-		if(!string_array) crit_error("Out of Memory");
-		sa_size = NAME_ARR_SZ;
-		
-		symbols = (DS) DS_new_bst(
-			sizeof(struct sym),
-			false,
-			&Program_data::sym_key,
-			&Program_data::cmp_sym
-		);
-	}
+	 Program_data(void);
 	~Program_data(void);
 	
 	// Mutators
-	str_dx add_string(const char * name);
-	str_dx new_label (void);
-	sym_pt new_var   (sym_type type);
-	void   remove_sym(str_dx dx);
+	str_dx              add_string(const char        * name);
+	str_dx              new_label (void                    );
+	sym_pt              new_var   (sym_type            type);
+	void                remove_sym(str_dx              dx  );
+	//Instruction_Queue * nq_blk    (Instruction_Queue * blk );
 	
 	// Accessors
 	inline const char * get_string(str_dx dx) const {
 		return (const char *) access_string(dx);
 	}
-	void dump_symbols(FILE * fd) const;
-	void Dump_block_q(FILE * fd) const;
+	
+	// Dump current state
+	void Dump_sym(FILE * fd) const;
+	void Dump_q  (FILE * fd) const { block_q.Dump(fd); };
 };
 
 

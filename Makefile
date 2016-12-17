@@ -7,7 +7,7 @@ INSTALLDIR:=$(HOME)/prg
 LIBDIR:=$(INSTALLDIR)/lib
 INCDIR:=$(INSTALLDIR)/include
 
-CWARNINGS:=-Wextra -pedantic \
+CWARNINGS:=-Wall -Wextra -pedantic \
 	-Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations \
 	-Wredundant-decls -Werror=implicit-function-declaration -Wnested-externs \
 	-Wshadow -Wbad-function-cast \
@@ -22,7 +22,7 @@ CWARNINGS:=-Wextra -pedantic \
 	-Wconversion -Wdisabled-optimization \
 	# -Wc++-compat -Wpadded
 
-CXXWARNINGS:=-Wextra -pedantic -Wfatal-errors \
+CXXWARNINGS:=-Wall -Wextra -pedantic \
 	-Wmissing-declarations \
 	-Wredundant-decls -Wshadow \
 	-Wpointer-arith -Wcast-align \
@@ -31,22 +31,20 @@ CXXWARNINGS:=-Wextra -pedantic -Wfatal-errors \
 	-Wwrite-strings \
 	-Wconversion
 
-THIRD_FLAGS:=-Wno-conversion -Wno-switch-default -Wno-sign-compare
-
 DEBUG_OPT:= #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES -DDBG_PARSE
 
-CFLAGS:=  --std=c11   -Wall -I$(INCDIR) -I./ -L$(LIBDIR) -g
-CXXFLAGS:=--std=c++14 -Wall -I$(INCDIR) -I./ -L$(LIBDIR) -g
+CFLAGS:=  --std=c11   $(CWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR) -g
+CXXFLAGS:=--std=c++14 $(CXXWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR) -g
 LFLAGS:=#-d
 LEX:= flex
 
 ################################## FILES #######################################
 
-HEADERS:=prog_data.h
+HEADERS:=prog_data.h errors.h my_types.h scanner.h token.h
 LIBS   :=-ldata
 
 PARSER:= \
-	parse.c \
+	parse.cpp \
 	parse_declarations.c parse_expressions.c parse_statements.c #emitters.c
 
 SRC    := \
@@ -61,7 +59,7 @@ AUTOFILES:=lex.yy.c yuck.h yuck.c
 OBJECTS:= \
 	yuck.o global.o main.o \
 	lex.yy.o scanner.o parse.o \
-	opt.o prog_data.o iq.o block_q.o\
+	opt.o prog_data.o \
 	gen-pexe.o gen-x86.o #gen-arm.o
 
 ALLFILES:= $(SRC) $(HEADERS)
@@ -72,8 +70,8 @@ ALLFILES:= $(SRC) $(HEADERS)
 all: occ scantest
 dist: CFLAGS += $(CWARNINGS)
 dist: $(AUTOFILES)
-dev-occ: CFLAGS += $(CWARNINGS) $(DEBUG_OPT)
-dev-occ: CXXFLAGS += $(CXXWARNINGS) $(DEBUG_OPT)
+dev-occ: CFLAGS +=  $(DEBUG_OPT)
+dev-occ: CXXFLAGS +=  $(DEBUG_OPT)
 dev-occ: occ
 
 ############################### PRODUCTIONS ####################################
@@ -87,22 +85,21 @@ scantest: scantest.c scanner.o lex.yy.o global.o scanner.h
 occ: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-parse.o: $(PARSER) $(HEADERS) scanner.h
-	$(CXX) $(CXXFLAGS) -Wno-switch-enum -c -o $@ parse.c
+parse.o: $(PARSER) scanner.h prog_data.h
+	$(CXX) $(CXXFLAGS) -Wno-switch-enum -c -o $@ parse.cpp
 
+scope.o: scope.cpp scope.h prog_data.h
 scanner.o: scanner.cpp scanner.h lex.h
-	$(CXX) $(CXXFLAGS) -c -o $@ scanner.cpp
+main.o: main.cpp yuck.h errors.h my_types.h prog_data.h proto.h scanner.h
+global.o: global.cpp prog_data.h errors.h token.h lex.h
+opt.o: opt.cpp prog_data.h proto.h
 
-main.o: main.c yuck.h $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c -o $@ main.c
-global.o: global.c errors.h lex.h token.h prog_def.h
-	$(CXX) $(CXXFLAGS) -c -o $@ global.c
 
 # suppress warnings for third party slop
 lex.yy.o: lex.yy.c lex.h 
-	$(CXX) $(CXXFLAGS) -fpermissive $(THIRD_FLAGS) -c lex.yy.c
+	$(CXX) $(CXXFLAGS) -fpermissive -Wno-conversion -Wno-switch-default -Wno-sign-compare -c lex.yy.c
 yuck.o: yuck.c yuck.h
-	$(CC) $(CFLAGS) $(THIRD_FLAGS) -c $<
+	$(CC) $(CFLAGS) -Wno-switch-enum -Wno-sign-conversion -c $<
 
 
 # Automatically generated files
@@ -116,8 +113,8 @@ yuck.c yuck.h: occ.yuck
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
-%.o: %.cpp %.hpp $(HEADERS)
-	$(CXX) $(CPPFLAGS) -c $<
+%.o: %.cpp %.h $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $<
 
 ################################## UTILITIES ###################################
 

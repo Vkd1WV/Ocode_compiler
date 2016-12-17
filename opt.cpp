@@ -6,7 +6,8 @@
  *
  ******************************************************************************/
 
-#include "global.h"
+#include "prog_data.h"
+#include "proto.h"
 
 /**	@file opt.c
  *	Optomize the intermediate representation.
@@ -16,9 +17,11 @@
 
 
 /******************************************************************************/
-//                               DEFINITIONS
+//                               GLOBALS
 /******************************************************************************/
 
+
+static Program_data * g_prog_pt;
 
 
 /******************************************************************************/
@@ -26,34 +29,34 @@
 /******************************************************************************/
 
 
-static DS Mk_blk(DS q){
-	DS blk = NULL;
+static Instruction_Queue * Mk_blk(Instruction_Queue * q){
+	Instruction_Queue * blk = NULL;
 	iop_pt iop;
 	
 	debug_msg("\tMk_blk(): start");
-	sprintf(err_array, "\tMk_blk(): queue has %u", DS_count(q));
+	sprintf(err_array, "\tMk_blk(): queue has %u", q->count());
 	debug_msg(err_array);
 	
-	if(!DS_isempty(q)){
+	if(!q->isempty()){
 		
 		debug_msg("\tMk_blk(): the queue is not empty");
 		
 		// Each block must contain at least one instruction
-		iop = (iop_pt)DS_dq(q);
+		iop = q->dq();
 		if(!iop) {
 			err_msg("\tInternal: Mk_blk(): counld not dq from non empty q");
 			return NULL;
 		}
-	
+		
 		info_msg("\tMk_blk(): Making Block");
-	
-		blk = (DS) DS_new_list(sizeof(icmd));
-	
-		DS_nq(blk, iop);
-	
-		while(( iop = (iop_pt)DS_first(q) )){
+		
+		blk = new Instruction_Queue(g_prog_pt);
+		
+		blk->nq(iop);
+		
+		while(( iop = q->first() )){
 			if(iop->label != NO_NAME) break; // entry points are leaders
-			DS_nq(blk, DS_dq(q));
+			blk->nq(q->dq());
 			if(
 				iop->op == I_JMP  ||
 				iop->op == I_JZ   ||
@@ -66,7 +69,7 @@ static DS Mk_blk(DS q){
 	else info_msg("\tMk_blk(): The queue is empty, no block made");
 	
 	// recover memory
-	DS_flush(q);
+	q->flush();
 	
 	debug_msg("\tMk_blk(): stop");
 	
@@ -77,18 +80,21 @@ static DS Mk_blk(DS q){
 // Colapse labels
 
 static void Dead_blks(DS block_q){
-	/* If a block ends with an unconditional jump, and the next block has no label then it must be dead
+	/* If a block ends with an unconditional jump, and the next block has no label then the second block must be dead
 	*/
 	
 	/* If a block ends with a jump and the next block starts with its target, then the two lines can be removed
+	*/
+	
+	/* After merging two blocks Liveness() should be run again
 	*/
 }
 
 
 // optomize inner loops
-static void Inner_loop(DS blk){
-	char * first_lbl = dx_to_name(((iop_pt) DS_first(blk))->label );
-	char * last_targ = dx_to_name(((iop_pt) DS_last (blk))->target);
+static void Inner_loop(Instruction_Queue * blk){
+	const char * first_lbl = g_prog_pt->get_string(blk->first()->label);
+	const char * last_targ = g_prog_pt->get_string(blk->last()->target);
 	
 	/*
 	If the end of a basic block is a jmp to its head then surely it is an inner loop
@@ -102,12 +108,12 @@ static void Inner_loop(DS blk){
 
 
 // Determine whether each symbol is live in each instruction
-static void Liveness(DS blk, DS symbols){
+static void Liveness(Instruction_Queue * blk){
 	iop_pt iop;
 	
 	debug_msg("\tLiveness(): start");
 	
-	iop = (iop_pt)DS_last(blk);
+	iop = blk->last();
 	if(!iop) crit_error("Internal: Liveness() received an empty block");
 	
 	do {
@@ -129,11 +135,10 @@ static void Liveness(DS blk, DS symbols){
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
 				// remove the temp symbol
-				if(DS_find(symbols, dx_to_name(iop->result->name)))
-					DS_remove(symbols);
+				g_prog_pt->remove_sym(iop->result->name);
 				
 				// and the iop
-				DS_remove(blk);
+				blk->remove();
 				break;
 			}
 			
@@ -169,11 +174,10 @@ static void Liveness(DS blk, DS symbols){
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
 				// remove the temp symbol
-				if(DS_find(symbols, dx_to_name(iop->result->name)))
-					DS_remove(symbols);
+				g_prog_pt->remove_sym(iop->result->name);
 				
 				// and the iop
-				DS_remove(blk);
+				blk->remove();
 				break;
 			}
 			
@@ -199,7 +203,7 @@ static void Liveness(DS blk, DS symbols){
 		case NUM_I_CODES:
 		default: crit_error("Liveness(): got a bad op");
 		}
-	} while(( iop = (icmd*)DS_previous(blk) ));
+	} while(( iop = blk->previous() ));
 	
 	debug_msg("\tLiveness(): stop");
 }
@@ -210,20 +214,24 @@ static void Liveness(DS blk, DS symbols){
 /******************************************************************************/
 
 
-void Optomize(Program_data * prog, DS inst_q){
-	DS blk;
+void Optomize(Program_data * prog, Instruction_Queue * inst_q){
+	Instruction_Queue * blk_pt;
 	
 	info_msg("Optomize(): start");
 	
-	if(!DS_isempty(inst_q)){
-		debug_msg("Optomize(): start");
-		while (( blk = Mk_blk(inst_q) )){
+	g_prog_pt = prog;
+	
+	if(! inst_q->isempty() ){
+		
+		// collapse labels
+		
+		while (( blk_pt = Mk_blk(inst_q) )){
 		
 			#ifdef BLK_ADDR
 			sprintf(
 				err_array,
 				"Optomize(): Mk_blk() returned address: %p",
-				(void*) blk
+				(void*) blk_pt
 			);
 			debug_msg(err_array);
 			#endif
@@ -237,8 +245,8 @@ void Optomize(Program_data * prog, DS inst_q){
 /*			*/
 /*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
-			Liveness(blk, prog->symbols);
-			Inner_loop(blk);
+			Liveness(blk_pt);
+			Inner_loop(blk_pt);
 			
 /*			sprintf(*/
 /*				err_array,*/
@@ -247,7 +255,7 @@ void Optomize(Program_data * prog, DS inst_q){
 /*			);*/
 /*			debug_msg(err_array);*/
 			
-			DS_nq(prog->block_q, &blk);
+			prog->block_q.nq(blk_pt);
 			
 /*			sprintf(*/
 /*				err_array,*/
@@ -256,7 +264,7 @@ void Optomize(Program_data * prog, DS inst_q){
 /*			);*/
 /*			debug_msg(err_array);*/
 			
-			if( blk != * (DS_pt) DS_last(prog->block_q) )
+			if( blk_pt != prog->block_q.last() )
 				err_msg("Internal: Queued block does not match first block");
 		}
 	}
@@ -265,7 +273,7 @@ void Optomize(Program_data * prog, DS inst_q){
 	sprintf(
 				err_array,
 				"Block queue has %u finally",
-				DS_count(prog->block_q)
+				prog->block_q.count()
 			);
 			debug_msg(err_array);
 	

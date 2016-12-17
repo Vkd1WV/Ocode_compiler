@@ -8,6 +8,7 @@
 
 
 #include "scanner.h"
+#include "prog_data.h"
 
 
 /******************************************************************************/
@@ -23,16 +24,14 @@
 /******************************************************************************/
 
 
-static Program_data * prg_data; //used by pop_scope()
-static DS           inst_q;     ///< pointer to the current scope inst_q
-       char *       name_array; ///< dynamic array for symbol and label names
-
-
+static Program_data      * intermed;    //used by pop_scope()
+static Scanner           * scanner;
+static Instruction_Queue * parse_q; ///< pointer to the current scope inst_q
 
 //#define COLLISION_CHAR (char)'#'
 
 // the break and continue labels for the smallest current looping construct
-name_dx break_this = NO_NAME, continue_this = NO_NAME;
+str_dx break_this = NO_NAME, continue_this = NO_NAME;
 
 
 /******************************************************************************/
@@ -48,7 +47,7 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 			stderr,
 			"PARSER CRITICAL ERROR: %s, on line %d.\n",
 			message,
-			yylineno
+			pars.get_lnum(),
 		);
 	Print_sym(stderr, arg1);
 	Print_sym(stderr, arg2);
@@ -59,8 +58,7 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 
 static inline void parse_error(const char * message){
 	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
-	if(token != T_EOF && token != T_NL)
-		while( (token = yylex()) != T_NL && token != T_EOF );
+	parse_front.resync();
 	fprintf(stderr, "continuing...\n");
 	longjmp(anewline, 1);
 }
@@ -146,52 +144,6 @@ static inline char * get_name(void){
 	return buffer;
 }
 
-/**************************** SCOPE FUNCTIONS *********************************/
-
-// get the current scope prefix
-static inline const char * scope_prefix(void){
-	prg_blk * block_pt;
-	
-	block_pt = (prg_blk*)DS_first(scope_stack);
-	
-	if(block_pt->scope)
-		return dx_to_name(block_pt->scope->name);
-	else return "";
-}
-
-static inline sym_pt Bind_operator(token_t op){
-	return NULL;
-}
-
-static inline void push_scope(sym_pt sym){
-	prg_blk data;
-	prg_blk * data_pt;
-	
-	data.inst_q = DS_new_list(sizeof(icmd));
-	data.scope  = sym;
-	
-	data_pt = DS_push(scope_stack, &data);
-	
-	inst_q = data_pt->inst_q;
-}
-
-static inline void pop_scope(void){
-	prg_blk * data_pt;
-	
-	data_pt = DS_pop(scope_stack);
-	
-	if(make_debug) Dump_iq(debug_fd, data_pt->inst_q);
-	
-	Optomize(prg_data, data_pt->inst_q);
-	if(!DS_isempty(data_pt->inst_q))
-		err_msg("Internal: pop_scope(): Optomize() returned non-empty queue");
-	
-	DS_delete(data_pt->inst_q);
-	
-	data_pt = DS_first(scope_stack);
-	if(data_pt) inst_q = data_pt->inst_q;
-}
-
 
 /******************************************************************************/
 //                           PRIVATE PROTOTYPES
@@ -201,17 +153,17 @@ static inline void pop_scope(void){
 //sym_pt get_scope(void);
 
 // Emmiters
-name_dx add_name (char * name);
-name_dx new_label(void); ///< get a new unique label
-sym_pt  new_var  (sym_type);  ///< Create a unique temporary symbol
-void    emit_iop (
-	name_dx      label,
-	op_code      op,
-	name_dx      target,
-	const sym_pt out,
-	const sym_pt left,
-	const sym_pt right
-);
+/*str_dx add_name (char * name);*/
+/*str_dx new_label(void); ///< get a new unique label*/
+/*sym_pt  new_var  (sym_type);  ///< Create a unique temporary symbol*/
+/*void    emit_iop (*/
+/*	str_dx      label,*/
+/*	op_code      op,*/
+/*	str_dx      target,*/
+/*	const sym_pt out,*/
+/*	const sym_pt left,*/
+/*	const sym_pt right*/
+/*);*/
 
 /*// Declarations*/
 //void Decl_Symbol  (void    );
@@ -245,7 +197,6 @@ void Statement (uint lvl);
 #include "parse_declarations.c"
 #include "parse_expressions.c"
 #include "parse_statements.c"
-//#include "emitters.c"
 
 
 /******************************************************************************/
@@ -253,27 +204,17 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-bool Parse(Program_data * data, char * infilename){
+bool Parse(Program_data * d, Scanner * s){
 	int errors;
 	
 	// set various global pointers
-	symbols  = data->symbols;
-	prg_data = data;
+	intermed = d;
+	scanner = s;
 	
 	// Initialize the scope stack
 	scope_stack = (DS)DS_new_list(sizeof(prg_blk));
 	
-	// set the infile
-	if(infilename){
-		sprintf(err_array, "Reading from: %s", infilename);
-		info_msg(err_array);
-		yyin = fopen(infilename, "r");
-		if(!yyin) {
-			sprintf(err_array, "No such file: %s", infilename);
-			crit_error(err_array);
-		}
-	}
-	else info_msg("Reading from: stdin");
+	
 	
 	get_token(); // Initialize the lookahead token
 	push_scope(NULL); // initialize the scope stack

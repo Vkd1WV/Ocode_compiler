@@ -33,45 +33,21 @@ private:
 	sym_pt  scan_sym;
 	char *  scan_text;
 	token_t scan_token;
-	
-	void Bind(void); // bind the scan_text to a symbol
+	uint    lnum;
 	
 public:
-	Scanner(void) { next_token(); } // initializate the lookahead token
+	Scanner(char * filename);
+	
 	// Mutators
 	void next_token(void);
+	void resync    (void);
 	
 	// Accessors
 	      sym_pt  get_sym  (void) const { return scan_sym  ; }
 	const char *  get_text (void) const { return scan_text ; }
-	const token_t get_token(void) const { return scan_token; }
+	      token_t get_token(void) const { return scan_token; }
+	      uint    get_lnum (void) const { return lnum      ; }
 };
-
-
-/******************************************************************************/
-//                            GLOBAL STORAGE
-/******************************************************************************/
-
-
-//#ifdef _SCANNER_C
-//	#define EXTERN const volatile
-//#else
-//	#define EXTERN extern
-//#endif
-
-//EXTERN sym_pt  scan_sym;
-//EXTERN char *  scan_text;
-//EXTERN token_t scan_token;
-
-
-//#undef EXTERN
-
-
-/******************************************************************************/
-//                              PROTOTYPES
-/******************************************************************************/
-
-//void get_token(void);
 
 
 #endif // _SCANNER_H

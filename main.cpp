@@ -7,7 +7,17 @@
  ******************************************************************************/
 
 
-#include "yuck.h"
+#include <string.h>
+
+extern "C"{
+	#include "yuck.h"
+}
+
+#include "errors.h"
+#include "my_types.h"
+#include "prog_data.h"
+#include "scanner.h"
+#include "proto.h"
 
 // Default output files
 const char * default_dbg  = ".dbg" ;
@@ -21,7 +31,7 @@ static inline void Set_files(char ** infilename, yuck_t * arg_pt){
 	char * debug_file;
 	
 	// default verbosity
-	verbosity = DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag;
+	verbosity = (verb_t) (DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag);
 	
 	if (arg_pt->nargs > 1) warn_msg("Too many arguments...Ignoring.");
 	
@@ -149,30 +159,29 @@ static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 int main (int argc, char** argv){
 	yuck_t arg_pt[1];
 	char * infile;
-	Program_data prog_data[1];
-	bool errors;
+	Program_data prog_data;
+	bool errors=0;
 	
 	// Setup
 	yuck_parse(arg_pt, argc, argv);
 	Set_files(&infile, arg_pt);
-	Init_program_data(prog_data);
+	Scanner scan(infile);
 	
 	// Compile
-	errors = Parse(prog_data, infile);
+	errors = Parse(&prog_data, &scan);
 	
 	if(make_debug){
 		fputs("\nSYMBOLS\n", debug_fd);
-		Dump_symbols(debug_fd, prog_data->symbols);
-		Dump_second(debug_fd, prog_data);
+		prog_data.Dump_sym(debug_fd);
+		prog_data.Dump_q  (debug_fd);
 	}
 	
-	if(!errors) Generate_code(arg_pt, prog_data);
+	if(!errors) Generate_code(arg_pt, &prog_data);
 	
 	// Cleanup
 	yuck_free(arg_pt);
 	if(make_debug) fclose(debug_fd);
 	debug_fd = NULL;
-	Clear_program_data(prog_data);
 	
 	return errors;
 }
