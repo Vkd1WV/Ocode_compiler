@@ -161,29 +161,29 @@ typedef enum {
 // token_dex[] contains user readable values for each token.
 
 EXTERN const char * token_dex[NUM_TOKENS]
-#ifdef _GLOBALS_C
+#ifdef _GLOBAL_C
 	= {
 		// Formatting
-		"EoF", "SCANNER ERROR", "T_NL", "T_IND", "T_OUTD",
+		"T_EOF", "T_SERR", "T_NL", "T_IND", "T_OUTD",
 		// Primary
-		"T_NUM", "T_HEX_NUM", "T_DEC_NUM", "STRING LITERAL", "T_CHAR",
+		"T_NUM", "T_HEX_NUM", "T_DEC_NUM", "T_STR", "T_CHAR",
 		/**************************** Operators *******************************/
 		"(",")",
 		// Unary
-		"--","++","T_REF","@","T_NOT"," T_INV",
+		"T_DEC","T_INC","T_REF","T_DREF", "T_NOT", "T_INV",
 		// Additive
-		"T_PLUS "," T_MINUS"," T_BAND ", "T_BOR", "T_BXOR",
+		"T_PLUS", "T_MINUS", "T_BAND", "T_BOR", "T_BXOR",
 		// Multiplicative
-		"T_MUL","T_MOD","/","T_EXP","<<",">>",
+		"T_MUL", "T_MOD", "T_DIV", "T_EXP", "T_LSHFT", "T_RSHFT",
 		// Comparative
-		"="," T_NEQ","<",">"," T_LTE"," T_GTE",
+		"T_EQ","T_NEQ","T_LT","T_GT"," T_LTE"," T_GTE",
 		// boolean
-		"T_AND"," T_OR ",
+		"T_AND", "T_OR",
 		// Assignment
 		":=", "T_LSH_A", "T_RSH_A", "T_ADD_A", "T_SUB_A", "T_MUL_A", "T_DIV_A",
 		"T_MOD_A", "T_AND_A", "T_OR_A ", "T_XOR_A",
 
-		"{","}","[","]", ",",
+		"{","}","[","]", "T_COMA",
 		/************************ Control statements **************************/
 		"label", "jump", "break", "continue", "return",
 		"if", "else", "switch", "case", "default",
@@ -192,15 +192,15 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		/************************** Declared Names ****************************/
 		"T_NAME", "T_N_SUB", "T_N_FUN", "T_N_TYPE",
 		/*************************** Declarations *****************************/
-		"operator", "sub", "fun", "typedef",
+		"operator", "sub", "T_FUN", "typedef",
 		// Word declarations
-		"byte", "byte2", "byte4", "byte8", "word", "max",
+		"T_8", "T_16", "T_32", "T_64", "T_WORD", "T_MAX",
 		// pointer declaration
-		"pointer",
+		"T_PTR",
 		// Qualifers
-		"const", "static", "asm",
+		"T_CONST", "T_STATIC", "T_ASM",
 		// Parameter Modes
-		"in", "out", "bi"
+		"in", "out", "T_BI"
 	}
 #endif // _GLOBALS_C
 ;

@@ -79,7 +79,7 @@ static inline void err_msg(const char * message){
 
 static inline void warn_msg(const char * message){
 	if (verbosity >= V_WARN)
-		fprintf(stderr, "ERROR: %s.\n", message);
+		fprintf(stderr, "WARNING: %s.\n", message);
 }
 
 static inline void info_msg(const char * message){

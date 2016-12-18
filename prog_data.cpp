@@ -24,7 +24,7 @@ char * Program_data::string_array;
 
 Program_data::Program_data(void){
 	// Initialize the string array
-	this->string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
+	string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
 	if(!string_array) crit_error("Out of Memory");
 	sa_size = NAME_ARR_SZ;
 	
@@ -39,27 +39,15 @@ Program_data::Program_data(void){
 Program_data::~Program_data(void){
 	Instruction_Queue * blk_pt;
 	
+	debug_msg("Program_data::~Program_data(): start");
+	
 	debug_msg("Deleting the name array");
 	free(string_array);
 	
-	
-	debug_msg("Deleting the blocks");
-	sprintf(err_array, "There are %u blocks", block_q.count());
-	debug_msg(err_array);
-	
-	while(( blk_pt = block_q.dq() )){
-		#ifdef BLK_ADDR
-		sprintf(err_array, "got block: %p", (void*) (*blk_pt));
-		debug_msg(err_array);
-		#endif
-		delete blk_pt;
-		//debug_msg("deleted");
-	}
-	
-//	debug_msg("Deleting the block queue");
-//	delete block_q;
 	debug_msg("Deleting the symbol table");
 	DS_delete(symbols);
+	
+	debug_msg("Program_data::~Program_data(): stop");
 }
 
 
@@ -171,14 +159,19 @@ Block_Queue::Block_Queue(void) {
 Block_Queue::~Block_Queue(void) {
 	Instruction_Queue * iq;
 	
+	debug_msg("Block_Queue::~Block_Queue(): start");
+	
 	while(( iq = dq() )) delete iq;
 	
 	DS_delete(bq);
+	
+	debug_msg("Block_Queue::~Block_Queue(): stop");
 }
 
 bool Block_Queue::isempty(void) const { return DS_isempty(bq); }
 uint Block_Queue::count  (void) const { return DS_count  (bq); }
 
+// FIXME: any of these could return NULL
 Instruction_Queue * Block_Queue::first(void) const {
 	return *(Instruction_Queue**) DS_first(bq);
 }
