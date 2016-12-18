@@ -5,6 +5,7 @@ junk
 
 # Executables
 occ
+scantest
 
 # compiler outfiles
 *.dbg

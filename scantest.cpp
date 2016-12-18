@@ -12,13 +12,13 @@ int main(int argc, char** argv){
 	ss.push(GLOBAL_SCOPE);
 	
 	while(scan.token() != T_EOF){
-		printf("%s: at %u is %s",
+		printf("%s: at %u is %s\n",
 			token_dex[scan.token()],
 			scan.lnum(),
 			scan.text()
 		);
 		
-		Print_sym(stdout, scan.sym, prog_data);
+		//Print_sym(stdout, scan.sym, prog_data);
 	}
 	
 	ss.pop();

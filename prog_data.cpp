@@ -20,10 +20,11 @@
 // sufficiently large for 32-bit numbers in decimal and then some.
 #define UNQ_NAME_SZ 16
 
+char * Program_data::string_array;
 
 Program_data::Program_data(void){
 	// Initialize the string array
-	string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
+	this->string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
 	if(!string_array) crit_error("Out of Memory");
 	sa_size = NAME_ARR_SZ;
 	

@@ -47,6 +47,7 @@ NEWL   ({WHTSPC})*(\r|\r\n|\n)
  /* These must eat all tabs at the begining of lines that shouldn't trigger indentation */
 ({WHTSPC})*#.*{NEWL} { tabs_this_ln=0;              } // comments
 ^({NEWL})            { tabs_this_ln=0;              } // ignore empty lines
+({WHTSPC})*\\(\r|\r\n|\n) {} // ignore escaped newlines
 {NEWL}               { tabs_this_ln=0; return T_NL; } // report the rest
 
 ^[ *\t+] {

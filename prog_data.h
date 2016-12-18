@@ -189,7 +189,7 @@ typedef struct iop {
 
 #define START_LBL "_#START"
 
-#ifdef _GLOBALS_C
+#ifdef _GLOBAL_C
 	const char * op_code_dex[NUM_I_CODES] = {
 		"I_NOP" , "I_ASS", "I_REF" , "I_DREF", "I_NEG", "I_NOT" , "I_INV" ,
 		"I_INC", "I_DEC" ,
@@ -358,7 +358,7 @@ static inline void Print_iop(FILE * fd, iop_pt iop, const Program_data * pd) {
 	}
 }
 
-static inline void Print_sym(FILE * fd, sym_pt sym, Program_data pd) {
+static inline void Print_sym(FILE * fd, sym_pt sym, const Program_data pd) {
 	const char * types[st_NUM] = {
 		"undef", "int", "ref", "fun", "sub", "lit_int", "lit_str", "tp_def"
 	};
