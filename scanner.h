@@ -20,6 +20,7 @@
 
 
 #include "prog_data.h"
+#include "scope.h"
 #include "token.h"
 
 
@@ -33,20 +34,22 @@ private:
 	sym_pt  scan_sym;
 	char *  scan_text;
 	token_t scan_token;
-	uint    lnum;
+	uint    line_num;
 	
 public:
 	Scanner(char * filename);
 	
 	// Mutators
-	void next_token(void);
-	void resync    (void);
+	void next_token (void     );
+	void resync     (void     );
+	void match_token(token_t t);
+	void match_str  (char * s );
 	
 	// Accessors
-	      sym_pt  get_sym  (void) const { return scan_sym  ; }
-	const char *  get_text (void) const { return scan_text ; }
-	      token_t get_token(void) const { return scan_token; }
-	      uint    get_lnum (void) const { return lnum      ; }
+	      sym_pt  sym  (void) const { return scan_sym  ; }
+	const char *  text (void) const { return scan_text ; }
+	      token_t token(void) const { return scan_token; }
+	      uint    lnum (void) const { return line_num  ; }
 };
 
 

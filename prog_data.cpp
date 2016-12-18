@@ -127,30 +127,6 @@ void Program_data::remove_sym(str_dx dx){
 }
 
 
-void Program_data::Print_sym(FILE * fd, sym_pt sym) const {
-	const char * types[st_NUM] = {
-		"undef", "int", "ref", "fun", "sub", "lit_int", "lit_str", "tp_def"
-	};
-	const char * widths[w_NUM] = {
-		"undef", "byte", "byte2", "word", "byte4", "max", "byte8"
-	};
-	
-	if(!sym) fputs("NULL\n", fd);
-	else
-		fprintf(fd, "%6s:\t%7s %5s %s%s%s%s%s  %p\n",
-			get_string(sym->name),
-			types[sym->type],
-			sym->type == st_int? widths[sym->size] : "",
-			sym->temp    ? "t": " ",
-			sym->constant? "c": " ",
-			sym->stat    ? "s": " ",
-			sym->set     ? "v": " ", // whether it currently has a value assigned
-			sym->init    ? "i": " ", // wether it has a static initialization
-			(void*) sym->dref
-		);
-}
-
-
 // Dump the symbol Table
 void Program_data::Dump_sym(FILE * fd) const {
 	sym_pt sym;
@@ -163,7 +139,7 @@ void Program_data::Dump_sym(FILE * fd) const {
 		
 		sym = (sym_pt) DS_first(symbols);
 		do {
-			Print_sym(fd, sym);
+			Print_sym(fd, sym, *this);
 		} while(( sym = (sym_pt) DS_next(symbols) ));
 		
 		#ifdef FLUSH_FILES
@@ -407,38 +383,6 @@ void Instruction_Queue::add_inst(
 	
 }
 
-void Instruction_Queue::Print_iop(FILE * fd, iop_pt iop) const {
-	const char *result, *arg1, *arg2;
-	const char *none = "NONE", *lit = "lit";
-	
-	if(!iop) fputs("Print_icmd(): NULL\n", fd);
-	else{
-		if(iop->target != NO_NAME) result = pd->get_string(iop->target);
-		else if(iop->result) result = pd->get_string(iop->result->name);
-		else result = none;
-		
-		if(iop->arg1_lit) arg1 = lit;
-		else if (iop->arg1.symbol) arg1 = pd->get_string(iop->arg1.symbol->name);
-		else arg1 = none;
-		
-		if(iop->arg2_lit) arg2 = lit;
-		else if (iop->arg2.symbol) arg2 = pd->get_string(iop->arg2.symbol->name);
-		else arg2 = none;
-		
-		fprintf(fd, "%6s:\t%s\t%c %6s\t%c %6s\t%c %6s\n",
-			pd->get_string(iop->label),
-			op_code_dex[iop->op],
-			iop->result_live? 'l' : 'd',
-			result,
-			iop->arg1_live? 'l' : 'd',
-			arg1,
-			iop->arg2_live? 'l' : 'd',
-			arg2
-		);
-		
-	}
-}
-
 void Instruction_Queue::Dump(FILE * fd) const {
 	iop_pt iop;
 	
@@ -457,7 +401,7 @@ void Instruction_Queue::Dump(FILE * fd) const {
 			debug_msg(err_array);
 			#endif
 		
-			Print_iop(fd, iop);
+			Print_iop(fd, iop, pd);
 			
 			#ifdef FLUSH_FILES
 				fflush(fd);

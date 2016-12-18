@@ -56,11 +56,13 @@ SRC    := \
 
 AUTOFILES:=lex.yy.c yuck.h yuck.c
 
-OBJECTS:= \
+OCC_OBJECTS:= \
 	yuck.o global.o main.o \
 	lex.yy.o scanner.o parse.o \
-	opt.o prog_data.o \
+	opt.o prog_data.o scope.o \
 	gen-pexe.o gen-x86.o #gen-arm.o
+
+SCAN_OBJECTS:=global.o lex.yy.o scanner.o prog_data.o scope.o scantest.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 
@@ -77,9 +79,9 @@ dev-occ: occ
 ############################### PRODUCTIONS ####################################
 
 scantest: LFLAGS += -d
-scantest: CFLAGS += $(CWARNINGS) $(DEBUG_OPT)
-scantest: scantest.c scanner.o lex.yy.o global.o scanner.h
-	$(CXX) $(CXXFLAGS) -o $@ scantest.c scanner.o global.o lex.yy.o
+scantest: CXXFLAGS += $(DEBUG_OPT)
+scantest: $(SCAN_OBJECTS) scanner.h
+	$(CXX) $(CXXFLAGS) -o $@ $(SCAN_OBJECTS)
 
 
 occ: $(OBJECTS)

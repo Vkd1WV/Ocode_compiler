@@ -174,7 +174,7 @@ static sym_pt Unary(void){
 	
 	switch (token){
 /*	case T_MINUS:*/
-/*		get_token();*/
+/*		scanner->next_token();*/
 /*		arg = Unary();*/
 /*		*/
 /*		*/
@@ -198,7 +198,7 @@ static sym_pt Unary(void){
 /*		}*/
 	
 	case T_REF:
-		get_token();
+		scanner->next_token();
 		arg = Primary();
 		
 		
@@ -225,7 +225,7 @@ static sym_pt Unary(void){
 		return result;
 	
 	case T_DREF:
-		get_token();
+		scanner->next_token();
 		arg = Unary();
 		
 		
@@ -240,7 +240,7 @@ static sym_pt Unary(void){
 		return result;
 	
 	case T_NOT:
-		get_token();
+		scanner->next_token();
 		arg = Unary();
 		
 		
@@ -270,7 +270,7 @@ static sym_pt Unary(void){
 		return result;
 	
 	case T_INV:
-		get_token();
+		scanner->next_token();
 		arg = Unary();
 		
 		
@@ -337,7 +337,7 @@ static sym_pt Term(void){
 	while(token>=T_MUL && token<=T_RSHFT){
 		switch(token){
 		case T_MUL:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -362,7 +362,7 @@ static sym_pt Term(void){
 		
 		
 		case T_DIV:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -387,7 +387,7 @@ static sym_pt Term(void){
 		
 		
 		case T_MOD:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -412,7 +412,7 @@ static sym_pt Term(void){
 		
 		
 		case T_EXP:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -444,7 +444,7 @@ static sym_pt Term(void){
 		
 		
 		case T_LSHFT:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -469,7 +469,7 @@ static sym_pt Term(void){
 		
 		
 		case T_RSHFT:
-			get_token();
+			scanner->next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -511,7 +511,7 @@ static sym_pt Expression(void){
 	while (token>=T_PLUS && token<=T_BXOR){
 		switch (token){
 		case T_PLUS:
-			get_token();
+			scanner->next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -564,7 +564,7 @@ static sym_pt Expression(void){
 		
 		
 		case T_MINUS:
-			get_token();
+			scanner->next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -616,7 +616,7 @@ static sym_pt Expression(void){
 		break;
 		
 		case T_BAND:
-			get_token();
+			scanner->next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -640,7 +640,7 @@ static sym_pt Expression(void){
 		break;
 		
 		case T_BOR:
-			get_token();
+			scanner->next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -664,7 +664,7 @@ static sym_pt Expression(void){
 			break;
 		
 		case T_BXOR:
-			get_token();
+			scanner->next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -704,7 +704,7 @@ static sym_pt Equation(void){
 	while (token>=T_EQ && token<=T_GTE){
 		switch (token){
 		case T_EQ:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -753,7 +753,7 @@ static sym_pt Equation(void){
 			
 			
 		case T_NEQ:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -802,7 +802,7 @@ static sym_pt Equation(void){
 			
 			
 		case T_LT:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -851,7 +851,7 @@ static sym_pt Equation(void){
 			
 			
 		case T_GT:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -900,7 +900,7 @@ static sym_pt Equation(void){
 			
 			
 		case T_LTE:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -949,7 +949,7 @@ static sym_pt Equation(void){
 			
 			
 		case T_GTE:
-			get_token();
+			scanner->next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -1016,7 +1016,7 @@ static sym_pt Assign(sym_pt target){
 	if(target->constant) parse_error("cannot make an assignment to a constant");
 	
 	op=token;
-	get_token();
+	scanner->next_token();
 	result=Boolean();
 	
 	if (!is_init(result)) parse_error("Assignment from an uninitialized value");
@@ -1094,7 +1094,7 @@ static sym_pt Boolean(void){
 	while(token == T_AND || token == T_OR){
 		switch(token){
 		case T_AND:
-			get_token();
+			scanner->next_token();
 			arg2=Equation();
 			
 			// Symantic Checks
@@ -1144,7 +1144,7 @@ static sym_pt Boolean(void){
 		
 		
 		case T_OR:
-			get_token();
+			scanner->next_token();
 			arg2=Equation();
 			
 			// Symantic Checks

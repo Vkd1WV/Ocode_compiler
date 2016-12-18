@@ -246,7 +246,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 	#endif
 	
 	if (token == T_NL){
-		get_token();
+		scanner->next_token();
 		
 		sprintf(err_array, "Statement(): lvl: %u block_lvl: %u", lvl, block_lvl);
 		debug_msg(err_array);

@@ -41,11 +41,11 @@ static void set_name(sym_pt sym, char * short_name){
 static void Qualifier_list   (sym_pt templt){
 	if (token == T_STATIC){
 		templt->stat = true;
-		get_token();
+		scanner->next_token();
 	}
 	else if (token == T_CONST){
 		templt->constant = true;
-		get_token();
+		scanner->next_token();
 	}
 	
 	// storage class specifier
@@ -66,7 +66,7 @@ static void Initializer_list (sym_pt templt){
 		if(!new_symbol->stat){} // TODO: we have to do something special here
 		
 		if (token == T_EQ){ // Initialized value
-			get_token();
+			scanner->next_token();
 			
 			if(new_symbol->type != st_int && new_symbol->type != st_ref)
 				parse_error("Invalid target for initialization");
@@ -131,7 +131,7 @@ static void Decl_Word(sym_pt templt){
 		case T_MAX:  templt->size=w_max  ; break;
 		default: crit_error("Internal compiler error at Decl_word()");
 	}
-	get_token();
+	scanner->next_token();
 	
 	Qualifier_list(templt);
 }
@@ -200,7 +200,7 @@ static void Parameter_list(sym_pt procedure){
 	 *
 	 */
 	
-	while(token != T_CBRK && token != T_NL) get_token();
+	while(token != T_CBRK && token != T_NL) scanner->next_token();
 	
 /*	while (true){*/
 /*		switch(token){*/
@@ -220,7 +220,7 @@ static void Decl_Operator(uint lvl){
 	
 	new_op->type = st_fun;
 	
-	get_token();
+	scanner->next_token();
 	if(token == T_ASM) assem = true;
 	
 	switch(token){
@@ -316,7 +316,7 @@ static void Decl_Operator(uint lvl){
 	
 	//Name
 	set_name(new_op, token_dex[token]);
-	get_token();
+	scanner->next_token();
 	if(!( new_op = DS_insert(symbols, new_op) )){
 		sprintf(
 			err_array,
@@ -356,7 +356,7 @@ static void Decl_Sub(uint lvl){
 	
 	new_sub->type  = st_sub;
 	
-	get_token();
+	scanner->next_token();
 	if(token == T_ASM) assem = true;
 	
 	// Name
@@ -450,7 +450,7 @@ static void Decl_Fun (uint lvl){
 
 static void Decl_block(uint lvl){
 	if (token == T_NL){
-		get_token();
+		scanner->next_token();
 		if(block_lvl <= lvl) expected("A type declaration block");
 		
 		else { // subordinate block
@@ -529,7 +529,7 @@ void Decl_list(uint lvl){
 	if(block_lvl != lvl) parse_error("Decl_list(): No Body");
 	
 	while(block_lvl == lvl){
-		while(token == T_NL) get_token();
+		while(token == T_NL) scanner->next_token();
 		if(!Declaration(lvl)) break;
 	}
 	

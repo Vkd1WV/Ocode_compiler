@@ -24,7 +24,7 @@
 /******************************************************************************/
 
 
-static Program_data      * intermed;    //used by pop_scope()
+static Program_data      * intermed; // used by pop_scope()
 static Scanner           * scanner;
 static Instruction_Queue * parse_q; ///< pointer to the current scope inst_q
 
@@ -47,25 +47,31 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 			stderr,
 			"PARSER CRITICAL ERROR: %s, on line %d.\n",
 			message,
-			pars.get_lnum(),
+			scanner->get_lnum()
 		);
-	Print_sym(stderr, arg1);
-	Print_sym(stderr, arg2);
+		Print_sym(stderr, arg1, intermed);
+		Print_sym(stderr, arg2, intermed);
 	}
 	
 	exit(EXIT_FAILURE);
 }
 
 static inline void parse_error(const char * message){
-	fprintf(stderr, "CODE ERROR: %s, on line %d.\n", message, yylineno);
-	parse_front.resync();
+	fprintf(stderr, "CODE ERROR: %s, on line %d.\n",
+		message,
+		scanner->get_lnum()
+	);
+	scanner->resync();
 	fprintf(stderr, "continuing...\n");
 	longjmp(anewline, 1);
 }
 
 static inline void parse_warn(const char * message){
 	if(verbosity >= V_WARN)
-		fprintf(stderr, "WARNING: %s, on line %d.\n", message, yylineno);
+		fprintf(stderr, "WARNING: %s, on line %d.\n",
+			message,
+			scanner->get_lnum()
+		);
 }
 
 static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
@@ -75,74 +81,78 @@ static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
 
 static inline void expected(const char* thing){
 	char temp_array[ERR_ARR_SZ];
-	sprintf(temp_array, "Expected '%s', found '%s'", thing, yytext);
+	
+	sprintf(temp_array, "Expected '%s', found '%s'",
+		thing,
+		scanner->get_text()
+	);
 	parse_error(temp_array);
 }
 
 static inline void debug_sym(const char * message, sym_pt sym){
 	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
-		Print_sym(stderr, sym);
+		fprintf(stderr, "%s, on line %4d: ", message, scanner->get_lnum());
+		Print_sym(stderr, sym, intermed);
 	}
 }
 
-static inline void debug_iop(const char * message, icmd * iop){
+static inline void debug_iop(const char * message, iop_pt iop){
 	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, yylineno);
-		Print_icmd(stderr, iop);
+		fprintf(stderr, "%s, on line %4d: ", message, scanner->get_lnum());
+		Print_iop(stderr, iop, intermed);
 	}
 }
 
 /********************************* GETTERS ************************************/
 
-static inline umax get_num(void){
-	umax num;
-	
-	if(token != T_NUM) expected("a number");
-	num=yynumber;
-	get_token();
-	return num;
-}
+//static inline umax get_num(void){
+//	umax num;
+//	
+//	if(token != T_NUM) expected("a number");
+//	num=yynumber;
+//	get_token();
+//	return num;
+//}
 
-static inline bool Match_string(char * string){
-	if ( token != T_NAME || strcmp(string, yytext) ){
-		expected(string);
-	}
-	get_token();
-	return true;
-}
+//static inline bool Match_string(char * string){
+//	if ( token != T_NAME || strcmp(string, yytext) ){
+//		expected(string);
+//	}
+//	get_token();
+//	return true;
+//}
 
-static inline void Match(token_t t){
-	if(token == t) get_token();
-	else expected(token_dex[t]);
-}
+//static inline void Match(token_t t){
+//	if(token == t) get_token();
+//	else expected(token_dex[t]);
+//}
 
-static inline char * get_name(void){
-	static char * buffer;
-	static size_t buf_lngth;
-	size_t lngth;
-	
-	if (token != T_NAME) expected("a name");
-	
-	lngth = strlen(yytext)+1; // +1 for the \0
-	
-	// size the buffer if necessary
-	if(!buffer){
-		buffer = malloc(lngth);
-		buf_lngth = lngth;
-	}
-	else if (lngth > buf_lngth){
-		buffer = realloc(buffer, lngth);
-		buf_lngth = lngth;
-	}
-	
-	if (!buffer) crit_error("Out of Memory");
-	
-	strncpy(buffer, yytext, lngth);
-	
-	get_token();
-	return buffer;
-}
+//static inline char * get_name(void){
+//	static char * buffer;
+//	static size_t buf_lngth;
+//	size_t lngth;
+//	
+//	if (token != T_NAME) expected("a name");
+//	
+//	lngth = strlen(yytext)+1; // +1 for the \0
+//	
+//	// size the buffer if necessary
+//	if(!buffer){
+//		buffer = malloc(lngth);
+//		buf_lngth = lngth;
+//	}
+//	else if (lngth > buf_lngth){
+//		buffer = realloc(buffer, lngth);
+//		buf_lngth = lngth;
+//	}
+//	
+//	if (!buffer) crit_error("Out of Memory");
+//	
+//	strncpy(buffer, yytext, lngth);
+//	
+//	get_token();
+//	return buffer;
+//}
 
 
 /******************************************************************************/
