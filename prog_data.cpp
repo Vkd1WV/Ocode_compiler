@@ -8,7 +8,10 @@
 
 
 #include "prog_data.h"
+#include "errors.h"
 #include <data.h> // put this here to force usage of wrappers
+#include <string.h>
+#include <stdlib.h>
 
 
 /******************************************************************************/
@@ -16,11 +19,24 @@
 /******************************************************************************/
 
 
-// string length limit for unique compiler generated labels
-// sufficiently large for 32-bit numbers in decimal and then some.
-#define UNQ_NAME_SZ 16
+const char colision_char = '#';
+
+/******************************* Static Data **********************************/
 
 char * Program_data::string_array;
+str_dx Program_data::sa_size;
+str_dx Program_data::sa_next;
+DS     Program_data::symbols;
+
+/**************************** Member Functions ********************************/
+
+// Used in symbols only
+static inline int cmp_sym(const void * left, const void * right){
+	return strcmp( (char*)left, (char*)right );
+}
+static inline const void * sym_key(const void * symbol){
+	return (const void *) Program_data::get_string(sym_pt (symbol)->name);
+}
 
 Program_data::Program_data(void){
 	// Initialize the string array
@@ -31,14 +47,12 @@ Program_data::Program_data(void){
 	symbols = (DS) DS_new_bst(
 		sizeof(struct sym),
 		false,
-		&Program_data::sym_key,
-		&Program_data::cmp_sym
+		&sym_key,
+		&cmp_sym
 	);
 }
 
 Program_data::~Program_data(void){
-	Instruction_Queue * blk_pt;
-	
 	debug_msg("Program_data::~Program_data(): start");
 	
 	debug_msg("Deleting the name array");
@@ -76,14 +90,20 @@ str_dx Program_data::add_string(const char * name){
 	return temporary;
 }
 
+const char * Program_data::unique_str(void){
+	static umax i;
+	static char str[23];
+	//2^64 = 10^x -> log_10 2^64 = x -> x=19.2659...
+	// +3
+	
+	if(i == UMAX_MAX) crit_error("Program_data::unique_str(): maxed out");
+	
+	sprintf(str, "_%c%04lld", colision_char, i++);
+	return str;
+}
 
 str_dx Program_data::new_label(void){
-	static umax i;
-	static char label[UNQ_NAME_SZ];
-	// sufficiently large for 32-bit numbers in decimal and then some.
-	
-	sprintf(label, "_$%04lld", i++); // use $ to prevent collisions
-	return add_string(label);
+	return add_string(unique_str());
 }
 
 
@@ -91,13 +111,10 @@ str_dx Program_data::new_label(void){
  *	*	temporary symbol names all begin with %.
  */
 sym_pt Program_data::new_var(sym_type type){
-	static umax i;
-	char name[UNQ_NAME_SZ];
 	static struct sym new_symbol; // initialized to 0
 	
 	// give it a unique name
-	sprintf(name, "_#%04lld", i++);
-	new_symbol.name = add_string(name);
+	new_symbol.name = add_string(unique_str());
 	new_symbol.type = type;
 	new_symbol.temp = true;
 	
@@ -107,12 +124,13 @@ sym_pt Program_data::new_var(sym_type type){
 	return (sym_pt)DS_insert(symbols, &new_symbol);
 }
 
+
 inline sym_pt Program_data::find_sym(str_dx dx) const {
 	return (sym_pt)DS_find(symbols, get_string(dx));
 }
 void Program_data::remove_sym(str_dx dx){
 	if( DS_find(symbols, get_string(dx)) ) DS_remove(symbols);
-	else err_msg("emit_iop(): Internal: couldn't find symbol");
+	else err_msg("Program_data::remove_sym(): Internal: couldn't find symbol");
 }
 
 
@@ -128,7 +146,7 @@ void Program_data::Dump_sym(FILE * fd) const {
 		
 		sym = (sym_pt) DS_first(symbols);
 		do {
-			Print_sym(fd, sym, *this);
+			Print_sym(fd, sym);
 		} while(( sym = (sym_pt) DS_next(symbols) ));
 		
 		#ifdef FLUSH_FILES
@@ -173,19 +191,35 @@ uint Block_Queue::count  (void) const { return DS_count  (bq); }
 
 // FIXME: any of these could return NULL
 Instruction_Queue * Block_Queue::first(void) const {
-	return *(Instruction_Queue**) DS_first(bq);
+	Instruction_Queue** pt;
+	
+	pt = (Instruction_Queue**) DS_first(bq);
+	if(pt) return *pt;
+	else return NULL;
 }
 Instruction_Queue * Block_Queue::last(void) const{
-	return *(Instruction_Queue**) DS_last(bq);
+	Instruction_Queue** pt;
+	
+	pt = (Instruction_Queue**) DS_last(bq);
+	if(pt) return *pt;
+	else return NULL;
 }
 Instruction_Queue * Block_Queue::next(void) const {
-	return *(Instruction_Queue**) DS_next(bq);
+	Instruction_Queue** pt;
+	
+	pt = (Instruction_Queue**) DS_next(bq);
+	if(pt) return *pt;
+	else return NULL;
 }
 Instruction_Queue * Block_Queue::nq(Instruction_Queue * q){
 	return *(Instruction_Queue**) DS_nq(bq, &q);
 }
 Instruction_Queue * Block_Queue::dq(void){
-	return *(Instruction_Queue**) DS_dq(bq);
+	Instruction_Queue** pt;
+	
+	pt = (Instruction_Queue**) DS_dq(bq);
+	if(pt) return *pt;
+	else return NULL;
 }
 
 void Block_Queue::Dump(FILE * fd) const {
@@ -223,9 +257,8 @@ void Block_Queue::Dump(FILE * fd) const {
 
 
 
-Instruction_Queue::Instruction_Queue(Program_data * prog_data) {
+Instruction_Queue::Instruction_Queue(void) {
 	q = DS_new_list(sizeof(struct iop));
-	pd = prog_data;
 }
 Instruction_Queue::~Instruction_Queue(void)  { DS_delete(q); }
 
@@ -304,7 +337,7 @@ void Instruction_Queue::add_inst(
 			iop->arg2.value = right->value;
 			
 			// remove the lit symbol
-			pd->remove_sym(right->name);
+			Program_data::remove_sym(right->name);
 		}
 		else iop->arg2.symbol = right;
 		
@@ -320,7 +353,7 @@ void Instruction_Queue::add_inst(
 			iop->arg1.value = left->value;
 			
 			// remove the lit symbol
-			pd->remove_sym(left->name);
+			Program_data::remove_sym(left->name);
 		}
 		else iop->arg1.symbol = left;
 		break;
@@ -332,7 +365,7 @@ void Instruction_Queue::add_inst(
 			iop->arg1.value = left->value;
 			
 			// remove the lit symbol
-			pd->remove_sym(left->name);
+			Program_data::remove_sym(left->name);
 		}
 		else iop->arg1.symbol = left;
 		break;
@@ -395,7 +428,7 @@ void Instruction_Queue::Dump(FILE * fd) const {
 			debug_msg(err_array);
 			#endif
 		
-			Print_iop(fd, iop, pd);
+			Print_iop(fd, iop);
 			
 			#ifdef FLUSH_FILES
 				fflush(fd);

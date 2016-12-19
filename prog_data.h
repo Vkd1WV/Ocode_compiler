@@ -17,13 +17,10 @@
 
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 //#include <data.h>
 typedef struct _root* DS;
 
-#include "errors.h"
 #include "my_types.h"
 
 
@@ -85,7 +82,7 @@ typedef struct sym {
 	bool set;         // has this data location been set before
 	bool init;        // is there a static initialization stored in `value`
 	umax value;       // integer literals or initialized
-	uint8_t * str;    // string literals and initialized arrays
+	str_dx str;       // string literals and initialized arrays
 	char * assembler; // contents of an asm fun or sub
 	
 	// Reference
@@ -210,19 +207,15 @@ typedef struct iop {
 /******************************************************************************/
 
 
-class Program_data;
-
 class Instruction_Queue{
 	// DATA
 private:
 	DS q;
-	Program_data * pd;
-	
 	
 	// FUNCTIONS
 public:
-	 Instruction_Queue(Program_data * prog_data);
-	~Instruction_Queue(void                    );
+	 Instruction_Queue(void);
+	~Instruction_Queue(void);
 	
 	bool   isempty (void) const;
 	uint   count   (void) const;
@@ -274,43 +267,38 @@ private:
 	// DATA
 	// These are static because only one Program_data can exist at a time
 	static char *      string_array;
-	str_dx      sa_size;
-	str_dx      sa_next;
+	static str_dx      sa_size;
+	static str_dx      sa_next;
 	
-	DS          symbols;
+	static DS          symbols;
 public:
 	Block_Queue block_q;
 	
 	// FUNCTIONS
 private:
-	// Used in symbols only
-	static inline int cmp_sym(const void * left, const void * right){
-		return strcmp( (char*)left, (char*)right );
-	}
-	static inline const void * sym_key(const void * symbol){
-		return (const void *) (string_array+(sym_pt (symbol)->name));
-	}
+	
 	
 	// returns non-constant
-	inline char * access_string(str_dx dx) const {
+	static inline char * access_string(str_dx dx){
 		if(dx == NO_NAME) return NULL;
 		else return string_array+dx;
 	}
 	inline sym_pt find_sym(str_dx dx) const;
+	static const char * unique_str(void);
 	
 public:
 	 Program_data(void);
 	~Program_data(void);
 	
 	// Mutators
-	str_dx              add_string(const char        * name);
-	str_dx              new_label (void                    );
-	sym_pt              new_var   (sym_type            type);
-	void                remove_sym(str_dx              dx  );
-	//Instruction_Queue * nq_blk    (Instruction_Queue * blk );
+	str_dx        new_label (void                    );
+	
+	static str_dx add_string(const char        * name);
+	static sym_pt new_var   (sym_type            type);
+	static void   remove_sym(str_dx              dx  );
 	
 	// Accessors
-	inline const char * get_string(str_dx dx) const {
+	static inline const char * get_string(str_dx dx) {
 		if(dx == NO_NAME) return NULL;
 		else return string_array+dx;
 	}
@@ -326,26 +314,30 @@ public:
 /******************************************************************************/
 
 
-static inline void Print_iop(FILE * fd, iop_pt iop, const Program_data * pd) {
+static inline void Print_iop(FILE * fd, iop_pt iop) {
 	const char *result, *arg1, *arg2;
 	const char *none = "NONE", *lit = "lit";
 	
 	if(!iop) fputs("Print_icmd(): NULL\n", fd);
 	else{
-		if(iop->target != NO_NAME) result = pd->get_string(iop->target);
-		else if(iop->result) result = pd->get_string(iop->result->name);
+		if(iop->target != NO_NAME)
+			result = Program_data::get_string(iop->target);
+		else if(iop->result)
+			result = Program_data::get_string(iop->result->name);
 		else result = none;
 		
 		if(iop->arg1_lit) arg1 = lit;
-		else if (iop->arg1.symbol) arg1 = pd->get_string(iop->arg1.symbol->name);
+		else if (iop->arg1.symbol)
+			arg1 = Program_data::get_string(iop->arg1.symbol->name);
 		else arg1 = none;
 		
 		if(iop->arg2_lit) arg2 = lit;
-		else if (iop->arg2.symbol) arg2 = pd->get_string(iop->arg2.symbol->name);
+		else if (iop->arg2.symbol)
+			arg2 = Program_data::get_string(iop->arg2.symbol->name);
 		else arg2 = none;
 		
 		fprintf(fd, "%6s:\t%s\t%c %6s\t%c %6s\t%c %6s\n",
-			pd->get_string(iop->label),
+			Program_data::get_string(iop->label),
 			op_code_dex[iop->op],
 			iop->result_live? 'l' : 'd',
 			result,
@@ -358,7 +350,7 @@ static inline void Print_iop(FILE * fd, iop_pt iop, const Program_data * pd) {
 	}
 }
 
-static inline void Print_sym(FILE * fd, sym_pt sym, const Program_data pd) {
+static inline void Print_sym(FILE * fd, sym_pt sym) {
 	const char * types[st_NUM] = {
 		"undef", "int", "ref", "fun", "sub", "lit_int", "lit_str", "tp_def"
 	};
@@ -369,7 +361,7 @@ static inline void Print_sym(FILE * fd, sym_pt sym, const Program_data pd) {
 	if(!sym) fputs("NULL\n", fd);
 	else
 		fprintf(fd, "%6s:\t%7s %5s %s%s%s%s%s  %p\n",
-			pd.get_string(sym->name),
+			Program_data::get_string(sym->name),
 			types[sym->type],
 			sym->type == st_int? widths[sym->size] : "",
 			sym->temp    ? "t": " ",

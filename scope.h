@@ -12,23 +12,29 @@
 
 
 #include "prog_data.h"
+#include "token.h"
 
 #define GLOBAL_SCOPE NULL
 
 class Scope_Stack{
 private:
-	DS stack;
-	Program_data * pd;
+	static DS stack;
+	
+	
+	static umax         read_num (const char * str);
+	static const char * read_str (const char * str);
+	static umax         read_char(const char * str);
 	
 public:
-	 Scope_Stack(Program_data * prog_data);
+	 Scope_Stack(void);
 	~Scope_Stack(void);
 	
 	void                push        (sym_pt       sym )      ;
-	bool                pop         (void             )      ;
-	sym_pt              bind        (const char * name) const;
+	Instruction_Queue * pop         (void             )      ;
 	void                bindop      (void             ) const;
 	Instruction_Queue * instructions(void             ) const;
+	
+	static sym_pt       bind(token_t &token, const char * name);
 };
 
 

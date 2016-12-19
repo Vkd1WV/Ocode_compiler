@@ -18,14 +18,13 @@ typedef enum {
 	T_SERR, // a scanner error
 	
 	// Formatting
-	T_NL  , // sets block_lvl
+	T_NL  ,
+	T_TABS,
 	T_IND,
 	T_OUTD,
 	
 	// Primary types
 	T_NUM ,
-	T_HEX_NUM,
-	T_DEC_NUM,
 	T_STR ,
 	T_CHAR,
 	/*	char will eventually be a variable width encoding, but for now it is
@@ -164,11 +163,11 @@ EXTERN const char * token_dex[NUM_TOKENS]
 #ifdef _GLOBAL_C
 	= {
 		// Formatting
-		"T_EOF", "T_SERR", "T_NL", "T_IND", "T_OUTD",
+		"T_EOF", "T_SERR", "T_NL", "T_TABS", "T_IND", "T_OUTD",
 		// Primary
-		"T_NUM", "T_HEX_NUM", "T_DEC_NUM", "T_STR", "T_CHAR",
+		"T_NUM", "T_STR", "T_CHAR",
 		/**************************** Operators *******************************/
-		"(",")",
+		"T_OPAR","T_CPAR",
 		// Unary
 		"T_DEC","T_INC","T_REF","T_DREF", "T_NOT", "T_INV",
 		// Additive
@@ -176,23 +175,23 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		// Multiplicative
 		"T_MUL", "T_MOD", "T_DIV", "T_EXP", "T_LSHFT", "T_RSHFT",
 		// Comparative
-		"T_EQ","T_NEQ","T_LT","T_GT"," T_LTE"," T_GTE",
+		"T_EQ", "T_NEQ", "T_LT", "T_GT", "T_LTE", "T_GTE",
 		// boolean
 		"T_AND", "T_OR",
 		// Assignment
-		":=", "T_LSH_A", "T_RSH_A", "T_ADD_A", "T_SUB_A", "T_MUL_A", "T_DIV_A",
-		"T_MOD_A", "T_AND_A", "T_OR_A ", "T_XOR_A",
+		"T_ASS", "T_LSH_A", "T_RSH_A", "T_ADD_A", "T_SUB_A", "T_MUL_A",
+		"T_DIV_A", "T_MOD_A", "T_AND_A", "T_OR_A ", "T_XOR_A",
 
-		"{","}","[","]", "T_COMA",
+		"T_OBRC","T_CBRC","T_OBRK","T_CBRK", "T_COMA",
 		/************************ Control statements **************************/
-		"label", "jump", "break", "continue", "return",
-		"if", "else", "switch", "case", "default",
-		"while", "do", "for",
+		"label", "T_JMP", "break", "continue", "T_RTRN",
+		"T_IF", "T_ELSE", "switch", "case", "default",
+		"T_WHILE", "T_DO", "T_FOR",
 		"try", "throw", "catch",
 		/************************** Declared Names ****************************/
 		"T_NAME", "T_N_SUB", "T_N_FUN", "T_N_TYPE",
 		/*************************** Declarations *****************************/
-		"operator", "sub", "T_FUN", "typedef",
+		"T_OPR", "T_SUB", "T_FUN", "T_TYPE",
 		// Word declarations
 		"T_8", "T_16", "T_32", "T_64", "T_WORD", "T_MAX",
 		// pointer declaration
@@ -200,7 +199,7 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		// Qualifers
 		"T_CONST", "T_STATIC", "T_ASM",
 		// Parameter Modes
-		"in", "out", "T_BI"
+		"T_IN", "T_OUT", "T_BI"
 	}
 #endif // _GLOBALS_C
 ;

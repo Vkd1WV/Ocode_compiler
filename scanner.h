@@ -19,9 +19,9 @@
 /******************************************************************************/
 
 
-#include "prog_data.h"
-#include "scope.h"
 #include "token.h"
+#include "my_types.h"
+#include "prog_data.h"
 
 
 /******************************************************************************/
@@ -31,13 +31,20 @@
 
 class Scanner{
 private:
-	sym_pt  scan_sym;
-	char *  scan_text;
-	token_t scan_token;
-	uint    line_num;
+	static sym_pt  scan_sym;
+	static char *  scan_text;
+	static token_t scan_token;
+	static uint    txtlen;
+	static uint    line_num;
+	
+	sym_pt       add_lit_sym(token_t token, const char * str);
+	const char * read_str (const char * str);
+	umax         read_char(const char * str);
+	umax         read_num (const char * str);
 	
 public:
-	Scanner(char * filename);
+	 Scanner(char * filename);
+	~Scanner(void);
 	
 	// Mutators
 	void next_token (void     );
@@ -46,10 +53,11 @@ public:
 	void match_str  (char * s );
 	
 	// Accessors
-	      sym_pt  sym  (void) const { return scan_sym  ; }
-	const char *  text (void) const { return scan_text ; }
-	      token_t token(void) const { return scan_token; }
-	      uint    lnum (void) const { return line_num  ; }
+	static sym_pt        sym   (void) { return scan_sym  ; }
+	static token_t       token (void) { return scan_token; }
+	static const char *  text  (void) { return scan_text ; }
+	static uint          length(void) { return txtlen    ; }
+	static uint          lnum  (void) { return line_num  ; }
 };
 
 

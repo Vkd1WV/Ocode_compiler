@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "scanner.h"
+
 typedef enum {
 	V_QUIET,
 	V_ERROR,
@@ -68,7 +70,7 @@ EXTERN char    err_array[ERR_ARR_SZ]; ///< Temporary string for messages
 
 static inline void crit_error(const char* message){
 	if (verbosity >= V_ERROR)
-		fprintf(stderr, "CRITICAL ERROR: %s.\n", message);
+		fprintf(stderr, "CRITICAL: %s.\n", message);
 	exit(EXIT_FAILURE);
 }
 

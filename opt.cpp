@@ -21,8 +21,6 @@
 /******************************************************************************/
 
 
-static Program_data * g_prog_pt;
-
 
 /******************************************************************************/
 //                             PRIVATE FUNCTIONS
@@ -50,7 +48,7 @@ static Instruction_Queue * Mk_blk(Instruction_Queue * q){
 		
 		info_msg("\tMk_blk(): Making Block");
 		
-		blk = new Instruction_Queue(g_prog_pt);
+		blk = new Instruction_Queue();
 		
 		blk->nq(iop);
 		
@@ -93,8 +91,8 @@ static void Dead_blks(DS block_q){
 
 // optomize inner loops
 static void Inner_loop(Instruction_Queue * blk){
-	const char * first_lbl = g_prog_pt->get_string(blk->first()->label);
-	const char * last_targ = g_prog_pt->get_string(blk->last()->target);
+	const char * first_lbl = Program_data::get_string(blk->first()->label);
+	const char * last_targ = Program_data::get_string(blk->last()->target);
 	
 	/*
 	If the end of a basic block is a jmp to its head then surely it is an inner loop
@@ -135,7 +133,7 @@ static void Liveness(Instruction_Queue * blk){
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
 				// remove the temp symbol
-				g_prog_pt->remove_sym(iop->result->name);
+				Program_data::remove_sym(iop->result->name);
 				
 				// and the iop
 				blk->remove();
@@ -174,7 +172,7 @@ static void Liveness(Instruction_Queue * blk){
 			// if the result is dead remove the op
 			if(iop->result->temp && !iop->result->live){
 				// remove the temp symbol
-				g_prog_pt->remove_sym(iop->result->name);
+				Program_data::remove_sym(iop->result->name);
 				
 				// and the iop
 				blk->remove();
@@ -218,8 +216,6 @@ void Optomize(Program_data * prog, Instruction_Queue * inst_q){
 	Instruction_Queue * blk_pt;
 	
 	info_msg("Optomize(): start");
-	
-	g_prog_pt = prog;
 	
 	if(! inst_q->isempty() ){
 		

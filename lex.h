@@ -19,6 +19,8 @@ the rest of the scanner.
 
 
 #include "token.h"
+#include "my_types.h"
+#include "errors.h"
 
 
 /******************************************************************************/
@@ -33,7 +35,7 @@ the rest of the scanner.
 #endif
 
 /// number of leading tabs on the current line
-EXTERN unsigned int tabs_this_ln;
+EXTERN uint tabs_this_ln;
 
 // Global variables provided by the scanner
 #ifndef _LEX_L

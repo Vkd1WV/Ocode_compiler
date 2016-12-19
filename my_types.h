@@ -24,7 +24,7 @@ typedef unsigned long long int umax;
 typedef unsigned int uint;
 
 #define UMAX_MAX ULLONG_MAX
-// INT_MAX is defined in limits.h
+// UINT_MAX is defined in limits.h
 
 #endif // _MY_TYPES_H
 

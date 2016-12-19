@@ -62,7 +62,7 @@ OCC_OBJECTS:= \
 	opt.o prog_data.o scope.o \
 	gen-pexe.o gen-x86.o #gen-arm.o
 
-SCAN_OBJECTS:=global.o lex.yy.o scanner.o prog_data.o scope.o scantest.o opt.o
+SCAN_OBJECTS:=global.o lex.yy.o scanner.o prog_data.o scope.o scantest.o
 
 ALLFILES:= $(SRC) $(HEADERS)
 
@@ -78,13 +78,12 @@ dev-occ: occ
 
 ############################### PRODUCTIONS ####################################
 
-scantest: LFLAGS += -d
 scantest: CXXFLAGS += $(DEBUG_OPT)
 scantest: $(SCAN_OBJECTS) scanner.h prog_data.h scope.h token.h errors.h
 	$(CXX) $(CXXFLAGS) -o $@ $(SCAN_OBJECTS) $(LIBS)
 
 
-occ: $(OBJECTS)
+occ: $(OCC_OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 parse.o: $(PARSER) scanner.h prog_data.h

@@ -17,12 +17,13 @@
 
 /* prevents flex from generating the default rule
  do not expect to call yywrap at the end of the file
- prevents the unput function
+ prevents the unput and input functions from being built
  */
 %option nodefault noyywrap nounput noinput
 
 /* keep track of the line number in yylineno
- turn on warnings */
+ turn on warnings
+ */
 %option yylineno warn
 
 %x INCLUDE
@@ -30,10 +31,12 @@
 %x CHAR
 
 DIGIT  [0-9]
-HEX    0x({DIGIT}|[a-f])+
+HEX    0[xX]({DIGIT}|[a-fA-F])+
 LETTER [A-Za-z_]
 NAME   {LETTER}({DIGIT}|{LETTER})*
 WHTSPC [ \t\v]
+NL     (\r|\r\n|\n)
+ESCNL  ({WHTSPC})*\\{NL}({WHTSPC})*
 
 NEWL   ({WHTSPC})*(\r|\r\n|\n)
 
@@ -44,23 +47,25 @@ NEWL   ({WHTSPC})*(\r|\r\n|\n)
 %%
 
 
- /* These must eat all tabs at the begining of lines that shouldn't trigger indentation */
+ /* These must eat all tabs at the beginning of lines that shouldn't trigger indentation */
 ({WHTSPC})*#.*{NEWL} { tabs_this_ln=0;              } // comments
 ^({NEWL})            { tabs_this_ln=0;              } // ignore empty lines
-({WHTSPC})*\\(\r|\r\n|\n) {} // ignore escaped newlines
 {NEWL}               { tabs_this_ln=0; return T_NL; } // report the rest
 
-^[ *\t+] {
+^(\t)+ {
 	for(unsigned int i=0; i < yyleng; i++)
 		if (yytext[i] == '\t') tabs_this_ln++;
 }
 
+^({WHTSPC})+  { warn_msg("Whitespace found at beginning of line. Are you mixing tabs and spaces?"); }
+
+{ESCNL}      {} // ignore escaped newlines
 ({WHTSPC})+  {} // ignore all other whitespace
 
 
 
  /* handle file inclusions */
-^include{WHTSPC} { BEGIN(INCLUDE); } // file include
+^include({WHTSPC})+ { BEGIN(INCLUDE); } // file include
 <INCLUDE>[^ \t\n\r]+ {
 	yyin=fopen(yytext, "r"); // open the new file
 	if (yyin == NULL){
@@ -75,6 +80,8 @@ NEWL   ({WHTSPC})*(\r|\r\n|\n)
 		BEGIN(INITIAL);
 	}
 }
+<INCLUDE>.|{NEWL} scan_error("Bad include statement"); BEGIN(INITIAL);
+
 
 <INITIAL><<EOF>> {
 	// if this file was an include, will return to
@@ -83,6 +90,8 @@ NEWL   ({WHTSPC})*(\r|\r\n|\n)
 	// if we are at the end of the top-level buffer then we are done.
 	if ( !YY_CURRENT_BUFFER ) yyterminate();
 }
+
+
 <STRING,CHAR><<EOF>> {
 	printf("ERROR: End of file encountered before closing quotation\n");
 }
@@ -191,115 +200,20 @@ asm    return T_ASM;
 
 {NAME} return T_NAME;
 
+{HEX}|({DIGIT})+ return T_NUM;
 
-{HEX} {
-//	yynumber=0; // this is a global from scanner.h
-//	size_t max;
-//	
-//	max=strlen(yytext);
-//	if (max-(unsigned)2 > sizeof(unsigned long long)*2) // subtracting 2 for the '0x'
-//		return scan_error("constant number too large");
-//	
-//	for(int i=2; i<max; i++){ // we start at 2 to skip the '0x'
-//		if     (yytext[i]>='0' && yytext[i]<='9')
-//			yynumber= (yynumber<<4) | (unsigned char)(yytext[i] - '0');
-//		
-//		else if(yytext[i]>='a' && yytext[i]<='f') // lower case
-//			yynumber= (yynumber<<4) | (unsigned char)(yytext[i] - 'a' + 10);
-//		
-//		else if(yytext[i]>='A' && yytext[i]<='F') // upper case
-//			yynumber= (yynumber<<4) | (unsigned char)(yytext[i] - 'A' + 10);
-//		
-//		else scan_error("Internal: {HEX}");
-//		// this should be impossible
-//	}
-	
-	return T_NUM;
-}
+\'               BEGIN(CHAR);
+<CHAR>(\\.|[^']) return T_CHAR; // an escaped anything \\. or a non-quote [^']
+<CHAR>\'         BEGIN(INITIAL);
 
-    /* Decimal number constants */
-{DIGIT}+ /*yynumber = (unsigned)atoi( yytext );*/ return T_NUM ;
+\"\" return T_STR; // the empty string
 
+\"                   BEGIN(STRING);
+<STRING>(\\\"|[^"])* return T_STR; // escaped quotes and non-quotes
+<STRING>\"           BEGIN(INITIAL);
 
-\' { BEGIN(CHAR); }
-<CHAR>(\\.|[^'])\' { // an escaped anything \\. or a non-quote [^']
-//	size_t len = strlen(yytext);
-//	
-//	if (len == 2){
-//		yynumber = (unsigned char)yytext[0];
-//	}
-//	
-//	else
-//		switch (yytext[1]){
-//		case 'n':
-//			yynumber = '\n';
-//			break;
-//		case 'r':
-//			yynumber = '\r';
-//			break;
-//		case '\\':
-//			yynumber = '\\';
-//			break;
-//		case '0':
-//			yynumber = '\0';
-//			break;
-//		case 't':
-//			yynumber = '\t';
-//			break;
-//		case '\'':
-//			yynumber = '\'';
-//			break;
-//		default:
-//			printf(
-//				"ERROR: Invalid character constant: '%s' on line %d.\n",
-//				yytext,
-//				yylineno
-//			);
-//	}
-	
-	BEGIN(INITIAL);
-	return T_CHAR;
-}
-
-
-\" { BEGIN(STRING); }
-<STRING>(\\.|[^"])*\" {
-//	int j=0;
-//	
-//	for(int i=0; yytext[i] != '"'; i++, j++){
-//		if (yytext[i] == '\\'){
-//			i++;
-//			switch (yytext[i]){
-//			case 'n':
-//				yytext[j]='\n';
-//				break;
-//			case 'r':
-//				yytext[j]='\r';
-//				break;
-//			case '\\':
-//				yytext[j]='\\';
-//				break;
-//			case '0':
-//				yytext[j]='\0';
-//				break;
-//			case 't':
-//				yytext[j]='\t';
-//				break;
-//			case '"':
-//				yytext[j]='"';
-//				break;
-//			default:
-//				printf("ERROR: Invalid escape sequence line %d.\n", yylineno);
-//			}
-//		}
-//		else yytext[j]=yytext[i];
-//	}
-//	yytext[j]='\0';
-	BEGIN(INITIAL);
-	return T_STR;
-}
 
  /* This needs to be the last thing */
-<*>[\n.] scan_error("unknown token");
+<*>.|\n scan_error("unknown token");
 
 

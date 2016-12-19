@@ -9,7 +9,9 @@
 
 #include "scanner.h"
 #include "prog_data.h"
+#include "errors.h"
 
+#include <stdlib.h>
 
 /******************************************************************************/
 //                      PARSER MODULE TYPE DEFINITIONS
@@ -24,11 +26,10 @@
 /******************************************************************************/
 
 
-static Program_data      * intermed; // used by pop_scope()
-static Scanner           * scanner;
-static Instruction_Queue * parse_q; ///< pointer to the current scope inst_q
+//static Program_data      * intermed; // used by pop_scope()
+//static Scanner           * scanner;
+//static Instruction_Queue * parse_q; ///< pointer to the current scope inst_q
 
-//#define COLLISION_CHAR (char)'#'
 
 // the break and continue labels for the smallest current looping construct
 str_dx break_this = NO_NAME, continue_this = NO_NAME;
@@ -47,10 +48,10 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 			stderr,
 			"PARSER CRITICAL ERROR: %s, on line %d.\n",
 			message,
-			scanner->get_lnum()
+			Scanner::lnum()
 		);
-		Print_sym(stderr, arg1, intermed);
-		Print_sym(stderr, arg2, intermed);
+		Print_sym(stderr, arg1);
+		Print_sym(stderr, arg2);
 	}
 	
 	exit(EXIT_FAILURE);
@@ -59,7 +60,7 @@ static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
 static inline void parse_error(const char * message){
 	fprintf(stderr, "CODE ERROR: %s, on line %d.\n",
 		message,
-		scanner->get_lnum()
+		Scanner::lnum()
 	);
 	scanner->resync();
 	fprintf(stderr, "continuing...\n");
@@ -70,7 +71,7 @@ static inline void parse_warn(const char * message){
 	if(verbosity >= V_WARN)
 		fprintf(stderr, "WARNING: %s, on line %d.\n",
 			message,
-			scanner->get_lnum()
+			Scanner::lnum()
 		);
 }
 
@@ -80,26 +81,24 @@ static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
 }
 
 static inline void expected(const char* thing){
-	char temp_array[ERR_ARR_SZ];
-	
-	sprintf(temp_array, "Expected '%s', found '%s'",
+	sprintf(err_array, "Expected '%s', found '%s'",
 		thing,
-		scanner->get_text()
+		Scanner::text()
 	);
-	parse_error(temp_array);
+	parse_error(err_array);
 }
 
 static inline void debug_sym(const char * message, sym_pt sym){
 	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, scanner->get_lnum());
-		Print_sym(stderr, sym, intermed);
+		fprintf(stderr, "%s, on line %4d: ", message, Scanner::lnum());
+		Print_sym(stderr, sym);
 	}
 }
 
 static inline void debug_iop(const char * message, iop_pt iop){
 	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, scanner->get_lnum());
-		Print_iop(stderr, iop, intermed);
+		fprintf(stderr, "%s, on line %4d: ", message, Scanner::lnum());
+		Print_iop(stderr, iop);
 	}
 }
 

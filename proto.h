@@ -9,6 +9,8 @@
 #ifndef _PROTO_H
 #define _PROTO_H
 
+
+#include "my_types.h"
 #include "prog_data.h"
 #include "scanner.h"
 

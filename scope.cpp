@@ -9,74 +9,76 @@
 
 #include <data.h>
 #include "scope.h"
-#include "proto.h"
+#include "errors.h"
+
+
+/******************************************************************************/
+//                            TYPE DEFINITIONS
+/******************************************************************************/
+
 
 typedef struct contxt{
 	Instruction_Queue * inst_q;
-	sym_pt            scope;
+	sym_pt              scope;
 } * contxt_pt;
 
 
-Scope_Stack::Scope_Stack (Program_data * prog_data){
+/******************************************************************************/
+//                            STATIC MEMBERS
+/******************************************************************************/
+
+
+DS Scope_Stack::stack;
+
+
+/******************************************************************************/
+//                           MEMBER FUNCTIONS
+/******************************************************************************/
+
+
+Scope_Stack::Scope_Stack (void){
 	stack = DS_new_list(sizeof(struct contxt));
-	pd = prog_data;
 }
 
-Scope_Stack::~Scope_Stack(void) { DS_delete(stack); }
+Scope_Stack::~Scope_Stack(void){
+	contxt_pt pt;
+	
+	debug_msg("Scope_Stack::~Scope_Stack(): start");
+	
+	// just make sure the stack is empty
+	while(( pt = (contxt_pt)DS_pop(stack) )){
+		err_msg("Internal: Scope_Stack::~Scope_Stack(): the stack isn't empty");
+		delete pt->inst_q;
+	}
+	
+	DS_delete(stack);
+	
+	debug_msg("Scope_Stack::~Scope_Stack(): stop");
+}
 
 
 void Scope_Stack::push(sym_pt sym){
 	struct contxt con;
 	
-	con.inst_q = new Instruction_Queue(pd);
+	con.inst_q = new Instruction_Queue();
 	con.scope  = sym;
 	
 	DS_push(stack, &con);
 }
 
-bool Scope_Stack::pop(void){
+Instruction_Queue * Scope_Stack::pop(void){
 	contxt_pt con;
 	
 	con = (contxt_pt)DS_pop(stack);
-	
-	if(con){
-		if(make_debug) con->inst_q->Dump(debug_fd);
-	
-		Optomize(pd, con->inst_q);
-		if(!con->inst_q->isempty())
-			err_msg("Internal: pop_scope(): Optomize() returned non-empty queue");
-	
-		delete con->inst_q;
-		return true;
-	}
-	else return false;
+	if(con) return con->inst_q;
+	else return NULL;
 }
 
-Instruction_Queue * Scope_Stack::instructions(void) const{
-	contxt_pt con;
+sym_pt Scope_Stack::bind(token_t &token, const char * name){
+	sym_pt sym=NULL;
 	
-	con = (contxt_pt) DS_first(stack);
-	if(!con){
-		err_msg("Scope_Stack::instructions(): the scope stack is empty");
-		return NULL;
-	}
-	else return con->inst_q;
-}
-
-// get the current scope prefix
-//inline const char * scope_prefix(void){
-//	prg_blk * block_pt;
-//	
-//	block_pt = (prg_blk*)DS_first(scope_stack);
-//	
-//	if(block_pt->scope)
-//		return dx_to_name(block_pt->scope->name);
-//	else return "";
-//}
-
-
-
-/*
+	if (token == T_NAME){
+		/*
 This function returns the correct symbol for the given name in the current scope
 */
 //void Scanner::bind(void){
@@ -117,5 +119,39 @@ This function returns the correct symbol for the given name in the current scope
 ////	// if we didn't find anything, check the global scope
 ////	if(!yysymbol) yysymbol = DS_find(symbols, yytext);
 //}
+	}
+	else return NULL;
+	
+	return sym;
+}
+
+Instruction_Queue * Scope_Stack::instructions(void) const{
+	contxt_pt con;
+	
+	con = (contxt_pt) DS_first(stack);
+	if(!con){
+		err_msg("Scope_Stack::instructions(): the scope stack is empty");
+		return NULL;
+	}
+	else return con->inst_q;
+}
+
+
+
+
+// get the current scope prefix
+//inline const char * scope_prefix(void){
+//	prg_blk * block_pt;
+//	
+//	block_pt = (prg_blk*)DS_first(scope_stack);
+//	
+//	if(block_pt->scope)
+//		return dx_to_name(block_pt->scope->name);
+//	else return "";
+//}
+
+
+
+
 
 

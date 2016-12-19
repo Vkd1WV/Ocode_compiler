@@ -138,7 +138,7 @@ static sym_pt Primary(void){
 	sym_pt sym;
 	char msg_arr[ERR_ARR_SZ];
 	
-	switch (token){
+	switch (Scanner::token()){
 	case T_OPAR:
 		Match(T_OPAR);
 		sym=Boolean();
@@ -172,7 +172,7 @@ static sym_pt Unary(void){
 	sym_pt arg, result;
 	const char * ref_inval = "Invalid Target of Reference";
 	
-	switch (token){
+	switch (Scanner::token()){
 /*	case T_MINUS:*/
 /*		scanner->next_token();*/
 /*		arg = Unary();*/
@@ -315,7 +315,7 @@ static sym_pt Postfix(void){
 	// Make navigation operators '.' '[]' implicitly safe if the target is null
 	
 	while (false){
-		switch (token){
+		switch (Scanner::token()){
 		default: break;
 		}
 	}
@@ -330,12 +330,12 @@ static sym_pt Term(void){
 	arg1=Postfix();
 	
 	// Handle assignment statements
-	if (token >= T_ASS && token <= T_XOR_A) arg1 = Assign(arg1);
+	if (Scanner::token() >= T_ASS && Scanner::token() <= T_XOR_A) arg1 = Assign(arg1);
 	// since assignment called Boolean which already returned we know we are at
 	// the end of this expression.
 	
-	while(token>=T_MUL && token<=T_RSHFT){
-		switch(token){
+	while(Scanner::token()>=T_MUL && Scanner::token()<=T_RSHFT){
+		switch(Scanner::token()){
 		case T_MUL:
 			scanner->next_token();
 			arg2=Postfix();
@@ -494,7 +494,7 @@ static sym_pt Term(void){
 		
 		
 		default:
-			sprintf(err_array, "Internal: at Term() with token %d", token);
+			sprintf(err_array, "Internal: at Term() with token %d", Scanner::token());
 			parse_crit(arg1, arg2, err_array);
 		}
 		arg1 = result;
@@ -508,8 +508,8 @@ static sym_pt Expression(void){
 	
 	arg1=Term();
 	
-	while (token>=T_PLUS && token<=T_BXOR){
-		switch (token){
+	while (Scanner::token()>=T_PLUS && Scanner::token()<=T_BXOR){
+		switch (Scanner::token()){
 		case T_PLUS:
 			scanner->next_token();
 			arg2=Term();
@@ -701,8 +701,8 @@ static sym_pt Equation(void){
 	
 	arg1 = Expression();
 	
-	while (token>=T_EQ && token<=T_GTE){
-		switch (token){
+	while (Scanner::token()>=T_EQ && Scanner::token()<=T_GTE){
+		switch (Scanner::token()){
 		case T_EQ:
 			scanner->next_token();
 			arg2=Expression();
@@ -1015,7 +1015,7 @@ static sym_pt Assign(sym_pt target){
 		parse_error("Invalid target of an assignment");
 	if(target->constant) parse_error("cannot make an assignment to a constant");
 	
-	op=token;
+	op=Scanner::token();
 	scanner->next_token();
 	result=Boolean();
 	
@@ -1091,8 +1091,8 @@ static sym_pt Boolean(void){
 	
 	arg1 = Equation();
 	
-	while(token == T_AND || token == T_OR){
-		switch(token){
+	while(Scanner::token() == T_AND || Scanner::token() == T_OR){
+		switch(Scanner::token()){
 		case T_AND:
 			scanner->next_token();
 			arg2=Equation();

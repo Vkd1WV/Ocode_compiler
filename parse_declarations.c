@@ -39,13 +39,13 @@ static void set_name(sym_pt sym, char * short_name){
 
 
 static void Qualifier_list   (sym_pt templt){
-	if (token == T_STATIC){
+	if (Scanner::token() == T_STATIC){
 		templt->stat = true;
-		scanner->next_token();
+		Scanner::next_token();
 	}
-	else if (token == T_CONST){
+	else if (Scanner::token() == T_CONST){
 		templt->constant = true;
-		scanner->next_token();
+		Scanner::next_token();
 	}
 	
 	// storage class specifier
@@ -65,8 +65,8 @@ static void Initializer_list (sym_pt templt){
 		
 		if(!new_symbol->stat){} // TODO: we have to do something special here
 		
-		if (token == T_EQ){ // Initialized value
-			scanner->next_token();
+		if (Scanner::token() == T_EQ){ // Initialized value
+			Scanner::next_token();
 			
 			if(new_symbol->type != st_int && new_symbol->type != st_ref)
 				parse_error("Invalid target for initialization");
@@ -88,8 +88,8 @@ static void Initializer_list (sym_pt templt){
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");
 		
-		if      (token == T_LIST) { Match(T_LIST); continue; }
-		else if (token == T_NL  ) { Match(T_NL)  ; break   ; }
+		if      (Scanner::token() == T_LIST) { Match(T_LIST); continue; }
+		else if (Scanner::token() == T_NL  ) { Match(T_NL)  ; break   ; }
 		else    expected("a comma or newline");
 	};
 	
@@ -122,7 +122,7 @@ static void Decl_Pointer (sym_pt templt){
 static void Decl_Word(sym_pt templt){
 	templt->type = st_int;
 	
-	switch (token){
+	switch (Scanner::token()){
 		case T_8:    templt->size=w_byte ; break;
 		case T_16:   templt->size=w_byte2; break;
 		case T_32:   templt->size=w_byte4; break;
@@ -131,7 +131,7 @@ static void Decl_Word(sym_pt templt){
 		case T_MAX:  templt->size=w_max  ; break;
 		default: crit_error("Internal compiler error at Decl_word()");
 	}
-	scanner->next_token();
+	Scanner::next_token();
 	
 	Qualifier_list(templt);
 }
@@ -153,7 +153,7 @@ static void Decl_Custom (sym_pt templt){
 
 void Type_specifier(sym_pt templt_pt){
 	
-	switch(token){
+	switch(Scanner::token()){
 		case T_8:
 		case T_16:
 		case T_32:
@@ -200,7 +200,8 @@ static void Parameter_list(sym_pt procedure){
 	 *
 	 */
 	
-	while(token != T_CBRK && token != T_NL) scanner->next_token();
+	while(Scanner::token() != T_CBRK && Scanner::token() != T_NL)
+		Scanner::next_token();
 	
 /*	while (true){*/
 /*		switch(token){*/
@@ -220,10 +221,10 @@ static void Decl_Operator(uint lvl){
 	
 	new_op->type = st_fun;
 	
-	scanner->next_token();
-	if(token == T_ASM) assem = true;
+	Scanner::next_token();
+	if(Scanner::token() == T_ASM) assem = true;
 	
-	switch(token){
+	switch(Scanner::token()){
 	case T_OPAR :
 	case T_CPAR :
 	case T_OBRC :
@@ -315,8 +316,8 @@ static void Decl_Operator(uint lvl){
 	}
 	
 	//Name
-	set_name(new_op, token_dex[token]);
-	scanner->next_token();
+	set_name(new_op, token_dex[Scanner::token()]);
+	Scanner::next_token();
 	if(!( new_op = DS_insert(symbols, new_op) )){
 		sprintf(
 			err_array,
@@ -356,8 +357,8 @@ static void Decl_Sub(uint lvl){
 	
 	new_sub->type  = st_sub;
 	
-	scanner->next_token();
-	if(token == T_ASM) assem = true;
+	Scanner::next_token();
+	if(Scanner::token() == T_ASM) assem = true;
 	
 	// Name
 	set_name(new_sub, get_name());
@@ -402,7 +403,7 @@ static void Decl_Fun (uint lvl){
 	new_fun->type  = st_fun;
 	
 	Match(T_FUN);
-	if(token == T_ASM) assem = true;
+	if(Scanner::token() == T_ASM) assem = true;
 	
 	// Name
 	set_name(new_fun, get_name());
@@ -449,8 +450,8 @@ static void Decl_Fun (uint lvl){
 
 
 static void Decl_block(uint lvl){
-	if (token == T_NL){
-		scanner->next_token();
+	if (Scanner::token() == T_NL){
+		Scanner::next_token();
 		if(block_lvl <= lvl) expected("A type declaration block");
 		
 		else { // subordinate block
@@ -462,7 +463,7 @@ static void Decl_block(uint lvl){
 	else Declaration(lvl);
 	
 	
-	sprintf(err_array, "Decl_block(): stop with token: %d", token);
+	sprintf(err_array, "Decl_block(): stop with token: %d", Scanner::token());
 	debug_msg(err_array);
 }
 
@@ -496,7 +497,7 @@ static void Decl_Type (uint lvl){
 bool Declaration(uint lvl){
 	sym_pt sym;
 
-	switch (token){
+	switch (Scanner::token()){
 	case T_TYPE: Decl_Type    (lvl); return true;
 	
 	case T_SUB : Decl_Sub     (lvl); return true;
@@ -529,14 +530,14 @@ void Decl_list(uint lvl){
 	if(block_lvl != lvl) parse_error("Decl_list(): No Body");
 	
 	while(block_lvl == lvl){
-		while(token == T_NL) scanner->next_token();
+		while(Scanner::token() == T_NL) Scanner::next_token();
 		if(!Declaration(lvl)) break;
 	}
 	
 	sprintf(
 		err_array,
 		"Decl_list(): stop with token: %s on line %d",
-		token_dex[token],
+		token_dex[Scanner::token()],
 		yylineno
 	);
 	debug_msg(err_array);

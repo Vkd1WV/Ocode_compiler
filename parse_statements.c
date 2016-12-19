@@ -60,7 +60,7 @@ static void Return(void){
 	sym_pt ret_val = NULL;
 	
 	Match(T_RTRN);
-	if(token != T_NL) ret_val = Boolean();
+	if(Scanner::token() != T_NL) ret_val = Boolean();
 	Match(T_NL);
 	
 	// TODO: check return type
@@ -95,7 +95,7 @@ static void If(uint lvl){
 	
 	Statement(lvl);
 	
-	if(token == T_ELSE){
+	if(Scanner::token() == T_ELSE){
 		Match(T_ELSE);
 		
 		skip_label = new_label();
@@ -222,7 +222,7 @@ static void Switch(uint lvl){
 	
 	err_msg("Internal: Switch() is not completely implemented");
 	
-	while(token == T_CASE) Statement(lvl);
+	while(Scanner::token() == T_CASE) Statement(lvl);
 	Match(T_DFLT);
 	Statement(lvl);
 	
@@ -245,7 +245,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 	debug_msg("Statement(): start");
 	#endif
 	
-	if (token == T_NL){
+	if (Scanner::token() == T_NL){
 		scanner->next_token();
 		
 		sprintf(err_array, "Statement(): lvl: %u block_lvl: %u", lvl, block_lvl);
@@ -259,14 +259,14 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			//fprintf(outfile, "\t# START block level %u\n", lvl);
 			do {
 				Statement(lvl);
-			} while (token != T_EOF && block_lvl == lvl);
+			} while (Scanner::token() != T_EOF && block_lvl == lvl);
 			if(block_lvl > lvl) parse_error("Unexpected nested block");
 			//fprintf(outfile, "\t# END block level %u\n", lvl);
 		}
 	}
 	
 	else
-		switch (token){
+		switch (Scanner::token()){
 		// Declarations
 		case T_8   :
 		case T_16  :
@@ -283,7 +283,7 @@ void Statement (uint lvl){ // any single line. always ends with NL
 			sprintf(
 				err_array,
 				"Declaration found in statement section. token is: %d",
-				token
+				Scanner::token()
 			);
 			parse_error(err_array);
 		
