@@ -8,6 +8,8 @@
 
 #include "prog_data.h"
 #include "proto.h"
+#include "errors.h"
+#include <string.h>
 
 /**	@file opt.c
  *	Optomize the intermediate representation.
@@ -212,7 +214,7 @@ static void Liveness(Instruction_Queue * blk){
 /******************************************************************************/
 
 
-void Optomize(Program_data * prog, Instruction_Queue * inst_q){
+void Optomize(Instruction_Queue * inst_q){
 	Instruction_Queue * blk_pt;
 	
 	info_msg("Optomize(): start");
@@ -251,7 +253,7 @@ void Optomize(Program_data * prog, Instruction_Queue * inst_q){
 /*			);*/
 /*			debug_msg(err_array);*/
 			
-			prog->block_q.nq(blk_pt);
+			Program_data::block_q.nq(blk_pt);
 			
 /*			sprintf(*/
 /*				err_array,*/
@@ -260,7 +262,7 @@ void Optomize(Program_data * prog, Instruction_Queue * inst_q){
 /*			);*/
 /*			debug_msg(err_array);*/
 			
-			if( blk_pt != prog->block_q.last() )
+			if( blk_pt != Program_data::block_q.last() )
 				err_msg("Internal: Queued block does not match first block");
 		}
 	}
@@ -269,7 +271,7 @@ void Optomize(Program_data * prog, Instruction_Queue * inst_q){
 	sprintf(
 				err_array,
 				"Block queue has %u finally",
-				prog->block_q.count()
+				Program_data::block_q.count()
 			);
 			debug_msg(err_array);
 	

@@ -40,7 +40,7 @@ LEX:= flex
 
 ################################## FILES #######################################
 
-HEADERS:=prog_data.h errors.h my_types.h scanner.h token.h
+HEADERS:=prog_data.h errors.h my_types.h proto.h scanner.h token.h
 LIBS   :=-ldata
 
 PARSER:= \
@@ -84,16 +84,16 @@ scantest: $(SCAN_OBJECTS) scanner.h prog_data.h scope.h token.h errors.h
 
 
 occ: $(OCC_OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OCC_OBJECTS) $(LIBS)
 
-parse.o: $(PARSER) scanner.h prog_data.h
+parse.o: $(PARSER) scanner.h prog_data.h errors.h scope.h proto.h
 	$(CXX) $(CXXFLAGS) -Wno-switch-enum -c -o $@ parse.cpp
 
-scope.o: scope.cpp scope.h prog_data.h
-scanner.o: scanner.cpp scanner.h lex.h
-main.o: main.cpp yuck.h errors.h my_types.h prog_data.h proto.h scanner.h
-global.o: global.cpp prog_data.h errors.h token.h lex.h
-opt.o: opt.cpp prog_data.h proto.h
+scanner.o: scanner.cpp scanner.h   errors.h scope.h lex.h
+scope.o: scope.cpp     prog_data.h errors.h scope.h
+main.o: main.cpp       prog_data.h errors.h proto.h scanner.h yuck.h my_types.h
+global.o: global.cpp   prog_data.h errors.h token.h lex.h
+opt.o: opt.cpp         prog_data.h errors.h proto.h
 
 
 # suppress warnings for third party slop

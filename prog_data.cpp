@@ -23,10 +23,11 @@ const char colision_char = '#';
 
 /******************************* Static Data **********************************/
 
-char * Program_data::string_array;
-str_dx Program_data::sa_size;
-str_dx Program_data::sa_next;
-DS     Program_data::symbols;
+char *      Program_data::string_array;
+str_dx      Program_data::sa_size;
+str_dx      Program_data::sa_next;
+DS          Program_data::symbols;
+Block_Queue Program_data::block_q;
 
 /**************************** Member Functions ********************************/
 

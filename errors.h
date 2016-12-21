@@ -21,8 +21,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "scanner.h"
-
 typedef enum {
 	V_QUIET,
 	V_ERROR,

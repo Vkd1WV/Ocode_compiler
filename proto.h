@@ -15,16 +15,16 @@
 #include "scanner.h"
 
 // opt.c
-void Optomize(Program_data * prog, Instruction_Queue * inst_q);
+void Optomize(Instruction_Queue * inst_q);
 
 // parse.cpp
-bool Parse(Program_data * d, Scanner * s);
+bool Parse(const char * infile);
 
 // gen-pexe.c
-void pexe (char * filename, const Program_data * prog);
+void pexe (char * filename);
 
 // gen-x86.c
-void x86 (char * filename, const Program_data * prog, bool B64);
+void x86 (char * filename, bool B64);
 
 #endif // _PROTO_H
 

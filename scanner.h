@@ -37,27 +37,24 @@ private:
 	static uint    txtlen;
 	static uint    line_num;
 	
-	sym_pt       add_lit_sym(token_t token, const char * str);
-	const char * read_str (const char * str);
-	umax         read_char(const char * str);
-	umax         read_num (const char * str);
+	static sym_pt       add_lit_sym(token_t token, const char * str);
+	static const char * read_str (const char * str);
+	static umax         read_char(const char * str);
+	static umax         read_num (const char * str);
 	
 public:
-	 Scanner(char * filename);
+	 Scanner(const char * filename);
 	~Scanner(void);
 	
 	// Mutators
-	void next_token (void     );
-	void resync     (void     );
-	void match_token(token_t t);
-	void match_str  (char * s );
+	static void next_token (void     );
 	
 	// Accessors
-	static sym_pt        sym   (void) { return scan_sym  ; }
-	static token_t       token (void) { return scan_token; }
-	static const char *  text  (void) { return scan_text ; }
-	static uint          length(void) { return txtlen    ; }
-	static uint          lnum  (void) { return line_num  ; }
+	static inline sym_pt        sym   (void) { return scan_sym  ; }
+	static inline token_t       token (void) { return scan_token; }
+	static inline const char *  text  (void) { return scan_text ; }
+	static inline uint          length(void) { return txtlen    ; }
+	static inline uint          lnum  (void) { return line_num  ; }
 };
 
 

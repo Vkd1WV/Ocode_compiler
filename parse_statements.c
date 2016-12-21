@@ -17,7 +17,7 @@ static void Call_sub(void){
 	
 	// TODO: Setup Parameters
 	
-	emit_iop(NO_NAME, I_CALL, NO_NAME, NULL, NULL, NULL);
+	Scope_Stack::emit_op(I_CALL, NULL, NULL, NULL);
 }
 
 
@@ -27,97 +27,96 @@ static void Call_sub(void){
 
 
 static void Label(void){
-	Match(T_LBL);
-	emit_iop(add_name( get_name() ), I_NOP, NO_NAME, NULL, NULL, NULL);
-	Match(T_NL);
+	match_token(T_LBL);
+	Scope_Stack::emit_lbl( Program_data::add_string( Scanner::text() ), NULL );
+	match_token(T_NL);
 }
 
 static void Jump(void){
-	Match(T_JMP);
-	emit_iop(NO_NAME, I_JMP, add_name(get_name()), NULL, NULL, NULL);
-	Match(T_NL);
+	match_token(T_JMP);
+	Scope_Stack::emit_jump(Program_data::add_string( Scanner::text() ), NULL);
+	match_token(T_NL);
 }
 
 static void Break(void){
-	Match(T_BRK);
+	match_token(T_BRK);
 	if(break_this == NO_NAME)
 		parse_error("Break statement with no enclosing control loop");
-	
-	emit_iop(NO_NAME, I_JMP, break_this, NULL, NULL, NULL);
-	Match(T_NL);
+	Scope_Stack::emit_jump(break_this, NULL);
+	match_token(T_NL);
 }
 
 static void Continue(void){
-	Match(T_CNTN);
+	match_token(T_CNTN);
 	if(continue_this == NO_NAME)
 		parse_error("Continue statement with no enclosing control loop");
-	
-	emit_iop(NO_NAME, I_JMP, continue_this, NULL, NULL, NULL);
-	Match(T_NL);
+	Scope_Stack::emit_jump(continue_this, NULL);
+	match_token(T_NL);
 }
 
 static void Return(void){
 	sym_pt ret_val = NULL;
 	
-	Match(T_RTRN);
+	match_token(T_RTRN);
 	if(Scanner::token() != T_NL) ret_val = Boolean();
-	Match(T_NL);
+	match_token(T_NL);
 	
 	// TODO: check return type
 	
-	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, ret_val, NULL);
+	Scope_Stack::emit_op(I_RTRN, NULL, ret_val, NULL);
 }
 
-static void If(uint lvl){
+
+static void If(void){
 	sym_pt condition;
-	name_dx skip_label, else_label;
+	str_dx skip_label, else_label;
 	
 	#ifdef DBG_PARSE
 	debug_msg("If(): start");
 	#endif
 	
-	Match(T_IF);
-	emit_iop(NO_NAME, I_NOP, add_name("IF"), NULL, NULL, NULL);
+	match_token(T_IF);
+	Scope_Stack::emit_cmnt("IF");
 	
-	else_label = new_label();
+	else_label = Program_data::new_label();
 	
 	condition = Boolean();
 	if(condition->type == st_lit_int){
 		if(!condition->value)
-			emit_iop(NO_NAME, I_JMP, else_label, NULL, NULL, NULL);
+			Scope_Stack::emit_jump(else_label, NULL);
 		// else fallthrough
 		
 		// remove unneeded symbol
-		if(DS_find(symbols, dx_to_name(condition->name)))
-			DS_remove(symbols);
+		Program_data::remove_sym(condition->name);
 	}
-	else emit_iop(NO_NAME, I_JZ, else_label, NULL, condition, NULL);
+	else Scope_Stack::emit_jz(else_label, condition);
 	
-	Statement(lvl);
+	Statement();
 	
 	if(Scanner::token() == T_ELSE){
-		Match(T_ELSE);
+		match_token(T_ELSE);
 		
-		skip_label = new_label();
+		skip_label = Program_data::new_label();
 		
-		emit_iop(NO_NAME, I_JMP, skip_label, NULL, NULL, NULL);
-		emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
+		Scope_Stack::emit_jump(skip_label, NULL);
+		Scope_Stack::emit_lbl(else_label, "ELSE lbl");
 		
-		Statement(lvl);
+		Statement();
 		
-		emit_iop(skip_label, I_NOP, add_name("SKIP lbl"), NULL, NULL, NULL);
+		Scope_Stack::emit_lbl(skip_label, "SKIP lbl");
 	}
-	else emit_iop(else_label, I_NOP, add_name("ELSE lbl"), NULL, NULL, NULL);
+	else Scope_Stack::emit_lbl(else_label, "ELSE lbl");
 	
-	emit_iop(NO_NAME, I_NOP, add_name("END IF"), NULL, NULL, NULL);
+	Scope_Stack::emit_cmnt("END IF");
 	
 	#ifdef DBG_PARSE
 	debug_msg("If(): stop");
 	#endif
 }
 
-static void While(uint lvl){
-	name_dx continue_label, break_label;
+
+static void While(void){
+	str_dx continue_label, break_label;
 	sym_pt condition;
 	
 	// Save the previous break and continue labels
@@ -125,30 +124,29 @@ static void While(uint lvl){
 	break_label    = break_this;
 	
 	// create new labels for this loop
-	continue_this = new_label();
-	break_this    = new_label();
+	continue_this = Program_data::new_label();
+	break_this    = Program_data::new_label();
 	
 	
-	Match(T_WHILE);
-	emit_iop(NO_NAME, I_NOP, add_name("WHILE"), NULL, NULL, NULL);
-	emit_iop(continue_this, I_NOP, add_name("CONT lbl"), NULL, NULL, NULL);
+	match_token(T_WHILE);
+	Scope_Stack::emit_cmnt("WHILE");
+	Scope_Stack::emit_lbl(continue_this, "CONT lbl");
 	
 	condition = Boolean();
 	if(condition->type == st_lit_int){
 		if(!condition->value)
-			emit_iop(NO_NAME, I_JMP, break_this, NULL, NULL, NULL);
+			Scope_Stack::emit_jump(break_this, NULL);
 		
 		// remove unneeded symbol
-		if(DS_find(symbols, dx_to_name(condition->name)))
-			DS_remove(symbols);
+		Program_data::remove_sym(condition->name);
 	}
-	else emit_iop(NO_NAME, I_JZ, break_this, NULL, condition, NULL);
+	else Scope_Stack::emit_jz(break_this, condition);
 	
-	Statement(lvl);
+	Statement();
 	
-	emit_iop(NO_NAME, I_JMP, continue_this, NULL, NULL, NULL);
-	emit_iop(break_this, I_NOP, add_name("BRK lbl"), NULL, NULL, NULL);
-	emit_iop(NO_NAME, I_NOP, add_name("END WHILE"), NULL, NULL, NULL);
+	Scope_Stack::emit_jump(continue_this, NULL);
+	Scope_Stack::emit_lbl(break_this, "BRK lbl");
+	Scope_Stack::emit_cmnt("END WHILE");
 	
 	
 	// restore previous break and continue labels
@@ -156,8 +154,9 @@ static void While(uint lvl){
 	break_this    = break_label;
 }
 
-static void Do(uint lvl){
-	name_dx continue_label, break_label, true_label;
+
+static void Do(void){
+	str_dx continue_label, break_label, true_label;
 	sym_pt condition;
 	
 	// Save the previous break and continue labels
@@ -165,56 +164,61 @@ static void Do(uint lvl){
 	break_label    = break_this;
 	
 	// create new labels for this loop
-	continue_this = new_label();
-	break_this    = new_label();
-	true_label    = new_label();
+	continue_this = Program_data::new_label();
+	break_this    = Program_data::new_label();
+	true_label    = Program_data::new_label();
 	
 	
-	Match(T_DO);
-	emit_iop(true_label, I_NOP, add_name("TRUE lbl"), NULL, NULL, NULL);
+	match_token(T_DO);
+	Scope_Stack::emit_lbl(true_label, "TRUE lbl");
 	
-	Statement(lvl);
+	Statement();
 	
 	// each continue retests the condition
-	emit_iop(continue_this, I_NOP, add_name("CONT lbl"), NULL, NULL, NULL);
-	Match(T_WHILE);
+	Scope_Stack::emit_lbl(continue_this, "CONT lbl");
+	match_token(T_WHILE);
 	condition = Boolean();
-	Match(T_NL);
+	match_token(T_NL);
 	
 	if(condition->type == st_lit_int){
 		if(condition->value)
-			emit_iop(NO_NAME, I_JMP, true_label, NULL, NULL, NULL);
+			Scope_Stack::emit_jump(true_label, NULL);
 		
 		// remove unneeded symbol
-		if(DS_find(symbols, dx_to_name(condition->name)))
-			DS_remove(symbols);
+		Program_data::remove_sym(condition->name);
 	}
-	else emit_iop(NO_NAME, I_JMP, true_label, NULL, condition, NULL);
+	else Scope_Stack::emit_jump(true_label, condition);
 	
-	emit_iop(break_this, I_NOP, add_name("BRK lbl"), NULL, NULL, NULL);
+	Scope_Stack::emit_lbl(break_this, "BRK lbl");
 	
 	// restore previous break and continue labels
 	continue_this = continue_label;
 	break_this    = break_label;
 }
 
-static void For(uint lvl){
-	Match(T_FOR);
+
+static void For(){
+	match_token(T_FOR);
 	
 	// FIXME
 	err_msg("Internal: For() is not completely implemented");
 	
-	Statement(lvl);
+	Statement();
 }
 
-static void Switch(uint lvl){
+static void Case(void){}
+static void Default(void){
+	match_token(T_DFLT);
+}
+
+static void Switch(void){
 	sym_pt condition;
-	name_dx break_label;
+	str_dx break_label;
 	
 	break_label = break_this;
-	break_this = new_label();
+	break_this = Program_data::new_label();
 	
-	Match(T_SWTCH);
+	match_token(T_SWTCH);
 	condition = Boolean();
 	if(condition->type == st_lit_int){}
 	
@@ -222,13 +226,21 @@ static void Switch(uint lvl){
 	
 	err_msg("Internal: Switch() is not completely implemented");
 	
-	while(Scanner::token() == T_CASE) Statement(lvl);
-	Match(T_DFLT);
-	Statement(lvl);
+	while(Scanner::token() == T_CASE) Case();
+	Default();
 	
-	emit_iop(break_this, I_NOP, NO_NAME, NULL, NULL, NULL);
+	Scope_Stack::emit_lbl(break_this, "BRK lbl");
 	
 	break_this = break_label;
+}
+
+
+static void Statement_block(void){
+	match_token(T_IND);
+	do{
+		Statement();
+	} while(Scanner::token() != T_OUTD);
+	match_token(T_OUTD);
 }
 
 
@@ -238,7 +250,7 @@ static void Switch(uint lvl){
 
 
 // lvl is the block level that the statement starts with
-void Statement (uint lvl){ // any single line. always ends with NL
+void Statement (void){ // any single line. always ends with NL
 	sym_pt sym;
 	
 	#ifdef DBG_PARSE
@@ -246,68 +258,62 @@ void Statement (uint lvl){ // any single line. always ends with NL
 	#endif
 	
 	if (Scanner::token() == T_NL){
-		scanner->next_token();
+		Scanner::next_token();
+		if(Scanner::token() == T_IND) Statement_block();
+		else return;
 		
-		sprintf(err_array, "Statement(): lvl: %u block_lvl: %u", lvl, block_lvl);
-		debug_msg(err_array);
-		if(block_lvl <= lvl); // empty statement
-		// Empty statements like this may occur as subordinates of control
-		// statements.
-		
-		else { // subordinate block
-			lvl=block_lvl;
-			//fprintf(outfile, "\t# START block level %u\n", lvl);
-			do {
-				Statement(lvl);
-			} while (Scanner::token() != T_EOF && block_lvl == lvl);
-			if(block_lvl > lvl) parse_error("Unexpected nested block");
-			//fprintf(outfile, "\t# END block level %u\n", lvl);
-		}
+/*		sprintf(err_array, "Statement(): lvl: %u block_lvl: %u", lvl, block_lvl);*/
+/*		debug_msg(err_array);*/
+/*		if(block_lvl <= lvl); // empty statement*/
+/*		// Empty statements like this may occur as subordinates of control*/
+/*		// statements.*/
+/*		*/
+/*		else { // subordinate block*/
+/*			lvl=block_lvl;*/
+/*			//fprintf(outfile, "\t# START block level %u\n", lvl);*/
+/*			do {*/
+/*				Statement(lvl);*/
+/*			} while (Scanner::token() != T_EOF && block_lvl == lvl);*/
+/*			if(block_lvl > lvl) parse_error("Unexpected nested block");*/
+/*			//fprintf(outfile, "\t# END block level %u\n", lvl);*/
+//		}
 	}
-	
 	else
 		switch (Scanner::token()){
 		// Declarations
-		case T_8   :
-		case T_16  :
-		case T_32  :
-		case T_64  :
-		case T_WORD:
-		case T_MAX :
-		case T_PTR :
-		case T_SUB :
-		case T_FUN :
-		case T_TYPE:
-		case T_OPR :
-		case T_N_TYPE:
-			sprintf(
-				err_array,
-				"Declaration found in statement section. token is: %d",
-				Scanner::token()
-			);
-			parse_error(err_array);
+		case T_8     :
+		case T_16    :
+		case T_32    :
+		case T_64    :
+		case T_WORD  :
+		case T_MAX   :
+		case T_PTR   :
+		case T_N_TYPE: Decl_Storage (); break;
+		case T_SUB   : Decl_Sub     (); break;
+		case T_FUN   : Decl_Fun     (); break;
+		case T_TYPE  : Decl_Type    (); break;
+		case T_OPR   : Decl_Operator(); break;
 		
 		// Control Statements
-		case T_LBL  : Label    (   ); break;
-		case T_JMP  : Jump     (   ); break;
-		case T_BRK  : Break    (   ); break;
-		case T_CNTN : Continue (   ); break;
-		case T_RTRN : Return   (   ); break;
-		case T_IF   : If       (lvl); break;
-		case T_WHILE: While    (lvl); break;
-		case T_DO   : Do       (lvl); break;
-		case T_FOR  : For      (lvl); break;
-		case T_SWTCH: Switch   (lvl); break;
-		case T_N_SUB:Call_sub  (   ); break;
+		case T_LBL  : Label   (); break;
+		case T_JMP  : Jump    (); break;
+		case T_BRK  : Break   (); break;
+		case T_CNTN : Continue(); break;
+		case T_RTRN : Return  (); break;
+		case T_IF   : If      (); break;
+		case T_WHILE: While   (); break;
+		case T_DO   : Do      (); break;
+		case T_FOR  : For     (); break;
+		case T_SWTCH: Switch  (); break;
+		case T_N_SUB:Call_sub (); break;
 		default:
 			sym = Boolean();
 			if(sym->type == st_lit_int){
 				parse_warn("Statement with no effect");
-				if(DS_find(symbols, dx_to_name(sym->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(sym->name);
 			}
 			
-			Match(T_NL);
+			match_token(T_NL);
 		}
 	
 	#ifdef DBG_PARSE

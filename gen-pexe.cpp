@@ -6,7 +6,10 @@
  *
  ******************************************************************************/
 
-#include "global.h"
+
+#include "proto.h"
+#include "errors.h"
+#include <stdio.h>
 
 typedef struct pexe_header{
 	uint8_t  magic0;
@@ -48,7 +51,7 @@ const uint16_t version = 0x0000;
 /**	Create a Portable Executable file from the intermediate represetation
 	Takes the output file name as a parameter. stack or register based VM?
  */
-void pexe (char * filename, const Program_data * prog){
+void pexe (char * filename){
 	FILE* fd;
 	pexe_h header;
 	size_t result;
@@ -65,8 +68,8 @@ void pexe (char * filename, const Program_data * prog){
 	header.version = version;
 	
 	header.name_array_sz = 0;
-	header.off_sym       = DS_count(prog->symbols);
-	header.off_instq     = DS_count(prog->block_q);
+	header.off_sym       = 0;
+	header.off_instq     = 0;
 	
 	header.checksum = 0;
 	

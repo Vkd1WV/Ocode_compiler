@@ -10,9 +10,11 @@
 
 
 %token T_EOF 0 "End of File"
-%token T_NL
+%token T_NL T_IND T_OUTD
 
-%token T_NAME T_NUM T_CH T_STR //primary
+%token T_NAME T_N_FUN T_N_SUB T_N_TYPE T_N_STRG T_N_CLSS
+
+%token T_NUM T_CHAR T_STR //primary
 
 %token T_INC T_DEC T_REF '@' T_NOT T_INV // Unary
 %token '*' '/' T_MOD '^' T_LSHFT T_RSHFT  // Term
@@ -26,30 +28,38 @@
 %token T_8 T_16 T_32 T_64 T_WORD T_MAX
 %token T_TYPE T_TO T_PTR
 %token T_SUB T_FUN T_OPR T_END T_ASM T_RTRNS
-%token T_STATIC T_CONST
+%token T_STATIC T_EXTRN T_CONST T_VOL T_IN T_OUT T_BI
 
-%token T_LBL T_JMP T_BRK T_CNTN T_RTRN T_IF T_ELSE T_WHILE T_DO T_FOR T_SWTCH
+%token T_LBL T_JMP T_BRK T_CNTN T_RTRN 
+%token T_IF T_ELSE T_WHILE T_DO T_FOR T_SWTCH
 
-%start Decl_list
+%start Unit
 
 %%
 
 
 /******************************************************************************/
-//                             PARSE EXPRESSIONS
+//                                EXPRESSIONS
 /******************************************************************************/
 
 
-Call_fun: T_NAME '[' ']'
+argument_expression_list
+	: Assignment
+	| argument_expression_list ',' Assignment
+	;
+
+Call_fun
+	: T_N_FUN '[' argument_expression_list ']'
+	| T_N_FUN '[' ']'
 	;
 
 Primary
 	: '(' Assignment ')'
 	| T_NUM
-	| T_CH
-	| T_NAME
+	| T_CHAR
 	| Call_fun
 	| T_STR
+	| T_N_STRG
 	;
 
 Unary
@@ -117,52 +127,53 @@ Assignment_op
 Assignment
 	: Boolean
 	| Postfix Assignment_op Assignment
+	| T_NAME T_ASS Assignment // implicit declaration
 	;
 
 
 /******************************************************************************/
-//                            PARSE DECLARATIONS
+//                               DECLARATIONS
 /******************************************************************************/
 
 
-Operator
-	: T_INC
-	| T_DEC
-	| T_REF
-	| '@'
-	| T_NOT
-	| T_INV
-	| '*'
-	| '/'
-	| T_MOD
-	| '^'
-	| T_LSHFT
-	| T_RSHFT
-	| '+'
-	| '-'
-	| '&'
-	| T_BOR
-	| T_BXOR
-	| '='
-	| T_NEQ
-	| '<'
-	| '>'
-	| T_LTE
-	| T_GTE
-	| T_AND
-	| T_OR
-	| T_ASS
-	| T_LSH_A
-	| T_RSH_A
-	| T_ADD_A
-	| T_SUB_A
-	| T_MUL_A
-	| T_DIV_A
-	| T_MOD_A
-	| T_AND_A
-	| T_OR_A
-	| T_XOR_A
-	;
+//Operator
+//	: T_INC
+//	| T_DEC
+//	| T_REF
+//	| '@'
+//	| T_NOT
+//	| T_INV
+//	| '*'
+//	| '/'
+//	| T_MOD
+//	| '^'
+//	| T_LSHFT
+//	| T_RSHFT
+//	| '+'
+//	| '-'
+//	| '&'
+//	| T_BOR
+//	| T_BXOR
+//	| '='
+//	| T_NEQ
+//	| '<'
+//	| '>'
+//	| T_LTE
+//	| T_GTE
+//	| T_AND
+//	| T_OR
+//	| T_ASS
+//	| T_LSH_A
+//	| T_RSH_A
+//	| T_ADD_A
+//	| T_SUB_A
+//	| T_MUL_A
+//	| T_DIV_A
+//	| T_MOD_A
+//	| T_AND_A
+//	| T_OR_A
+//	| T_XOR_A
+//	;
 
 Size_specifier
 	: T_8
@@ -175,12 +186,12 @@ Size_specifier
 
 Storage_class
 	: T_STATIC	// Static
-				// extern
+	| T_EXTRN	// extern
 	;
 
 Type_qualifier
 	: T_CONST	// Constant
-				// Volatile
+	| T_VOL		// Volatile
 	;
 
 Qualifier_list
@@ -193,7 +204,7 @@ Qualifier_list
 
 Initializer
 	: T_NAME
-	| T_NAME '=' Boolean
+	| T_NAME '=' Assignment
 	;
 
 Initializer_list
@@ -203,7 +214,7 @@ Initializer_list
 Word_specifier: Size_specifier Qualifier_list
 	;
 
-Custom_specifier: T_NAME Qualifier_list
+Custom_specifier: T_N_TYPE Qualifier_list
 	;
 
 Pointer_specifier: T_PTR Qualifier_list T_TO Type_specifier
@@ -224,19 +235,16 @@ Parameter_mode
 	| T_BI
 	;
 
-Parameter
-	: Parameter_mode Decl_Symbol_list
-	| Parameter_mode Proc_decl
+Parameter_decl
+	: Parameter_mode Type_specifier Initializer
 	;
 
 Parameter_list
-	: Parameter
-	| Parameter_list ';' Parameter
+	: Parameter_decl
+	| Parameter_list ';' Parameter_decl
 	;
 
-Proc_decl
-	: T_FUN T_NAME '[' Parameter_list ']' T_RTRNS Type_specifier
-	| T_SUB T_NAME '[' Parameter_list ']'
+Fun_decl: T_FUN T_NAME '[' Parameter_list ']' T_RTRNS Type_specifier
 	;
 
 //Assembler_blk: %empty
@@ -252,11 +260,15 @@ Proc_decl
 //	;
 
 
-Type_decl: T_TYPE T_NAME Decl_list
+Type_decl
+	: T_TYPE T_NAME Declaration_block
+	| T_TYPE T_NAME Type_specifier T_NL
 	;
 
 Declaration
-	: Type_decl
+	: T_NL Declaration_block
+	| Type_decl
+	| Fun_decl
 //	| Sub_def
 //	| Fun_def
 //	| Operator_Decl
@@ -268,13 +280,16 @@ Decl_list
 	| Decl_list Declaration
 	;
 
+Declaration_block: T_IND Decl_list T_OUTD
+	;
+
 
 /******************************************************************************/
-//                             PARSE STATEMENTS
+//                            CONTROL STATEMENTS
 /******************************************************************************/
 
 
-Call_sub: T_NAME
+Call_sub: T_N_SUB
 	;
 
 Label: T_LBL T_NAME T_NL
@@ -291,18 +306,18 @@ Continue: T_CNTN T_NL
 
 Return
 	: T_RTRN T_NL
-	| T_RTRN Boolean T_NL
+	| T_RTRN Assignment T_NL
 	;
 
 If
-	: T_IF Boolean Statement
-	| T_IF Boolean Statement T_ELSE Statement
+	: T_IF Assignment Statement
+	| T_IF Assignment Statement T_ELSE Statement
 	;
 
 While: T_WHILE Boolean Statement
 	;
 
-Do: T_DO Statement T_WHILE Boolean T_NL
+Do: T_DO Statement T_WHILE Assignment T_NL
 	;
 
 For: T_FOR
@@ -312,10 +327,17 @@ Switch: T_SWTCH Boolean
 	;
 
 
+/******************************************************************************/
+//                                  STATEMENTS
+/******************************************************************************/
+
 
 Statement
 	: T_NL // empty statement
 	| T_NL Statement_block
+	| Storage_decl
+	| Fun_decl
+	| Type_decl
 	| Label
 	| Jump
 	| Break
@@ -330,27 +352,15 @@ Statement
 	| Assignment T_NL
 	;
 
-Statement_block
-	: Statement
-	| Statement_list Statement
-	;
-
 Statement_list
 	: Statement
 	| Statement_list Statement
 	;
 
-/******************************************************************************/
-//                                     PARSE
-/******************************************************************************/
+Statement_block: T_IND Statement_list T_OUTD
+	;
 
-
-
-
-Unit
-	: Decl_list T_EOF
-	| Statement_list T_EOF
-	| Decl_list Statement_list T_EOF
+Unit: Statement_list T_EOF
 	;
 
 

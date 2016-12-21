@@ -30,7 +30,7 @@ uint    Scanner::line_num;
 //                           MEMBER FUNCTIONS
 /******************************************************************************/
 
-Scanner::Scanner(char * filename){
+Scanner::Scanner(const char * filename){
 	
 	//debug_msg("Scanner(): start");
 	

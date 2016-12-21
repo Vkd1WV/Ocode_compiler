@@ -45,6 +45,11 @@ typedef enum {
 	T_NOT  ,
 	T_INV  ,
 
+	// postfix
+	T_PEROD,
+	T_OBRK ,
+	T_CBRK ,
+
 	// basic
 	T_PLUS ,
 	T_MINUS,
@@ -87,8 +92,7 @@ typedef enum {
 	
 	T_OBRC ,
 	T_CBRC ,
-	T_OBRK ,
-	T_CBRK ,
+
 	T_COMA,
 	
 	/************************** Control statements ****************************/
@@ -115,9 +119,11 @@ typedef enum {
 	/**************************** Declared Names ******************************/
 
 	T_NAME,   // sets yytext
-	T_N_SUB,  // Named subroutine
+	T_N_STRG, // Named Storage
 	T_N_FUN,  // Named function or storage
+	T_N_SUB,  // Named subroutine
 	T_N_TYPE, // Named Type
+	T_N_CLSS, // Named Class
 
 	/***************************** Declarations *******************************/
 
@@ -170,6 +176,8 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		"T_OPAR","T_CPAR",
 		// Unary
 		"T_DEC","T_INC","T_REF","T_DREF", "T_NOT", "T_INV",
+		// Postfix
+		"T_PEROD", "T_OBRK","T_CBRK",
 		// Additive
 		"T_PLUS", "T_MINUS", "T_BAND", "T_BOR", "T_BXOR",
 		// Multiplicative
@@ -182,14 +190,14 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		"T_ASS", "T_LSH_A", "T_RSH_A", "T_ADD_A", "T_SUB_A", "T_MUL_A",
 		"T_DIV_A", "T_MOD_A", "T_AND_A", "T_OR_A ", "T_XOR_A",
 
-		"T_OBRC","T_CBRC","T_OBRK","T_CBRK", "T_COMA",
+		"T_OBRC","T_CBRC", "T_COMA",
 		/************************ Control statements **************************/
-		"label", "T_JMP", "break", "continue", "T_RTRN",
-		"T_IF", "T_ELSE", "switch", "case", "default",
+		"T_LBL", "T_JMP", "T_BRK", "T_CNTN", "T_RTRN",
+		"T_IF", "T_ELSE", "T_SWTCH", "T_CASE", "T_DFLT",
 		"T_WHILE", "T_DO", "T_FOR",
-		"try", "throw", "catch",
+		"T_TRY", "T_THRW", "T_CTCH",
 		/************************** Declared Names ****************************/
-		"T_NAME", "T_N_SUB", "T_N_FUN", "T_N_TYPE",
+		"T_NAME", "T_N_STRG", "T_N_FUN", "T_N_SUB", "T_N_TYPE", "T_N_CLSS",
 		/*************************** Declarations *****************************/
 		"T_OPR", "T_SUB", "T_FUN", "T_TYPE",
 		// Word declarations

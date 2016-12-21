@@ -54,7 +54,7 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 			sprintf(
 				message,
 				"Assigning reference to non-reference %s",
-				dx_to_name(result->name)
+				Program_data::get_string(result->name)
 			);
 			parse_warn(message);
 		}
@@ -140,28 +140,36 @@ static sym_pt Primary(void){
 	
 	switch (Scanner::token()){
 	case T_OPAR:
-		Match(T_OPAR);
+		match_token(T_OPAR);
 		sym=Boolean();
-		Match(T_CPAR);
+		match_token(T_CPAR);
 		break;
-		
+	
+	case T_STR:
 	case T_CHAR:
 	case T_NUM:
-		sym = new_var(st_lit_int);
-		sym->set     = true;
-		sym->constant = true;
-		sym->value    = get_num();
+		sym = Scanner::sym();
+		break;
+	
+	case T_N_STRG:
+		sym = Scanner::sym();
+		break;
+	
+	case T_NAME:
+		
+		break;
+	
+	case T_N_FUN:
+		sym = Call_fun(Scanner::sym());
 		break;
 		
-	case T_N_FUN: sym = yysymbol;
-		if(sym->type == st_fun) sym = Call_fun(sym);
-		break;
-		
-	case T_STR:
+	
 	default:
-		sprintf(msg_arr, "Could not match token: '%s' to any rule", yytext);
+		sprintf(msg_arr, "Could not match token: '%s' to any rule",
+			Scanner::text()
+		);
 		parse_error(msg_arr);
-		__builtin_unreachable ();
+		//__builtin_unreachable ();
 	}
 	
 	return sym;
@@ -174,7 +182,7 @@ static sym_pt Unary(void){
 	
 	switch (Scanner::token()){
 /*	case T_MINUS:*/
-/*		scanner->next_token();*/
+/*		Scanner::next_token();*/
 /*		arg = Unary();*/
 /*		*/
 /*		*/
@@ -187,8 +195,8 @@ static sym_pt Unary(void){
 /*			break;*/
 /*		*/
 /*		case data:*/
-/*			result = new_var();*/
-/*			emit_iop(NO_NAME, I_NEG, NO_NAME, result, arg, NULL);*/
+/*			result = Program_data::new_var();*/
+/*			Scope_Stack::emit_op(I_NEG, result, arg, NULL);*/
 /*			return result;*/
 /*		*/
 /*		case subroutine: parse_error("Subroutine used in an expression");*/
@@ -198,7 +206,7 @@ static sym_pt Unary(void){
 /*		}*/
 	
 	case T_REF:
-		scanner->next_token();
+		Scanner::next_token();
 		arg = Primary();
 		
 		
@@ -217,15 +225,15 @@ static sym_pt Unary(void){
 		default: parse_crit(arg, NULL, "Internal: at Unary(), T_REF");
 		}
 		
-		result = new_var(st_ref);
+		result = Program_data::new_var(st_ref);
 		result->set = true;
 		result->dref = arg;
 		
-		emit_iop(NO_NAME, I_REF, NO_NAME, result, arg, NULL);
+		Scope_Stack::emit_op(I_REF, result, arg, NULL);
 		return result;
 	
 	case T_DREF:
-		scanner->next_token();
+		Scanner::next_token();
 		arg = Unary();
 		
 		
@@ -236,20 +244,20 @@ static sym_pt Unary(void){
 		
 		result = arg->dref;
 		
-		emit_iop(NO_NAME, I_DREF, NO_NAME, result, arg, NULL);
+		Scope_Stack::emit_op(I_DREF, result, arg, NULL);
 		return result;
 	
 	case T_NOT:
-		scanner->next_token();
+		Scanner::next_token();
 		arg = Unary();
 		
 		
 		// Symantic Checks
 		switch (arg->type){
 		case st_int:
-			result = new_var(st_int);
+			result = Program_data::new_var(st_int);
 			set_init_size(result, arg, NULL);
-			emit_iop(NO_NAME, I_NOT, NO_NAME, result, arg, NULL);
+			Scope_Stack::emit_op(I_NOT, result, arg, NULL);
 			break;
 		
 		case st_lit_int:
@@ -270,16 +278,16 @@ static sym_pt Unary(void){
 		return result;
 	
 	case T_INV:
-		scanner->next_token();
+		Scanner::next_token();
 		arg = Unary();
 		
 		
 		// Symantic Checks
 		switch (arg->type){
 		case st_int:
-			result = new_var(st_int);
+			result = Program_data::new_var(st_int);
 			set_init_size(result, arg, NULL);
-			emit_iop(NO_NAME, I_INV, NO_NAME, result, arg, NULL);
+			Scope_Stack::emit_op(I_INV, result, arg, NULL);
 			break;
 		
 		case st_lit_int:
@@ -337,7 +345,7 @@ static sym_pt Term(void){
 	while(Scanner::token()>=T_MUL && Scanner::token()<=T_RSHFT){
 		switch(Scanner::token()){
 		case T_MUL:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -350,19 +358,18 @@ static sym_pt Term(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value * arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_MUL, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_MUL, result, arg1, arg2);
 			}
 			break;
 		
 		
 		case T_DIV:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -375,19 +382,18 @@ static sym_pt Term(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value / arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_DIV, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_DIV, result, arg1, arg2);
 			}
 			break;
 		
 		
 		case T_MOD:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -400,19 +406,18 @@ static sym_pt Term(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value % arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_MOD, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_MOD, result, arg1, arg2);
 			}
 			break;
 		
 		
 		case T_EXP:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -424,7 +429,7 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = new_var(st_lit_int);
+				result = Program_data::new_var(st_lit_int);
 				result->set = true;
 				result->constant = true;
 				
@@ -436,15 +441,15 @@ static sym_pt Term(void){
 				}
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_EXP, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_EXP, result, arg1, arg2);
 			}
 			break;
 		
 		
 		case T_LSHFT:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -457,19 +462,18 @@ static sym_pt Term(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value << arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_LSH, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_LSH, result, arg1, arg2);
 			}
 			break;
 		
 		
 		case T_RSHFT:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Postfix();
 			
 			// Symantic Checks
@@ -482,13 +486,12 @@ static sym_pt Term(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value >> arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_RSH, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_RSH, result, arg1, arg2);
 			}
 			break;
 		
@@ -511,7 +514,7 @@ static sym_pt Expression(void){
 	while (Scanner::token()>=T_PLUS && Scanner::token()<=T_BXOR){
 		switch (Scanner::token()){
 		case T_PLUS:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -549,22 +552,21 @@ static sym_pt Expression(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value + arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
-					result = new_var(st_ref);
-				else result = new_var(st_int);
+					result = Program_data::new_var(st_ref);
+				else result = Program_data::new_var(st_int);
 				
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_ADD, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_ADD, result, arg1, arg2);
 			}
 		break;
 		
 		
 		case T_MINUS:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -602,21 +604,20 @@ static sym_pt Expression(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value - arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
-					result = new_var(st_ref);
-				else result = new_var(st_int);
+					result = Program_data::new_var(st_ref);
+				else result = Program_data::new_var(st_int);
 				
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_SUB, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_SUB, result, arg1, arg2);
 			}
 		break;
 		
 		case T_BAND:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -629,18 +630,17 @@ static sym_pt Expression(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value & arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_BAND, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_BAND, result, arg1, arg2);
 			}
 		break;
 		
 		case T_BOR:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -653,18 +653,17 @@ static sym_pt Expression(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value | arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_BOR, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_BOR, result, arg1, arg2);
 			}
 			break;
 		
 		case T_BXOR:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Term();
 			
 			// Symantic Checks
@@ -677,13 +676,12 @@ static sym_pt Expression(void){
 				// fold the literals
 				result = arg1;
 				result->value = arg1->value ^ arg2->value;
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				set_init_size(result, arg1, arg2);
-				emit_iop(NO_NAME, I_XOR, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_XOR, result, arg1, arg2);
 			}
 			break;
 		
@@ -704,7 +702,7 @@ static sym_pt Equation(void){
 	while (Scanner::token()>=T_EQ && Scanner::token()<=T_GTE){
 		switch (Scanner::token()){
 		case T_EQ:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -740,20 +738,19 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value == arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_EQ, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_EQ, result, arg1, arg2);
 			}
 			break;
 			
 			
 		case T_NEQ:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -789,20 +786,19 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value != arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_NEQ, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_NEQ, result, arg1, arg2);
 			}
 			break;
 			
 			
 		case T_LT:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -838,20 +834,19 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value < arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_LT, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_LT, result, arg1, arg2);
 			}
 			break;
 			
 			
 		case T_GT:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -887,20 +882,19 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value > arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_GT, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_GT, result, arg1, arg2);
 			}
 			break;
 			
 			
 		case T_LTE:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -936,20 +930,19 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value <= arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_LTE, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_LTE, result, arg1, arg2);
 			}
 			break;
 			
 			
 		case T_GTE:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Expression();
 			
 			// Symantic Checks
@@ -985,14 +978,13 @@ static sym_pt Equation(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value >= arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
-				emit_iop(NO_NAME, I_GTE, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_GTE, result, arg1, arg2);
 			}
 			break;
 		
@@ -1016,7 +1008,7 @@ static sym_pt Assign(sym_pt target){
 	if(target->constant) parse_error("cannot make an assignment to a constant");
 	
 	op=Scanner::token();
-	scanner->next_token();
+	Scanner::next_token();
 	result=Boolean();
 	
 	if (!is_init(result)) parse_error("Assignment from an uninitialized value");
@@ -1025,47 +1017,47 @@ static sym_pt Assign(sym_pt target){
 	
 	switch (op){
 	case T_ASS:
-		emit_iop(NO_NAME, I_ASS, NO_NAME, target, result, NULL  );
+		Scope_Stack::emit_op(I_ASS, target, result, NULL  );
 		break;
 	
 	case T_LSH_A:
-		emit_iop(NO_NAME, I_LSH, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_LSH, target, target, result);
 		break;
 	
 	case T_RSH_A:
-		emit_iop(NO_NAME, I_RSH, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_RSH, target, target, result);
 		break;
 	
 	case T_ADD_A:
-		emit_iop(NO_NAME, I_ADD, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_ADD, target, target, result);
 		break;
 	
 	case T_SUB_A:
-		emit_iop(NO_NAME, I_SUB, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_SUB, target, target, result);
 		break;
 	
 	case T_MUL_A:
-		emit_iop(NO_NAME, I_MUL, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_MUL, target, target, result);
 		break;
 	
 	case T_DIV_A:
-		emit_iop(NO_NAME, I_DIV, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_DIV, target, target, result);
 		break;
 	
 	case T_MOD_A:
-		emit_iop(NO_NAME, I_MOD, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_MOD, target, target, result);
 		break;
 	
 	case T_AND_A:
-		emit_iop(NO_NAME, I_AND, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_AND, target, target, result);
 		break;
 	
 	case T_OR_A :
-		emit_iop(NO_NAME, I_OR , NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_OR , target, target, result);
 		break;
 	
 	case T_XOR_A:
-		emit_iop(NO_NAME, I_XOR, NO_NAME, target, target, result);
+		Scope_Stack::emit_op(I_XOR, target, target, result);
 		break;
 	
 	default: parse_crit(target, result, "Internal: at Assign()");
@@ -1094,7 +1086,7 @@ static sym_pt Boolean(void){
 	while(Scanner::token() == T_AND || Scanner::token() == T_OR){
 		switch(Scanner::token()){
 		case T_AND:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Equation();
 			
 			// Symantic Checks
@@ -1130,21 +1122,20 @@ static sym_pt Boolean(void){
 				// fold the literals
 				result = arg1;
 				result->value = (arg1->value && arg2->value);
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				result->size = w_byte;
 				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
-				emit_iop(NO_NAME, I_AND, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_AND, result, arg1, arg2);
 			};
 			break;
 		
 		
 		case T_OR:
-			scanner->next_token();
+			Scanner::next_token();
 			arg2=Equation();
 			
 			// Symantic Checks
@@ -1181,15 +1172,14 @@ static sym_pt Boolean(void){
 				result = arg1;
 				result->value = (arg1->value || arg2->value);
 				
-				if(DS_find(symbols, dx_to_name(arg2->name)))
-					DS_remove(symbols);
+				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = new_var(st_int);
+				result = Program_data::new_var(st_int);
 				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
 				result->size = w_byte;
-				emit_iop(NO_NAME, I_OR, NO_NAME, result, arg1, arg2);
+				Scope_Stack::emit_op(I_OR, result, arg1, arg2);
 			}
 			break;
 		

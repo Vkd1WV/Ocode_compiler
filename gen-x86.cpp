@@ -6,7 +6,10 @@
  *
  ******************************************************************************/
 
-#include "global.h"
+#include "proto.h"
+#include "errors.h"
+#include <stdio.h>
+#include <string.h>
 
 
 /******************************************************************************/
@@ -75,12 +78,12 @@ static char * str_num(umax num){
 	return array;
 }
 
-static char * str_name(name_dx dx){
-	char * in_name;
+static char * str_name(str_dx dx){
+	const char * in_name;
 	static char * out_name;
 	size_t length;
 	
-	in_name = dx_to_name(dx);
+	in_name = Program_data::get_string(dx);
 	length = strlen(in_name) + 2; // $ and \0
 	
 	out_name = (char*) realloc(out_name, length);
@@ -138,7 +141,7 @@ static char * str_reg(int_size width, reg_t reg, bool B64){
 }
 
 
-static void put_op(icmd * op){
+static void put_op(iop_pt op){
 	switch (op -> op){
 	case I_NOP:
 		break;
@@ -244,21 +247,21 @@ static void put_op(icmd * op){
 	}
 }
 
-static void Gen_blk(FILE * out_fd, DS blk){
-	icmd * iop;
+static void Gen_blk(FILE * out_fd, Instruction_Queue * blk){
+	iop_pt iop;
 	
-	iop = (icmd*) DS_first(blk);
-	do{
-		// Getreg
-		
-		// find a copy of arg1 and put it in result
-		
-		// generate op res arg2
-		
-		// if arg1 or arg2 are not live remove them from the reg_d
-		
-	} while (( iop = (icmd*) DS_next(blk) ));
-	
+//	iop = (icmd*) DS_first(blk);
+//	do{
+//		// Getreg
+//		
+//		// find a copy of arg1 and put it in result
+//		
+//		// generate op res arg2
+//		
+//		// if arg1 or arg2 are not live remove them from the reg_d
+//		
+//	} while (( iop = (icmd*) DS_next(blk) ));
+//	
 	// commit live symbols in regs to memory
 }
 
@@ -269,9 +272,8 @@ static void Gen_blk(FILE * out_fd, DS blk){
 
 /**	Produces a NASM file from the block queue
 */
-void x86 (char * filename, const Program_data * prog, bool B64){
+void x86 (char * filename, bool B64){
 	FILE * out_fd;
-	DS_pt blk_pt;
 	
 	info_msg("\tx86(): start");
 	
@@ -280,22 +282,20 @@ void x86 (char * filename, const Program_data * prog, bool B64){
 	// Initialize the register descriptor
 	memset(reg_d, 0, sizeof(sym_pt)*NUM_X86_REG);
 	
-	// This is the text or code section
-	blk_pt = (DS_pt) DS_first(prog->block_q);
 	
-	if(!blk_pt) crit_error("x86(): Empty block queue");
-	
-	fprintf(out_fd,"\nsection .text\t; Program code\n");
-	
-	do{
-		Gen_blk(out_fd, *blk_pt);
-	} while(( blk_pt = (DS_pt) DS_next(prog->block_q) ));
-	
-	
-	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");
-	fprintf(out_fd,"\nsection .bss\t; Declare static variables\n");
-	if (B64) fprintf(out_fd,"align 8\n");
-	else fprintf(out_fd,"align 4\n");
+//	if(!blk_pt) crit_error("x86(): Empty block queue");
+//	
+//	fprintf(out_fd,"\nsection .text\t; Program code\n");
+//	
+//	do{
+//		Gen_blk(out_fd, *blk_pt);
+//	} while(( blk_pt = (DS_pt) DS_next(prog->block_q) ));
+//	
+//	
+//	fprintf(out_fd,"\nsection .data\t; Data Section contains constants\n");
+//	fprintf(out_fd,"\nsection .bss\t; Declare static variables\n");
+//	if (B64) fprintf(out_fd,"align 8\n");
+//	else fprintf(out_fd,"align 4\n");
 	
 	//TODO: static variables
 	

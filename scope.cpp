@@ -74,6 +74,22 @@ Instruction_Queue * Scope_Stack::pop(void){
 	else return NULL;
 }
 
+void Scope_Stack::nq_inst(
+	str_dx       a,
+	op_code      b,
+	str_dx       c,
+	const sym_pt d,
+	const sym_pt e,
+	const sym_pt f
+){
+	contxt_pt con;
+	
+	con = (contxt_pt) DS_first(stack);
+	if(!con)
+		crit_error("Scope_Stack::instructions(): the scope stack is empty");
+	else con->inst_q->add_inst(a, b, c, d, e, f);
+}
+
 sym_pt Scope_Stack::bind(token_t &token, const char * name){
 	sym_pt sym=NULL;
 	
@@ -125,15 +141,32 @@ This function returns the correct symbol for the given name in the current scope
 	return sym;
 }
 
-Instruction_Queue * Scope_Stack::instructions(void) const{
-	contxt_pt con;
-	
-	con = (contxt_pt) DS_first(stack);
-	if(!con){
-		err_msg("Scope_Stack::instructions(): the scope stack is empty");
-		return NULL;
-	}
-	else return con->inst_q;
+
+void Scope_Stack::emit_cmnt(const char * cmnt){
+	nq_inst(NO_NAME, I_NOP, Program_data::add_string(cmnt), NULL, NULL, NULL);
+}
+
+void Scope_Stack::emit_lbl (const str_dx lbl, const char * cmnt){
+	if(!cmnt) nq_inst(lbl, I_NOP, NO_NAME, NULL, NULL, NULL);
+	else
+		nq_inst(lbl, I_NOP, Program_data::add_string(cmnt), NULL, NULL, NULL);
+}
+
+void Scope_Stack::emit_jump(const str_dx target, const sym_pt condition){
+	nq_inst(NO_NAME, I_JMP, target, NULL, condition, NULL);
+}
+
+void Scope_Stack::emit_jz  (const str_dx target, const sym_pt condition){
+	nq_inst(NO_NAME, I_JZ, target, NULL, condition, NULL);
+}
+
+void Scope_Stack::emit_op(
+	const op_code op,
+	const sym_pt  result,
+	const sym_pt  arg1,
+	const sym_pt  arg2
+){
+	nq_inst(NO_NAME, op, NO_NAME, result, arg1, arg2);
 }
 
 

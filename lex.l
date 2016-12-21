@@ -52,15 +52,15 @@ NEWL   ({WHTSPC})*(\r|\r\n|\n)
 ^({NEWL})            { tabs_this_ln=0;              } // ignore empty lines
 {NEWL}               { tabs_this_ln=0; return T_NL; } // report the rest
 
-^(\t)+ {
+^\ *(\t\ *)+ {
 	for(unsigned int i=0; i < yyleng; i++)
 		if (yytext[i] == '\t') tabs_this_ln++;
 }
 
-^({WHTSPC})+  { warn_msg("Whitespace found at beginning of line. Are you mixing tabs and spaces?"); }
+	/*^({WHTSPC})+  { warn_msg("Whitespace found at beginning of line. Are you mixing tabs and spaces?"); } */
 
-{ESCNL}      {} // ignore escaped newlines
-({WHTSPC})+  {} // ignore all other whitespace
+{ESCNL}     {} // ignore escaped newlines
+({WHTSPC})  {} // ignore all other whitespace
 
 
 

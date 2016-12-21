@@ -32,17 +32,25 @@ typedef size_t str_dx; ///< indexes into the string_array
 
 /********************************* SYMBOLS ************************************/
 
+/* 
+
+*/
+
 
 typedef enum{
 	st_undef,
+	// Storage
 	st_int,      ///< an integer
 	st_ref,      ///< a reference
-	st_fun,      ///< a function
+	
 	st_sub,      ///< a subroutine
 	st_lit_int,  ///< a literal integer to be inserted directly
 	st_lit_str,  ///< a string literal
-	st_type_def, ///< a type definition: struct or class
-	st_cust,     ///< programmer defined types
+	st_rec_def,   ///< a type definition: struct or class
+	st_rec,
+	st_union_def,
+	st_union,
+	st_alias,    ///< an alias for another type
 	st_NUM
 } sym_type;
 
@@ -73,6 +81,9 @@ typedef struct sym {
 	str_dx  short_name;
 	sym_type type; ///< Symbol type
 	bool     temp;
+	
+	// function
+	bool fun;
 	
 	// Qualifiers
 	bool stat;     // Is it a static data location
@@ -272,7 +283,7 @@ private:
 	
 	static DS          symbols;
 public:
-	Block_Queue block_q;
+	static Block_Queue block_q;
 	
 	// FUNCTIONS
 private:
@@ -291,8 +302,7 @@ public:
 	~Program_data(void);
 	
 	// Mutators
-	str_dx        new_label (void                    );
-	
+	static str_dx new_label (void                    );
 	static str_dx add_string(const char        * name);
 	static sym_pt new_var   (sym_type            type);
 	static void   remove_sym(str_dx              dx  );
@@ -305,7 +315,12 @@ public:
 	
 	// Dump current state
 	void Dump_sym(FILE * fd) const;
-	void Dump_q  (FILE * fd) const { block_q.Dump(fd); };
+	void Dump(FILE * fd) const {
+		fputs("\nSYMBOLS\n", fd);
+		Dump_sym(fd);
+		fputs("\nBLOCK QUEUE\n", fd);
+		block_q.Dump(fd);
+	}
 };
 
 

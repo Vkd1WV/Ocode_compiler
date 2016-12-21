@@ -10,8 +10,12 @@
 #include "scanner.h"
 #include "prog_data.h"
 #include "errors.h"
+#include "scope.h"
+#include "proto.h"
 
 #include <stdlib.h>
+#include <string.h>
+
 
 /******************************************************************************/
 //                      PARSER MODULE TYPE DEFINITIONS
@@ -62,7 +66,8 @@ static inline void parse_error(const char * message){
 		message,
 		Scanner::lnum()
 	);
-	scanner->resync();
+	while(Scanner::token() != T_EOF && Scanner::token() != T_NL)
+		Scanner::next_token();
 	fprintf(stderr, "continuing...\n");
 	longjmp(anewline, 1);
 }
@@ -104,54 +109,44 @@ static inline void debug_iop(const char * message, iop_pt iop){
 
 /********************************* GETTERS ************************************/
 
-//static inline umax get_num(void){
-//	umax num;
-//	
-//	if(token != T_NUM) expected("a number");
-//	num=yynumber;
-//	get_token();
-//	return num;
-//}
+static inline bool match_string(char * string){
+	if ( Scanner::token() != T_NAME || strcmp(string, Scanner::text()) ){
+		expected(string);
+	}
+	Scanner::next_token();
+	return true;
+}
 
-//static inline bool Match_string(char * string){
-//	if ( token != T_NAME || strcmp(string, yytext) ){
-//		expected(string);
-//	}
-//	get_token();
-//	return true;
-//}
+static inline void match_token(token_t t){
+	if(Scanner::token() == t) Scanner::next_token();
+	else expected(token_dex[t]);
+}
 
-//static inline void Match(token_t t){
-//	if(token == t) get_token();
-//	else expected(token_dex[t]);
-//}
-
-//static inline char * get_name(void){
-//	static char * buffer;
-//	static size_t buf_lngth;
-//	size_t lngth;
-//	
-//	if (token != T_NAME) expected("a name");
-//	
-//	lngth = strlen(yytext)+1; // +1 for the \0
-//	
-//	// size the buffer if necessary
-//	if(!buffer){
-//		buffer = malloc(lngth);
-//		buf_lngth = lngth;
-//	}
-//	else if (lngth > buf_lngth){
-//		buffer = realloc(buffer, lngth);
-//		buf_lngth = lngth;
-//	}
-//	
-//	if (!buffer) crit_error("Out of Memory");
-//	
-//	strncpy(buffer, yytext, lngth);
-//	
-//	get_token();
-//	return buffer;
-//}
+static inline char * get_name(void){
+	static char * buffer;
+	static size_t buf_lngth;
+	
+	if (token != T_NAME) expected("a name");
+	
+	lngth = strlen(yytext)+1; // +1 for the \0
+	
+	// size the buffer if necessary
+	if(!buffer){
+		buffer = malloc(Scanner::length()+1);
+		buf_lngth = lngth;
+	}
+	else if (lngth > buf_lngth){
+		buffer = realloc(buffer, Scanner::length()+1);
+		buf_lngth = lngth;
+	}
+	
+	if (!buffer) crit_error("Out of Memory");
+	
+	strncpy(buffer, yytext, Scanner::length());
+	
+	Scanner::next_token();
+	return buffer;
+}
 
 
 /******************************************************************************/
@@ -185,17 +180,25 @@ static inline void debug_iop(const char * message, iop_pt iop){
 /*void Decl_Word    (sym_pt templt);*/
 /*void Decl_Pointer (sym_pt templt);*/
 
-void Type_specifier(sym_pt templt_pt);
+//void Type_specifier(sym_pt templt_pt);
 
-bool Declaration(uint lvl);
-void Decl_list(uint lvl);
+//bool Declaration(uint lvl);
+//void Decl_list(uint lvl);
+
+// Declarations
+void Decl_Storage (void);
+void Decl_Sub     (void);
+void Decl_Fun     (void);
+void Decl_Type    (void);
+void Decl_Operator(void);
+void Decl_Implicit(void)
 
 // expressions
 static sym_pt Boolean          (void);
 static sym_pt Assign(sym_pt target);
 
 /*// Statements*/
-void Statement (uint lvl);
+void Statement (void);
 
 
 /******************************************************************************/
@@ -213,20 +216,19 @@ void Statement (uint lvl);
 /******************************************************************************/
 
 
-bool Parse(Program_data * d, Scanner * s){
+bool Parse(const char * infile){
 	int errors;
 	
 	// set various global pointers
-	intermed = d;
-	scanner = s;
+//	intermed = d;
+//	scanner = s;
+	
+	// Initialize the scanner
+	Scanner scan(infile);
 	
 	// Initialize the scope stack
-	scope_stack = (DS)DS_new_list(sizeof(prg_blk));
-	
-	
-	
-	get_token(); // Initialize the lookahead token
-	push_scope(NULL); // initialize the scope stack
+	Scope_Stack scope;
+	scope.push(GLOBAL_SCOPE);
 	
 	
 	/*
@@ -239,28 +241,19 @@ bool Parse(Program_data * d, Scanner * s){
 			;
 	*/
 	
+	scope.emit_lbl( Program_data::add_string(START_LBL), NULL);
 	
 	errors=setjmp(anewline); // Save the program state for error recovery
 	
-	// get global declarations
-	Decl_list(0);
+	if(scan.token() == T_EOF) crit_error("Cannot compile an empty file");
 	
-	emit_iop(add_name(START_LBL), I_NOP, NO_NAME, NULL, NULL, NULL);
+	do{
+		Statement();
+	} while (scan.token() != T_EOF);
 	
-	errors+=setjmp(anewline); // once global declarations are finished
+	scope.emit_op(I_RTRN, NULL, NULL, NULL);
 	
-	while (token != T_EOF) {
-		Statement(0);
-	}
-	
-	// Close the infile
-	fclose(yyin);
-	yyin = NULL;
-	
-	emit_iop(NO_NAME, I_RTRN, NO_NAME, NULL, NULL, NULL);
-	pop_scope();
-	data->names = name_array;
-	DS_delete(scope_stack);
+	Optomize(scope.pop());
 	
 	if(errors){
 		warn_msg("Parse(): errors were found");

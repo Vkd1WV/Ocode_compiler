@@ -88,8 +88,8 @@ static void Initializer_list (sym_pt templt){
 		else if (new_symbol->constant)
 			parse_error("No initialization for constant");
 		
-		if      (Scanner::token() == T_LIST) { Match(T_LIST); continue; }
-		else if (Scanner::token() == T_NL  ) { Match(T_NL)  ; break   ; }
+		if      (Scanner::token() == T_LIST) { match_token(T_LIST); continue; }
+		else if (Scanner::token() == T_NL  ) { match_token(T_NL)  ; break   ; }
 		else    expected("a comma or newline");
 	};
 	
@@ -109,7 +109,7 @@ static void Decl_Pointer (sym_pt templt){
 	
 	templt->dref = target;
 	
-	Match(T_PTR);
+	match_token(T_PTR);
 	
 	Qualifier_list(templt);
 	
@@ -214,7 +214,7 @@ static void Parameter_list(sym_pt procedure){
 }
 
 // Declare an Operator
-static void Decl_Operator(uint lvl){
+static void Decl_Operator(void){
 	struct sym oper;
 	sym_pt new_op = &oper;
 	bool assem;
@@ -331,7 +331,7 @@ static void Decl_Operator(uint lvl){
 	
 	// Parameters
 	
-	Match(T_NL);
+	match_token(T_NL);
 	
 	if(assem){
 		
@@ -346,11 +346,11 @@ static void Decl_Operator(uint lvl){
 	// End statement
 	Match_string("end");
 	Match_string(dx_to_name(new_op->name)); // FIXME
-	Match(T_NL);
+	match_token(T_NL);
 }
 
 // Declare a Subroutine
-static void Decl_Sub(uint lvl){
+static void Decl_Sub(void){
 	struct sym sub;
 	sym_pt new_sub = &sub;
 	bool assem;
@@ -375,7 +375,7 @@ static void Decl_Sub(uint lvl){
 	
 	// Parameter Declarations
 	Parameter_list(new_sub);
-	Match(T_NL);
+	match_token(T_NL);
 	
 	if(assem){
 		
@@ -390,23 +390,23 @@ static void Decl_Sub(uint lvl){
 	// End statement
 	Match_string("end");
 	Match_string(dx_to_name(new_sub->name));
-	Match(T_NL);
+	match_token(T_NL);
 }
 
 
 // Declare a Function
-static void Decl_Fun (uint lvl){
+static void Decl_Fun (void){
 	struct sym fun;
 	sym_pt new_fun = &fun;
 	bool assem;
 	
 	new_fun->type  = st_fun;
 	
-	Match(T_FUN);
+	match_token(T_FUN);
 	if(Scanner::token() == T_ASM) assem = true;
 	
 	// Name
-	set_name(new_fun, get_name());
+	set_name(new_fun, Scanner::text());
 	if(!( new_fun = DS_insert(symbols, new_fun) )){
 		sprintf(
 			err_array,
@@ -418,14 +418,14 @@ static void Decl_Fun (uint lvl){
 	
 	push_scope(new_fun);
 	
-	Match(T_OBRK);
+	match_token(T_OBRK);
 	Parameter_list(new_fun);
-	Match(T_CBRK);
+	match_token(T_CBRK);
 	
 	// Return type
-	Match_string("returns");
+	match_string("returns");
 	
-	Match(T_NL);
+	match_token(T_NL);
 	
 	if(assem){
 		
@@ -440,7 +440,7 @@ static void Decl_Fun (uint lvl){
 	// End statement
 	Match_string("end");
 	Match_string(dx_to_name(new_fun->name));
-	Match(T_NL);
+	match_token(T_NL);
 }
 
 
@@ -460,7 +460,7 @@ static void Decl_block(uint lvl){
 			if(block_lvl > lvl) parse_error("Unexpected nested block");
 		}
 	}
-	else Declaration(lvl);
+	else Declaration();
 	
 	
 	sprintf(err_array, "Decl_block(): stop with token: %d", Scanner::token());
@@ -468,11 +468,11 @@ static void Decl_block(uint lvl){
 }
 
 // Define a Datatype
-static void Decl_Type (uint lvl){
+static void Decl_Type(void){
 	struct sym t;
 	sym_pt new_type = &t;
 	
-	Match(T_TYPE);
+	match_token(T_TYPE);
 	set_name(new_type, get_name());
 	
 	if(!( new_type = DS_insert(symbols, new_type) ))
@@ -493,6 +493,29 @@ static void Decl_Type (uint lvl){
 /******************************************************************************/
 
 
+void Decl_Storage (void){}
+void Decl_Sub     (void){}
+void Decl_Fun     (void){}
+void Decl_Type    (void){}
+void Decl_Operator(void){}
+
+
+void Decl_Implicit(void){
+	const char * name;
+	sym_pt sym;
+	
+	name = get_name();
+	match_token(T_ASS);
+	
+	sym = Boolean();
+	
+	// do things
+}
+
+
+
+
+/*
 // returns whether a declaration was found
 bool Declaration(uint lvl){
 	sym_pt sym;
@@ -512,12 +535,12 @@ bool Declaration(uint lvl){
 	case T_MAX :
 	case T_PTR : 
 	case T_N_TYPE: Decl_Symbol_list (   ); return true;
-/*		if(!( sym = (sym_pt) Bind(yytext) ))*/
-/*			parse_error("Undeclared symbol");*/
-/*		if(sym->type == st_type_def){ // defined type*/
-/*			Decl_Symbol_list();*/
-/*			return true;*/
-/*		}*/
+		if(!( sym = (sym_pt) Bind(yytext) ))
+			parse_error("Undeclared symbol");
+		if(sym->type == st_type_def){ // defined type
+			Decl_Symbol_list();
+			return true;
+		}
 		// fall through
 	
 	default: return false;
@@ -542,5 +565,5 @@ void Decl_list(uint lvl){
 	);
 	debug_msg(err_array);
 }
-
+*/
 

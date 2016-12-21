@@ -16,7 +16,6 @@ extern "C"{
 #include "errors.h"
 #include "my_types.h"
 #include "prog_data.h"
-#include "scanner.h"
 #include "proto.h"
 
 // Default output files
@@ -101,7 +100,7 @@ arm_v8_flag       :\t%u\n\n" ,
 }
 
 
-static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
+static inline void Generate_code(yuck_t * arg_pt){
 	uint sum;
 	char *pexefile, *asmfile;
 	
@@ -118,7 +117,7 @@ static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 		sprintf(err_array, "pexefile is: '%s'", pexefile);
 		info_msg(err_array);
 		
-		pexe(pexefile, prog);
+		pexe(pexefile);
 		
 		free(pexefile);
 	}
@@ -145,8 +144,8 @@ static inline void Generate_code(yuck_t * arg_pt, Program_data * prog){
 		sprintf(err_array, "asmfile is: '%s'", asmfile);
 		info_msg(err_array);
 		
-		if(arg_pt->x86_long_flag) x86(asmfile, prog, true);
-		else if(arg_pt->x86_protected_flag) x86(asmfile, prog, false);
+		if(arg_pt->x86_long_flag) x86(asmfile, true);
+		else if(arg_pt->x86_protected_flag) x86(asmfile, false);
 		else err_msg("Unimplemented Target");
 		
 		free(asmfile);
@@ -165,18 +164,14 @@ int main (int argc, char** argv){
 	// Setup
 	yuck_parse(arg_pt, argc, argv);
 	Set_files(&infile, arg_pt);
-	Scanner scan(infile);
+	
 	
 	// Compile
-	errors = Parse(&prog_data, &scan);
+	errors = Parse(infile);
 	
-	if(make_debug){
-		fputs("\nSYMBOLS\n", debug_fd);
-		prog_data.Dump_sym(debug_fd);
-		prog_data.Dump_q  (debug_fd);
-	}
+	if(make_debug) prog_data.Dump(debug_fd);
 	
-	if(!errors) Generate_code(arg_pt, &prog_data);
+	if(!errors) Generate_code(arg_pt);
 	
 	// Cleanup
 	yuck_free(arg_pt);

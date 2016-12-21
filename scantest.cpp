@@ -21,7 +21,7 @@ int main(int argc, char** argv){
 	ss.push(GLOBAL_SCOPE);
 	
 	
-	while(scan.token() != T_EOF){
+	do {
 		printf("%s\t: at %u is '%s'\n",
 			token_dex[scan.token()],
 			scan.lnum(),
@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 		//Print_sym(stdout, scan.sym());
 		
 		scan.next_token();
-	}
+	} while(scan.token() != T_EOF);
 	
 	(void) ss.pop();
 	

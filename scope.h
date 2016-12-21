@@ -21,20 +21,37 @@ private:
 	static DS stack;
 	
 	
-	static umax         read_num (const char * str);
-	static const char * read_str (const char * str);
-	static umax         read_char(const char * str);
+	static void nq_inst(
+		str_dx       a,
+		op_code      b,
+		str_dx       c,
+		const sym_pt d,
+		const sym_pt e,
+		const sym_pt f
+	);
 	
 public:
 	 Scope_Stack(void);
 	~Scope_Stack(void);
 	
-	void                push        (sym_pt       sym )      ;
-	Instruction_Queue * pop         (void             )      ;
-	void                bindop      (void             ) const;
-	Instruction_Queue * instructions(void             ) const;
+	static void                push        (sym_pt       sym );
+	static Instruction_Queue * pop         (void             );
 	
-	static sym_pt       bind(token_t &token, const char * name);
+	
+	
+	static sym_pt bind  (token_t &token, const char * name);
+	static void   bindop(void             );
+	
+	static void emit_cmnt(const char * cmnt);
+	static void emit_lbl (const str_dx lbl, const char * cmnt);
+	static void emit_jump(const str_dx target, const sym_pt condition);
+	static void emit_jz  (const str_dx target, const sym_pt condition);
+	static void emit_op  (
+		const op_code op,
+		const sym_pt  result,
+		const sym_pt  arg1,
+		const sym_pt  arg2
+	);
 };
 
 
