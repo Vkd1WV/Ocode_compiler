@@ -141,11 +141,14 @@ REFERENCES
 
 DECLARATIONS
 *	Mixed
-		* harder to read
-		* can be freely mixed with conditionals
+	* harder to read
+	* can be freely mixed with conditionals
+	* conditionals still wouldn't change declarations.
+	* class instantiation may be a problem
 *	Separate
-		* better formatting
-		* conditional declarations need to be treated differently anyway
+	* better formatting
+	* conditional declarations need to be treated differently anyway
+	* allow for class instantiation anywhere
 
 
 

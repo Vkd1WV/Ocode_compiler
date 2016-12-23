@@ -94,7 +94,7 @@ typedef struct sym {
 	bool init;        // is there a static initialization stored in `value`
 	umax value;       // integer literals or initialized
 	str_dx str;       // string literals and initialized arrays
-	char * assembler; // contents of an asm fun or sub
+	const char * assembler; // contents of an asm fun or sub
 	
 	// Reference
 	struct sym* dref;
@@ -302,10 +302,11 @@ public:
 	~Program_data(void);
 	
 	// Mutators
-	static str_dx new_label (void                    );
-	static str_dx add_string(const char        * name);
-	static sym_pt new_var   (sym_type            type);
-	static void   remove_sym(str_dx              dx  );
+	static str_dx new_label (void               );
+	static str_dx add_string(const char * name  );
+	static sym_pt new_var   (sym_type     type  );
+	static void   remove_sym(str_dx       dx    );
+	static void   add_symbol(sym_pt     & symbol);
 	
 	// Accessors
 	static inline const char * get_string(str_dx dx) {

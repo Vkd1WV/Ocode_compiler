@@ -126,6 +126,11 @@ sym_pt Program_data::new_var(sym_type type){
 }
 
 
+void Program_data::add_symbol(sym_pt &symbol){
+	symbol = (sym_pt)DS_insert(symbols, symbol);
+}
+
+
 inline sym_pt Program_data::find_sym(str_dx dx) const {
 	return (sym_pt)DS_find(symbols, get_string(dx));
 }

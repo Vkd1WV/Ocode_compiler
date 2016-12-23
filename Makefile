@@ -45,7 +45,7 @@ LIBS   :=-ldata
 
 PARSER:= \
 	parse.cpp \
-	parse_declarations.c parse_expressions.c parse_statements.c #emitters.c
+	parse_declarations.cpp parse_expressions.cpp parse_statements.cpp
 
 SRC    := \
 	Makefile cmd_line.yuck main.c \
@@ -87,7 +87,7 @@ occ: $(OCC_OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OCC_OBJECTS) $(LIBS)
 
 parse.o: $(PARSER) scanner.h prog_data.h errors.h scope.h proto.h
-	$(CXX) $(CXXFLAGS) -Wno-switch-enum -c -o $@ parse.cpp
+	$(CXX) $(CXXFLAGS) -Wno-switch -c -o $@ parse.cpp
 
 scanner.o: scanner.cpp scanner.h   errors.h scope.h lex.h
 scope.o: scope.cpp     prog_data.h errors.h scope.h

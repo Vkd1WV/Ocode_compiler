@@ -289,10 +289,10 @@ void Statement (void){ // any single line. always ends with NL
 		case T_MAX   :
 		case T_PTR   :
 		case T_N_TYPE: Decl_Storage (); break;
-		case T_SUB   : Decl_Sub     (); break;
+		//case T_SUB   : Decl_Sub     (); break;
 		case T_FUN   : Decl_Fun     (); break;
-		case T_TYPE  : Decl_Type    (); break;
-		case T_OPR   : Decl_Operator(); break;
+		//case T_TYPE  : Decl_Type    (); break;
+		//case T_OPR   : Decl_Operator(); break;
 		
 		// Control Statements
 		case T_LBL  : Label   (); break;

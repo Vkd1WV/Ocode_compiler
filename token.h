@@ -131,6 +131,7 @@ typedef enum {
 	T_SUB , // Subroutine
 	T_FUN , // Function
 	T_TYPE, // Type Declaration
+	T_VOID, // void declaration
 
 	// Word declarations
 	T_8   ,
@@ -147,6 +148,7 @@ typedef enum {
 	T_CONST ,
 	T_STATIC,
 	T_ASM,     // Assembler Routine
+	T_ASM_BLK,
 	
 	// Parameter Modes
 	T_IN,
@@ -199,7 +201,7 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		/************************** Declared Names ****************************/
 		"T_NAME", "T_N_STRG", "T_N_FUN", "T_N_SUB", "T_N_TYPE", "T_N_CLSS",
 		/*************************** Declarations *****************************/
-		"T_OPR", "T_SUB", "T_FUN", "T_TYPE",
+		"T_OPR", "T_SUB", "T_FUN", "T_TYPE", "T_VOID",
 		// Word declarations
 		"T_8", "T_16", "T_32", "T_64", "T_WORD", "T_MAX",
 		// pointer declaration

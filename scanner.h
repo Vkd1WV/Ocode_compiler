@@ -47,7 +47,8 @@ public:
 	~Scanner(void);
 	
 	// Mutators
-	static void next_token (void     );
+	static void next_token(void);
+	static void start_asm (void);
 	
 	// Accessors
 	static inline sym_pt        sym   (void) { return scan_sym  ; }

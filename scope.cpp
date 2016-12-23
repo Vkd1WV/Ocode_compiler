@@ -10,6 +10,9 @@
 #include <data.h>
 #include "scope.h"
 #include "errors.h"
+#include "scanner.h"
+#include "prog_data.h"
+#include <string.h>
 
 
 /******************************************************************************/
@@ -28,7 +31,9 @@ typedef struct contxt{
 /******************************************************************************/
 
 
-DS Scope_Stack::stack;
+DS     Scope_Stack::stack;
+char * Scope_Stack::buffer;
+size_t Scope_Stack::buf_l;
 
 
 /******************************************************************************/
@@ -38,6 +43,8 @@ DS Scope_Stack::stack;
 
 Scope_Stack::Scope_Stack (void){
 	stack = DS_new_list(sizeof(struct contxt));
+	buffer = (char*) malloc(50); // anything will work here
+	buf_l = 50;
 }
 
 Scope_Stack::~Scope_Stack(void){
@@ -52,6 +59,8 @@ Scope_Stack::~Scope_Stack(void){
 	}
 	
 	DS_delete(stack);
+	
+	free(buffer);
 	
 	debug_msg("Scope_Stack::~Scope_Stack(): stop");
 }
@@ -89,6 +98,45 @@ void Scope_Stack::nq_inst(
 		crit_error("Scope_Stack::instructions(): the scope stack is empty");
 	else con->inst_q->add_inst(a, b, c, d, e, f);
 }
+
+
+// get the current scope prefix
+const char * Scope_Stack::prefix(void){
+	contxt_pt con;
+	
+	con = (contxt_pt) DS_first(stack);
+	if(!con) crit_error("Scope_Stack::prefix(): no context");
+	
+	if(con->scope) return Program_data::get_string(con->scope->name);
+	else return "";
+}
+
+
+// uses Scanner::text() as the name
+	// checks Scanner::token() == T_NAME
+	// inserts sym into the symbol table
+void Scope_Stack::add_sym(sym_pt &sym){
+	size_t length;
+	
+	length = strlen(prefix()) + Scanner::length() +1;
+	
+	// resize the buffer
+	if(length > buf_l){
+		buffer = (char*) realloc(buffer, length);
+		buf_l = length;
+	}
+	
+	strcpy(buffer, prefix());
+	strcat(buffer, Scanner::text());
+	
+	sym->name = Program_data::add_string(buffer);
+	sym->short_name = sym->name + strlen(prefix());
+	
+	Program_data::add_symbol(sym);
+	
+	Scanner::next_token();
+}
+
 
 sym_pt Scope_Stack::bind(token_t &token, const char * name){
 	sym_pt sym=NULL;
@@ -168,23 +216,5 @@ void Scope_Stack::emit_op(
 ){
 	nq_inst(NO_NAME, op, NO_NAME, result, arg1, arg2);
 }
-
-
-
-
-// get the current scope prefix
-//inline const char * scope_prefix(void){
-//	prg_blk * block_pt;
-//	
-//	block_pt = (prg_blk*)DS_first(scope_stack);
-//	
-//	if(block_pt->scope)
-//		return dx_to_name(block_pt->scope->name);
-//	else return "";
-//}
-
-
-
-
 
 

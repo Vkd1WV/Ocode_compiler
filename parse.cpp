@@ -10,8 +10,8 @@
 #include "scanner.h"
 #include "prog_data.h"
 #include "errors.h"
-#include "scope.h"
 #include "proto.h"
+#include "scope.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -109,7 +109,7 @@ static inline void debug_iop(const char * message, iop_pt iop){
 
 /********************************* GETTERS ************************************/
 
-static inline bool match_string(char * string){
+static inline bool match_string(const char * string){
 	if ( Scanner::token() != T_NAME || strcmp(string, Scanner::text()) ){
 		expected(string);
 	}
@@ -122,31 +122,29 @@ static inline void match_token(token_t t){
 	else expected(token_dex[t]);
 }
 
-static inline char * get_name(void){
-	static char * buffer;
-	static size_t buf_lngth;
-	
-	if (token != T_NAME) expected("a name");
-	
-	lngth = strlen(yytext)+1; // +1 for the \0
-	
-	// size the buffer if necessary
-	if(!buffer){
-		buffer = malloc(Scanner::length()+1);
-		buf_lngth = lngth;
-	}
-	else if (lngth > buf_lngth){
-		buffer = realloc(buffer, Scanner::length()+1);
-		buf_lngth = lngth;
-	}
-	
-	if (!buffer) crit_error("Out of Memory");
-	
-	strncpy(buffer, yytext, Scanner::length());
-	
-	Scanner::next_token();
-	return buffer;
-}
+//static inline char * get_name(void){
+//	static char * buffer;
+//	static size_t buf_lngth;
+//	
+//	if (Scanner::token() != T_NAME) expected("a name");
+//	
+//	// size the buffer if necessary
+//	if(!buffer){
+//		buffer = (char*)malloc(Scanner::length()+1);
+//		buf_lngth = Scanner::length()+1;
+//	}
+//	else if (Scanner::length()+1 > buf_lngth){
+//		buffer = (char*)realloc(buffer, Scanner::length()+1);
+//		buf_lngth = Scanner::length()+1;
+//	}
+//	
+//	if (!buffer) crit_error("Out of Memory");
+//	
+//	strncpy(buffer, Scanner::text(), Scanner::length());
+//	
+//	Scanner::next_token();
+//	return buffer;
+//}
 
 
 /******************************************************************************/
@@ -191,7 +189,7 @@ void Decl_Sub     (void);
 void Decl_Fun     (void);
 void Decl_Type    (void);
 void Decl_Operator(void);
-void Decl_Implicit(void)
+void Decl_Implicit(void);
 
 // expressions
 static sym_pt Boolean          (void);
@@ -206,9 +204,9 @@ void Statement (void);
 /******************************************************************************/
 
 
-#include "parse_declarations.c"
-#include "parse_expressions.c"
-#include "parse_statements.c"
+#include "parse_declarations.cpp"
+#include "parse_expressions.cpp"
+#include "parse_statements.cpp"
 
 
 /******************************************************************************/

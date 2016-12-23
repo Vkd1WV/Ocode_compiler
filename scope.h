@@ -19,6 +19,9 @@
 class Scope_Stack{
 private:
 	static DS stack;
+	// used in emit_sym()
+	static char * buffer;
+	static size_t buf_l;
 	
 	
 	static void nq_inst(
@@ -29,6 +32,8 @@ private:
 		const sym_pt e,
 		const sym_pt f
 	);
+	
+	static const char * prefix(void);
 	
 public:
 	 Scope_Stack(void);
@@ -41,6 +46,11 @@ public:
 	
 	static sym_pt bind  (token_t &token, const char * name);
 	static void   bindop(void             );
+	
+	// uses Scanner::text() as the name
+	// checks Scanner::token() == T_NAME
+	// inserts sym into the symbol table
+	static void add_sym(sym_pt &sym);
 	
 	static void emit_cmnt(const char * cmnt);
 	static void emit_lbl (const str_dx lbl, const char * cmnt);

@@ -33,7 +33,7 @@ int main(int argc, char** argv){
 		scan.next_token();
 	} while(scan.token() != T_EOF);
 	
-	(void) ss.pop();
+	delete ss.pop();
 	
 	debug_msg("main(): stop");
 	

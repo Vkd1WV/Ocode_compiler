@@ -11,6 +11,7 @@
 #define _LEX_L // Used in globals.h to eliminate spurrious warnings
 
 #include "lex.h"
+#include "scanner.h"
 
 %}
 
@@ -29,6 +30,7 @@
 %x INCLUDE
 %x STRING
 %x CHAR
+%x ASM
 
 DIGIT  [0-9]
 HEX    0[xX]({DIGIT}|[a-fA-F])+
@@ -195,6 +197,10 @@ const  return T_CONST;
 static return T_STATIC;
 asm    return T_ASM;
 
+ /***************************** ASSEMBLER MODE ********************************/
+
+<ASM>(.|\n)*               return T_ASM_BLK;
+<ASM>end     BEGIN(INITIAL); return T_NAME;
 
  /************************** PRIMARY DATA TYPES *******************************/
 
@@ -216,4 +222,7 @@ asm    return T_ASM;
  /* This needs to be the last thing */
 <*>.|\n scan_error("unknown token");
 
+%%
+
+void Scanner::start_asm (void) { BEGIN(ASM); }
 
