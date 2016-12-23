@@ -28,13 +28,17 @@ static void Call_sub(void){
 
 static void Label(void){
 	match_token(T_LBL);
+	if(Scanner::token() != T_NAME) expected("An unbound name");
 	Scope_Stack::emit_lbl( Program_data::add_string( Scanner::text() ), NULL );
+	match_token(T_NAME);
 	match_token(T_NL);
 }
 
 static void Jump(void){
 	match_token(T_JMP);
+	if(Scanner::token() != T_NAME) expected("An unbound name");
 	Scope_Stack::emit_jump(Program_data::add_string( Scanner::text() ), NULL);
+	match_token(T_NAME);
 	match_token(T_NL);
 }
 
@@ -78,7 +82,7 @@ static void If(void){
 	match_token(T_IF);
 	Scope_Stack::emit_cmnt("IF");
 	
-	else_label = Program_data::new_label();
+	else_label = Program_data::unq_label();
 	
 	condition = Boolean();
 	if(condition->type == st_lit_int){
@@ -96,7 +100,7 @@ static void If(void){
 	if(Scanner::token() == T_ELSE){
 		match_token(T_ELSE);
 		
-		skip_label = Program_data::new_label();
+		skip_label = Program_data::unq_label();
 		
 		Scope_Stack::emit_jump(skip_label, NULL);
 		Scope_Stack::emit_lbl(else_label, "ELSE lbl");
@@ -124,8 +128,8 @@ static void While(void){
 	break_label    = break_this;
 	
 	// create new labels for this loop
-	continue_this = Program_data::new_label();
-	break_this    = Program_data::new_label();
+	continue_this = Program_data::unq_label();
+	break_this    = Program_data::unq_label();
 	
 	
 	match_token(T_WHILE);
@@ -159,17 +163,22 @@ static void Do(void){
 	str_dx continue_label, break_label, true_label;
 	sym_pt condition;
 	
+	#ifdef DBG_PARSE
+	debug_msg("Do(): start");
+	#endif
+	
 	// Save the previous break and continue labels
 	continue_label = continue_this;
 	break_label    = break_this;
 	
 	// create new labels for this loop
-	continue_this = Program_data::new_label();
-	break_this    = Program_data::new_label();
-	true_label    = Program_data::new_label();
+	continue_this = Program_data::unq_label();
+	break_this    = Program_data::unq_label();
+	true_label    = Program_data::unq_label();
 	
 	
 	match_token(T_DO);
+	Scope_Stack::emit_cmnt("DO");
 	Scope_Stack::emit_lbl(true_label, "TRUE lbl");
 	
 	Statement();
@@ -190,10 +199,15 @@ static void Do(void){
 	else Scope_Stack::emit_jump(true_label, condition);
 	
 	Scope_Stack::emit_lbl(break_this, "BRK lbl");
+	Scope_Stack::emit_cmnt("END DO");
 	
 	// restore previous break and continue labels
 	continue_this = continue_label;
 	break_this    = break_label;
+	
+	#ifdef DBG_PARSE
+	debug_msg("Do(): stop");
+	#endif
 }
 
 
@@ -216,7 +230,7 @@ static void Switch(void){
 	str_dx break_label;
 	
 	break_label = break_this;
-	break_this = Program_data::new_label();
+	break_this = Program_data::unq_label();
 	
 	match_token(T_SWTCH);
 	condition = Boolean();
@@ -293,6 +307,7 @@ void Statement (void){ // any single line. always ends with NL
 		case T_FUN   : Decl_Fun     (); break;
 		//case T_TYPE  : Decl_Type    (); break;
 		//case T_OPR   : Decl_Operator(); break;
+		//case T_NAME  : Decl_Implicit(); break;
 		
 		// Control Statements
 		case T_LBL  : Label   (); break;

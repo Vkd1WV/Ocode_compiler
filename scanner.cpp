@@ -118,6 +118,14 @@ void Scanner::next_token(void){
 		scan_sym = Scope_Stack::bind(scan_token, scan_text);
 	else scan_sym = NULL;
 	
+	#ifdef DBG_SCAN
+		printf("%s\t: at %u is '%s'\n",
+			token_dex[token()],
+			lnum(),
+			token() != T_NL && token() != T_EOF? text() : ""
+		);
+	#endif
+	
 	//debug_msg("Scanner::next_token(): stop");
 	
 }
@@ -127,19 +135,19 @@ sym_pt Scanner::add_lit_sym(token_t token, const char * str){
 	sym_pt sym=NULL;
 	
 	if(token == T_NUM){ // process the number
-		sym = Program_data::new_var(st_lit_int);
+		sym = Program_data::unq_sym(st_lit_int);
 		sym->set = true;
 		sym->constant = true;
 		sym->value = read_num(str);
 	}
 	else if (token == T_CHAR){
-		sym = Program_data::new_var(st_lit_int);
+		sym = Program_data::unq_sym(st_lit_int);
 		sym->set = true;
 		sym->constant = true;
 		sym->value = read_char(str);
 	}
 	else if (token == T_STR){
-		sym = Program_data::new_var(st_lit_str);
+		sym = Program_data::unq_sym(st_lit_str);
 		sym->set = true;
 		sym->constant = true;
 		sym->str = Program_data::add_string(str);

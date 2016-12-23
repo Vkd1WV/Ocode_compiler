@@ -8,7 +8,7 @@
 
 
 /******************************************************************************/
-//                           PRIVATE FUNCTIONS
+//                           HELPER FUNCTIONS
 /******************************************************************************/
 
 
@@ -129,8 +129,44 @@ static inline void set_init_size(sym_pt result, sym_pt arg1, sym_pt arg2){
 }
 
 
-static sym_pt Call_fun(sym_pt function){
-	return NULL; //FIXME: this is causing a segfault in procedure.oc
+/******************************************************************************/
+//                           HELPER FUNCTIONS
+/******************************************************************************/
+
+
+void Arg_Exp_list(sym_pt fun){
+	sym_pt param;
+	
+	// FIXME: if fun was expecting a funtion argument pass instead of execute
+	// FIXME: check param types
+	param=Boolean();
+	Scope_Stack::emit_op(I_PARM, NULL, param, NULL);
+	
+	while(Scanner::token() == T_COMA){
+		Scanner::next_token();
+		param=Boolean();
+		Scope_Stack::emit_op(I_PARM, NULL, param, NULL);
+	}
+}
+
+static sym_pt Call_fun(){
+	sym_pt ret_val, fun;
+	
+	fun = Scanner::sym();
+	if(!fun) crit_error("sym_pt Call_fun(): Scanner::sym() returned NULL");
+	
+	ret_val = Program_data::unq_sym(fun->type);
+	set_init_size(ret_val, fun, NULL);
+	
+	match_token(T_N_FUN);
+	
+	match_token(T_OBRK);
+	if(Scanner::token() != T_CBRK) Arg_Exp_list(fun);
+	match_token(T_CBRK);
+	
+	Scope_Stack::emit_op(I_CALL, ret_val, fun, NULL);
+	
+	return ret_val;
 }
 
 
@@ -148,19 +184,13 @@ static sym_pt Primary(void){
 	case T_STR:
 	case T_CHAR:
 	case T_NUM:
-		sym = Scanner::sym();
-		break;
-	
 	case T_N_STRG:
 		sym = Scanner::sym();
-		break;
-	
-	case T_NAME:
-		
+		Scanner::next_token();
 		break;
 	
 	case T_N_FUN:
-		sym = Call_fun(Scanner::sym());
+		sym=Call_fun();
 		break;
 		
 	
@@ -195,7 +225,7 @@ static sym_pt Unary(void){
 /*			break;*/
 /*		*/
 /*		case data:*/
-/*			result = Program_data::new_var();*/
+/*			result = Program_data::unq_sym();*/
 /*			Scope_Stack::emit_op(I_NEG, result, arg, NULL);*/
 /*			return result;*/
 /*		*/
@@ -223,7 +253,7 @@ static sym_pt Unary(void){
 		default: parse_crit(arg, NULL, "Internal: at Unary(), T_REF");
 		}
 		
-		result = Program_data::new_var(st_ref);
+		result = Program_data::unq_sym(st_ref);
 		result->set = true;
 		result->dref = arg;
 		
@@ -253,7 +283,7 @@ static sym_pt Unary(void){
 		// Symantic Checks
 		switch (arg->type){
 		case st_int:
-			result = Program_data::new_var(st_int);
+			result = Program_data::unq_sym(st_int);
 			set_init_size(result, arg, NULL);
 			Scope_Stack::emit_op(I_NOT, result, arg, NULL);
 			break;
@@ -281,7 +311,7 @@ static sym_pt Unary(void){
 		// Symantic Checks
 		switch (arg->type){
 		case st_int:
-			result = Program_data::new_var(st_int);
+			result = Program_data::unq_sym(st_int);
 			set_init_size(result, arg, NULL);
 			Scope_Stack::emit_op(I_INV, result, arg, NULL);
 			break;
@@ -355,7 +385,7 @@ static sym_pt Term(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_MUL, result, arg1, arg2);
 			}
@@ -379,7 +409,7 @@ static sym_pt Term(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_DIV, result, arg1, arg2);
 			}
@@ -403,7 +433,7 @@ static sym_pt Term(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_MOD, result, arg1, arg2);
 			}
@@ -423,7 +453,7 @@ static sym_pt Term(void){
 			
 			if(arg2->type == st_lit_int && arg1->type == st_lit_int){
 				// fold the literals
-				result = Program_data::new_var(st_lit_int);
+				result = Program_data::unq_sym(st_lit_int);
 				result->set = true;
 				result->constant = true;
 				
@@ -435,7 +465,7 @@ static sym_pt Term(void){
 				}
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_EXP, result, arg1, arg2);
 			}
@@ -459,7 +489,7 @@ static sym_pt Term(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_LSH, result, arg1, arg2);
 			}
@@ -483,7 +513,7 @@ static sym_pt Term(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_RSH, result, arg1, arg2);
 			}
@@ -546,8 +576,8 @@ static sym_pt Expression(void){
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
-					result = Program_data::new_var(st_ref);
-				else result = Program_data::new_var(st_int);
+					result = Program_data::unq_sym(st_ref);
+				else result = Program_data::unq_sym(st_int);
 				
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_ADD, result, arg1, arg2);
@@ -594,8 +624,8 @@ static sym_pt Expression(void){
 			}
 			else{
 				if (arg2->type == st_ref || arg1->type == st_ref)
-					result = Program_data::new_var(st_ref);
-				else result = Program_data::new_var(st_int);
+					result = Program_data::unq_sym(st_ref);
+				else result = Program_data::unq_sym(st_int);
 				
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_SUB, result, arg1, arg2);
@@ -619,7 +649,7 @@ static sym_pt Expression(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_BAND, result, arg1, arg2);
 			}
@@ -642,7 +672,7 @@ static sym_pt Expression(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_BOR, result, arg1, arg2);
 			}
@@ -665,7 +695,7 @@ static sym_pt Expression(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				set_init_size(result, arg1, arg2);
 				Scope_Stack::emit_op(I_XOR, result, arg1, arg2);
 			}
@@ -723,7 +753,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_EQ, result, arg1, arg2);
@@ -767,7 +797,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_NEQ, result, arg1, arg2);
@@ -811,7 +841,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_LT, result, arg1, arg2);
@@ -855,7 +885,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_GT, result, arg1, arg2);
@@ -899,7 +929,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_LTE, result, arg1, arg2);
@@ -943,7 +973,7 @@ static sym_pt Equation(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(is_init(arg1) && is_init(arg2)) result->set = true;
 				Scope_Stack::emit_op(I_GTE, result, arg1, arg2);
@@ -954,7 +984,11 @@ static sym_pt Equation(void){
 		default: parse_crit(arg1, arg2, "Internal: at Equation()");
 		}
 		
-		Warn_comparison(arg1, arg2);
+		if(
+			(arg1->type == st_ref && arg2->type != st_ref) ||
+			(arg2->type == st_ref && arg1->type != st_ref)
+		)parse_warn("Incompatible types in comparison");
+		
 		arg1 = result;
 	}
 	return arg1;
@@ -1083,7 +1117,7 @@ static sym_pt Boolean(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				result->size = w_byte;
 				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
@@ -1129,7 +1163,7 @@ static sym_pt Boolean(void){
 				Program_data::remove_sym(arg2->name);
 			}
 			else{
-				result = Program_data::new_var(st_int);
+				result = Program_data::unq_sym(st_int);
 				if(arg1->set && arg2->set) result->set = true;
 				else parse_warn("Using an uninitialized value");
 				result->size = w_byte;

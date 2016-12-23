@@ -148,7 +148,7 @@ typedef enum {
 	T_CONST ,
 	T_STATIC,
 	T_ASM,     // Assembler Routine
-	T_ASM_BLK,
+	T_ASM_LN,
 	
 	// Parameter Modes
 	T_IN,
@@ -207,7 +207,7 @@ EXTERN const char * token_dex[NUM_TOKENS]
 		// pointer declaration
 		"T_PTR",
 		// Qualifers
-		"T_CONST", "T_STATIC", "T_ASM",
+		"T_CONST", "T_STATIC", "T_ASM", "T_ASM_LN",
 		// Parameter Modes
 		"T_IN", "T_OUT", "T_BI"
 	}

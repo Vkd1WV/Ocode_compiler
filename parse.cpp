@@ -80,10 +80,10 @@ static inline void parse_warn(const char * message){
 		);
 }
 
-static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
-	if(verbosity >= V_WARN && arg1->type != arg2->type)
-		parse_warn("Incompatible types in comparison");
-}
+//static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
+//	if(verbosity >= V_WARN && arg1->type != arg2->type)
+//		parse_warn("Incompatible types in comparison");
+//}
 
 static inline void expected(const char* thing){
 	sprintf(err_array, "Expected '%s', found '%s'",
@@ -110,7 +110,7 @@ static inline void debug_iop(const char * message, iop_pt iop){
 /********************************* GETTERS ************************************/
 
 static inline bool match_string(const char * string){
-	if ( Scanner::token() != T_NAME || strcmp(string, Scanner::text()) ){
+	if ( strcmp(string, Scanner::text()) ){
 		expected(string);
 	}
 	Scanner::next_token();
@@ -251,13 +251,16 @@ bool Parse(const char * infile){
 	
 	scope.emit_op(I_RTRN, NULL, NULL, NULL);
 	
-	Optomize(scope.pop());
+	
 	
 	if(errors){
 		warn_msg("Parse(): errors were found");
 		return true;
 	}
-	else return false;
+	else{
+		Optomize(scope.pop());
+		return false;
+	}
 }
 
 

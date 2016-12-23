@@ -20,10 +20,7 @@
 /******************************************************************************/
 
 
-typedef struct contxt{
-	Instruction_Queue * inst_q;
-	sym_pt              scope;
-} * contxt_pt;
+
 
 
 /******************************************************************************/
@@ -83,6 +80,14 @@ Instruction_Queue * Scope_Stack::pop(void){
 	else return NULL;
 }
 
+
+inline contxt_pt Scope_Stack::first(void){
+	return (contxt_pt) DS_first(stack);
+}
+inline contxt_pt Scope_Stack::next (void){
+	return (contxt_pt) DS_next(stack);
+}
+
 void Scope_Stack::nq_inst(
 	str_dx       a,
 	op_code      b,
@@ -93,7 +98,7 @@ void Scope_Stack::nq_inst(
 ){
 	contxt_pt con;
 	
-	con = (contxt_pt) DS_first(stack);
+	con = first();
 	if(!con)
 		crit_error("Scope_Stack::instructions(): the scope stack is empty");
 	else con->inst_q->add_inst(a, b, c, d, e, f);
@@ -101,10 +106,10 @@ void Scope_Stack::nq_inst(
 
 
 // get the current scope prefix
-const char * Scope_Stack::prefix(void){
+inline const char * Scope_Stack::prefix(void){
 	contxt_pt con;
 	
-	con = (contxt_pt) DS_first(stack);
+	con=first();
 	if(!con) crit_error("Scope_Stack::prefix(): no context");
 	
 	if(con->scope) return Program_data::get_string(con->scope->name);
@@ -132,59 +137,62 @@ void Scope_Stack::add_sym(sym_pt &sym){
 	sym->name = Program_data::add_string(buffer);
 	sym->short_name = sym->name + strlen(prefix());
 	
-	Program_data::add_symbol(sym);
+	Program_data::add_sym(sym);
 	
 	Scanner::next_token();
 }
 
 
-sym_pt Scope_Stack::bind(token_t &token, const char * name){
-	sym_pt sym=NULL;
-	
-	if (token == T_NAME){
-		/*
+/*
 This function returns the correct symbol for the given name in the current scope
 */
-//void Scanner::bind(void){
-//	static char * buffer;
-//	static size_t buf_l;
-//	#define BUF_SZ 64
-//	
-//	char * prefix;
-//	size_t name_l;
-////	prg_blk * block_pt;
-////	
-////	// initializate the buffer
-////	if(!buffer){
-////		buffer = (char*)malloc(BUF_SZ);
-////		buf_l = BUF_SZ;
-////	}
-////	
-////	yysymbol = NULL;
-////	
-////	block_pt = (prg_blk*)DS_first(scope_stack);
-////	
-////	// resize the buffer if necessary
-////	if(block_pt->scope){
-////		prefix = dx_to_name(block_pt->scope->name);
-////		name_l = strlen(prefix) + strlen(yytext) + 1;
-////		if(name_l > buf_l) buffer = realloc(buffer, name_l);
-////	}
-////	
-////	// search the scope stack
-////	while ( block_pt->scope ){
-////		prefix = dx_to_name(block_pt->scope->name);
-////		strncpy(buffer, prefix, strlen(prefix));
-////		strncat(buffer, yytext, strlen(yytext));
-////		if(( yysymbol = DS_find(symbols, buffer) )) break;
-////		block_pt = (prg_blk*)DS_next(scope_stack);
-////	}
-////	
-////	// if we didn't find anything, check the global scope
-////	if(!yysymbol) yysymbol = DS_find(symbols, yytext);
-//}
+sym_pt Scope_Stack::bind(token_t &token, const char * name){
+	sym_pt sym=NULL;
+	contxt_pt con;
+	const char * prefix;
+	size_t length;
+	
+	if (token != T_NAME)
+		crit_error("Scope_Stack::bind(): did not receive T_NAME");
+	
+	con = first();
+	if(!con) crit_error("Scope_Stack::bind(): stack is empty");
+	
+	if(con->scope){
+		prefix = Program_data::get_string(con->scope->name);
+		length = strlen(prefix) + Scanner::length() +1;
+		
+		// resize the buffer
+		if(length > buf_l){
+			buffer = (char*) realloc(buffer, length);
+			buf_l = length;
+		}
 	}
-	else return NULL;
+	
+	// search the scope stack
+	while ( con->scope ){
+		prefix = Program_data::get_string(con->scope->name);
+		strcpy(buffer, prefix);
+		strncat(buffer, Scanner::text(), Scanner::length());
+		
+		
+		if(( sym = Program_data::find_sym(buffer) )) break;
+		con = next();
+	}
+
+	// if we didn't find anything, check the global scope
+	if(!sym) sym = Program_data::find_sym(Scanner::text());
+	
+	// Set the token
+	if(sym){
+		if(sym->fun)                 token = T_N_FUN;
+		else if(sym->type == st_sub) token = T_N_SUB;
+		else if(
+			sym->type == st_int ||
+			sym->type == st_ref
+		)                            token = T_N_STRG;
+		else crit_error("Scope_Stack::bind(): Internal: unknown type");
+	}
 	
 	return sym;
 }

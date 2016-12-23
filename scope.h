@@ -16,10 +16,15 @@
 
 #define GLOBAL_SCOPE NULL
 
+typedef struct contxt{
+	Instruction_Queue * inst_q;
+	sym_pt              scope;
+} * contxt_pt;
+
 class Scope_Stack{
 private:
 	static DS stack;
-	// used in emit_sym()
+	// used in add_sym()
 	static char * buffer;
 	static size_t buf_l;
 	
@@ -33,7 +38,9 @@ private:
 		const sym_pt f
 	);
 	
-	static const char * prefix(void);
+	static inline const char * prefix(void);
+	static inline contxt_pt first(void);
+	static inline contxt_pt next (void);
 	
 public:
 	 Scope_Stack(void);

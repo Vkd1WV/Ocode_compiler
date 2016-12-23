@@ -43,10 +43,8 @@ static Instruction_Queue * Mk_blk(Instruction_Queue * q){
 		
 		// Each block must contain at least one instruction
 		iop = q->dq();
-		if(!iop) {
-			err_msg("\tInternal: Mk_blk(): counld not dq from non empty q");
-			return NULL;
-		}
+		if(!iop)
+			crit_error("\tInternal: Mk_blk(): counld not dq from non empty q");
 		
 		info_msg("\tMk_blk(): Making Block");
 		
@@ -54,7 +52,13 @@ static Instruction_Queue * Mk_blk(Instruction_Queue * q){
 		
 		blk->nq(iop);
 		
-		while(( iop = q->first() )){
+		if(
+			iop->op == I_JMP  ||
+			iop->op == I_JZ   ||
+			iop->op == I_RTRN ||
+			iop->op == I_CALL
+		);
+		else while(( iop = q->first() )){
 			if(iop->label != NO_NAME) break; // entry points are leaders
 			blk->nq(q->dq());
 			if(
@@ -223,6 +227,8 @@ void Optomize(Instruction_Queue * inst_q){
 		
 		// collapse labels
 		
+		if(make_debug) inst_q->Dump(debug_fd);
+		
 		while (( blk_pt = Mk_blk(inst_q) )){
 		
 			#ifdef BLK_ADDR
@@ -267,6 +273,8 @@ void Optomize(Instruction_Queue * inst_q){
 		}
 	}
 	else info_msg("Optomize(): The queue is empty");
+	
+	delete inst_q;
 	
 	sprintf(
 				err_array,

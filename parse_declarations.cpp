@@ -104,7 +104,7 @@ static void Pointer_Specifier (sym_pt templt){
 	
 	templt->type = st_ref;
 	
-	target= Program_data::new_var(st_undef);
+	target= Program_data::unq_sym(st_undef);
 	target->set = true; // assume it's initialized
 	
 	templt->dref = target;
@@ -153,6 +153,11 @@ static void Custom_Specifier(sym_pt templt){
 
 void Type_specifier(sym_pt templt_pt){
 	switch(Scanner::token()){
+		case T_VOID:
+			templt_pt->type = st_void;
+			match_token(T_VOID);
+			break;
+		
 		case T_8:
 		case T_16:
 		case T_32:
@@ -161,6 +166,7 @@ void Type_specifier(sym_pt templt_pt){
 		case T_MAX   : Word_Specifier   (templt_pt); break;
 		case T_PTR   : Pointer_Specifier(templt_pt); break;
 		case T_N_TYPE: Custom_Specifier (templt_pt); break;
+		default      : expected("A type specifier");
 	}
 	
 	// type specifier
@@ -182,6 +188,7 @@ void Decl_Storage(void){
 	
 	Initializer_list(&templt);
 	
+	match_token(T_NL);
 } // end Decl_Symbol
 
 
@@ -196,13 +203,17 @@ static void Assembler_block(sym_pt fun){
 	Scanner::start_asm();
 	match_token(T_ASM);
 	
-	if(Scanner::token() == T_ASM_BLK){
-		ass_code = (char*)malloc(Scanner::length()+1);
-		strcpy(ass_code, Scanner::text());
-		fun->assembler = ass_code;
+	while(Scanner::token() == T_ASM_LN)
 		Scanner::next_token();
-	}
-	else expected("Assembler");
+	
+//	if(Scanner::token() == T_ASM_BLK){
+//		ass_code = (char*)malloc(Scanner::length()+1);
+//		strcpy(ass_code, Scanner::text());
+//		fun->assembler = ass_code;
+//		Scanner::next_token();
+//	}
+//	else expected("Assembler");
+	
 }
 
 
@@ -397,6 +408,7 @@ static void Fun_Parameter_list(sym_pt procedure){
 	
 	memset((void*) templt, 0, sizeof(struct sym));
 	
+	templt->set = true;
 	Decl_Fun_Parameter(templt);
 	
 	while(Scanner::token() == T_COMA){
@@ -408,9 +420,12 @@ static void Fun_Parameter_list(sym_pt procedure){
 void Decl_Fun(void){
 	struct sym f;
 	sym_pt fun = &f;
+	Instruction_Queue * iq_pt;
 	
 	match_token(T_FUN);
 	Type_specifier(fun);
+	
+	fun->fun = true;
 	
 	if(Scanner::token() != T_NAME) expected("An unbound name");
 	Scope_Stack::add_sym(fun);
@@ -419,17 +434,23 @@ void Decl_Fun(void){
 	Scope_Stack::push(fun);
 	
 	match_token(T_OBRK);
-	Fun_Parameter_list(fun);
+	if(Scanner::token() != T_CBRK) Fun_Parameter_list(fun);
 	match_token(T_CBRK);
 	
 	if(Scanner::token() == T_ASM) Assembler_block(fun);
 	else Statement();
 	
 	match_string("end");
-	match_string(Program_data::get_string(fun->name));
+	
+	Scope_Stack::emit_op(I_RTRN, NULL, NULL, NULL);
+	
+	iq_pt = Scope_Stack::pop();
+	
+	if(Scanner::sym() != fun) expected("function name");
+	match_token(T_N_FUN);
 	match_token(T_NL);
 	
-	Optomize( Scope_Stack::pop() );
+	Optomize( iq_pt );
 }
 
 // Declare a Function

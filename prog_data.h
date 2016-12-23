@@ -43,6 +43,7 @@ typedef enum{
 	st_int,      ///< an integer
 	st_ref,      ///< a reference
 	
+	st_void,     ///< explicitly nothing
 	st_sub,      ///< a subroutine
 	st_lit_int,  ///< a literal integer to be inserted directly
 	st_lit_str,  ///< a string literal
@@ -155,6 +156,7 @@ typedef enum {
 	// Flow Control (6)
 	I_JMP ,
 	I_JZ  ,
+	I_PARM,
 	I_CALL,
 	I_PROC, // first icmd of each procedure. sets auto variables
 	I_RTRN,
@@ -206,7 +208,8 @@ typedef struct iop {
 		"I_BAND", "I_BOR", "I_XOR" , "I_EQ" , "I_NEQ" , "I_LT" , "I_GT"  ,
 		"I_LTE" ,
 		"I_GTE" , "I_AND", "I_OR"  ,
-		"I_JMP" , "I_JZ" , "I_PROC", "I_CALL", "I_RTRN"
+		"I_JMP" , "I_JZ" ,
+		"I_PARM", "I_CALL", "I_PROC", "I_RTRN"
 	};
 #else
 	extern const char * op_code_dex[NUM_I_CODES];
@@ -294,7 +297,7 @@ private:
 		if(dx == NO_NAME) return NULL;
 		else return string_array+dx;
 	}
-	inline sym_pt find_sym(str_dx dx) const;
+	
 	static const char * unique_str(void);
 	
 public:
@@ -302,11 +305,16 @@ public:
 	~Program_data(void);
 	
 	// Mutators
-	static str_dx new_label (void               );
 	static str_dx add_string(const char * name  );
-	static sym_pt new_var   (sym_type     type  );
+	static void   add_sym   (sym_pt     & symbol);
+	
+	static str_dx unq_label (void               );
+	static sym_pt unq_sym   (sym_type     type  );
+	//static sym_pt dup_sym   (sym_pt symbol      );
+	
 	static void   remove_sym(str_dx       dx    );
-	static void   add_symbol(sym_pt     & symbol);
+	
+	static sym_pt find_sym(const char * name);
 	
 	// Accessors
 	static inline const char * get_string(str_dx dx) {

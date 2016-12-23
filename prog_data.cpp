@@ -91,6 +91,12 @@ str_dx Program_data::add_string(const char * name){
 	return temporary;
 }
 
+void Program_data::add_sym(sym_pt &symbol){
+	symbol = (sym_pt)DS_insert(symbols, symbol);
+}
+
+
+
 const char * Program_data::unique_str(void){
 	static umax i;
 	static char str[23];
@@ -103,15 +109,14 @@ const char * Program_data::unique_str(void){
 	return str;
 }
 
-str_dx Program_data::new_label(void){
+str_dx Program_data::unq_label(void){
 	return add_string(unique_str());
 }
-
 
 /**	create a new symbol table entry with a unique name.
  *	*	temporary symbol names all begin with %.
  */
-sym_pt Program_data::new_var(sym_type type){
+sym_pt Program_data::unq_sym(sym_type type){
 	static struct sym new_symbol; // initialized to 0
 	
 	// give it a unique name
@@ -126,13 +131,8 @@ sym_pt Program_data::new_var(sym_type type){
 }
 
 
-void Program_data::add_symbol(sym_pt &symbol){
-	symbol = (sym_pt)DS_insert(symbols, symbol);
-}
-
-
-inline sym_pt Program_data::find_sym(str_dx dx) const {
-	return (sym_pt)DS_find(symbols, get_string(dx));
+sym_pt Program_data::find_sym(const char * name){
+	return (sym_pt)DS_find(symbols, name);
 }
 void Program_data::remove_sym(str_dx dx){
 	if( DS_find(symbols, get_string(dx)) ) DS_remove(symbols);
@@ -308,14 +308,14 @@ void Instruction_Queue::add_inst(
 	iop->arg2_lit    = false;
 	
 	#ifdef DBG_EMIT_IOP
-	debug_sym("emit_iop()        : out         ", out);
-	debug_sym("emit_iop()        : left        ", left);
-	debug_sym("emit_iop()        : right       ", right);
+	debug_sym("Instruction_Queue::add_inst(): out         ", out);
+	debug_sym("Instruction_Queue::add_inst(): left        ", left);
+	debug_sym("Instruction_Queue::add_inst(): right       ", right);
 	#endif
 	
 	switch (op){
 	case I_NOP :
-	case I_RTRN:
+	case I_PROC:
 		break;
 	
 	// Binaries
@@ -346,8 +346,11 @@ void Instruction_Queue::add_inst(
 			Program_data::remove_sym(right->name);
 		}
 		else iop->arg2.symbol = right;
-		
+	
 	// Unaries
+	case I_PARM:
+	case I_RTRN:
+	
 	case I_ASS :
 	case I_REF :
 	case I_DREF:
@@ -363,7 +366,7 @@ void Instruction_Queue::add_inst(
 		}
 		else iop->arg1.symbol = left;
 		break;
-		
+	
 	case I_JMP :
 	case I_JZ  :
 		if (left && left->type == st_lit_int){
@@ -375,22 +378,26 @@ void Instruction_Queue::add_inst(
 		}
 		else iop->arg1.symbol = left;
 		break;
-		
+	
+	case I_CALL:
+		iop->arg1.symbol = left;
+		break;
+	
 	case I_INC :
 	case I_DEC :
-	case I_CALL:
+	
 	
 	case NUM_I_CODES:
 	default:
 		sprintf(err_array,
-			"Internal: emit_iop() called with cmd = %s",
+			"Internal: Instruction_Queue::add_inst(): called with cmd = %s",
 			op_code_dex[op]
 		);
 		crit_error(err_array);
 	}
 	
 	#ifdef DBG_EMIT_IOP
-	debug_iop("emit_iop()        :Adding iop   ", iop);
+	debug_iop("Instruction_Queue::add_inst():Adding iop   ", iop);
 	#endif
 	
 	

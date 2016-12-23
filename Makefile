@@ -20,21 +20,26 @@ CWARNINGS:=-Wall -Wextra -pedantic \
 	-Wtrampolines -Wstack-protector \
 	-Wwrite-strings \
 	-Wconversion -Wdisabled-optimization \
-	# -Wc++-compat -Wpadded
+	 -Wc++-compat -Wpadded
 
 CXXWARNINGS:=-Wall -Wextra -pedantic \
-	-Wmissing-declarations \
+	-Wmissing-declarations -Werror=implicit-function-declaration \
 	-Wredundant-decls -Wshadow \
 	-Wpointer-arith -Wcast-align \
-	-Wuninitialized -Wmaybe-uninitialized \
+	-Wuninitialized -Wmaybe-uninitialized -Werror=uninitialized \
 	-Winline -Wno-long-long \
+	-Wswitch \
+	-Wsuggest-attribute=pure -Wsuggest-attribute=const \
+	-Wsuggest-attribute=noreturn -Wsuggest-attribute=format \
+	-Wtrampolines -Wstack-protector \
 	-Wwrite-strings \
-	-Wconversion
+	-Wconversion -Wdisabled-optimization
 
-DEBUG_OPT:= #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES -DDBG_PARSE
+DEBUG_OPT:=-DDBG_PARSE -DDBG_SCAN \
+#-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
 
 CFLAGS:=  --std=c11   $(CWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR) -g
-CXXFLAGS:=--std=c++14 $(CXXWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR) -g
+CXXFLAGS:=--std=c++14 $(CXXWARNINGS) $(DEBUG_OPT) -I$(INCDIR) -I./ -L$(LIBDIR) -g
 LFLAGS:=#-d
 LEX:= flex
 
@@ -100,7 +105,7 @@ opt.o: opt.cpp         prog_data.h errors.h proto.h
 lex.yy.o: lex.yy.c lex.h 
 	$(CXX) $(CXXFLAGS) -fpermissive -Wno-conversion -Wno-switch-default -Wno-sign-compare -c lex.yy.c
 yuck.o: yuck.c yuck.h
-	$(CC) $(CFLAGS) -Wno-switch-enum -Wno-sign-conversion -c $<
+	$(CC) $(CFLAGS) -Wno-padded -Wno-c++-compat -Wno-switch-enum -Wno-sign-conversion -c $<
 
 
 # Automatically generated files

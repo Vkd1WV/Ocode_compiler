@@ -192,6 +192,7 @@ byte4   return T_32;
 byte8   return T_64;
 word    return T_WORD;
 max     return T_MAX;
+void    return T_VOID;
 
 const  return T_CONST;
 static return T_STATIC;
@@ -199,7 +200,7 @@ asm    return T_ASM;
 
  /***************************** ASSEMBLER MODE ********************************/
 
-<ASM>(.|\n)*               return T_ASM_BLK;
+<ASM>\t.*{NEWL}               return T_ASM_LN;
 <ASM>end     BEGIN(INITIAL); return T_NAME;
 
  /************************** PRIMARY DATA TYPES *******************************/

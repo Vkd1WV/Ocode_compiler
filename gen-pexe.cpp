@@ -25,6 +25,7 @@ typedef struct pexe_header{
 	uint32_t name_array_sz; ///< Name Array length in bytes
 	uint32_t off_sym;       ///< File position for start of symbol table
 	uint32_t off_instq;     ///< File position for start of op queue
+	uint32_t padding;       ///< just to keep the fields alligned
 	
 	// file integity verification
 	uint64_t checksum; ///< checksum of everything after the header
@@ -70,6 +71,7 @@ void pexe (char * filename){
 	header.name_array_sz = 0;
 	header.off_sym       = 0;
 	header.off_instq     = 0;
+	header.padding       = 0;
 	
 	header.checksum = 0;
 	
