@@ -4,7 +4,7 @@
 
 SOURCEDIR:=$(HOME)/devel
 INSTALLDIR:=$(HOME)/prg
-LIBDIR:=$(INSTALLDIR)/lib
+LIBDIR:=$(INSTALLDIR)/lib/util
 INCDIR:=$(INSTALLDIR)/include
 
 CWARNINGS:=-Wall -Wextra -pedantic \
@@ -46,7 +46,7 @@ LEX:= flex
 ################################## FILES #######################################
 
 HEADERS:=prog_data.h errors.h my_types.h proto.h scanner.h token.h
-LIBS   :=-ldata
+LIBS   :=-ldata -lmsg
 
 PARSER:= \
 	parse.cpp \

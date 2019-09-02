@@ -32,7 +32,7 @@ Block_Queue Program_data::block_q;
 /**************************** Member Functions ********************************/
 
 // Used in symbols only
-static inline int cmp_sym(const void * left, const void * right){
+static inline imax cmp_sym(const void * left, const void * right){
 	return strcmp( (char*)left, (char*)right );
 }
 static inline const void * sym_key(const void * symbol){
