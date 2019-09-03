@@ -40,6 +40,8 @@ static inline const void * sym_key(const void * symbol){
 }
 
 Program_data::Program_data(void){
+	msg_print(NULL, V_TRACE, "Program_data(): start");
+	
 	// Initialize the string array
 	string_array = (char*)malloc(sizeof(char) * NAME_ARR_SZ);
 	if(!string_array) crit_error("Out of Memory");
@@ -51,10 +53,11 @@ Program_data::Program_data(void){
 		&sym_key,
 		&cmp_sym
 	);
+	msg_print(NULL, V_TRACE, "Program_data(): stop");
 }
 
 Program_data::~Program_data(void){
-	msg_print(NULL, V_DEBUG, "Program_data::~Program_data(): start");
+	msg_print(NULL, V_TRACE, "~Program_data(): start");
 	
 	msg_print(NULL, V_DEBUG, "Deleting the name array");
 	free(string_array);
@@ -62,7 +65,7 @@ Program_data::~Program_data(void){
 	msg_print(NULL, V_DEBUG, "Deleting the symbol table");
 	DS_delete(symbols);
 	
-	msg_print(NULL, V_DEBUG, "Program_data::~Program_data(): stop");
+	msg_print(NULL, V_TRACE, "~Program_data(): stop");
 }
 
 
@@ -426,7 +429,7 @@ void Instruction_Queue::add_inst(
 void Instruction_Queue::Dump(FILE * fd) const {
 	iop_pt iop;
 	
-	//msg_print(NULL, V_DEBUG, "\tDump_iq(): start");
+	msg_print(NULL, V_TRACE, "Instruction_Queue::Dump(): start");
 	if (!fd) msg_print(NULL, V_ERROR, "Internal: Dump_iq(): received NULL file descriptor");
 	
 	#ifdef FLUSH_FILES
@@ -453,7 +456,7 @@ void Instruction_Queue::Dump(FILE * fd) const {
 		fputs("Empty\n", fd);
 	}
 	
-	//msg_print(NULL, V_DEBUG, "\tDump_iq(): stop");
+	msg_print(NULL, V_TRACE, "Instruction_Queue::Dump(): stop");
 }
 
 

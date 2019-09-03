@@ -108,8 +108,8 @@ CXXWARNINGS:=-Wall -Wextra -pedantic \
 	-Wwrite-strings \
 	-Wconversion -Wdisabled-optimization
 
-DEBUG_OPT:=#-DDBG_PARSE -DDBG_SCAN \
-#-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
+DEBUG_OPT:=-DDBG_PARSE -DDBG_SCAN \
+-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
 
 CFLAGS:=  --std=c11   -g $(CWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR)
 CXXFLAGS:=--std=c++14 -g $(CXXWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR)

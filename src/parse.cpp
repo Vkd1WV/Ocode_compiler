@@ -216,12 +216,13 @@ bool Parse(const char * infile){
 //	intermed = d;
 //	scanner = s;
 	
-	// Initialize the scanner
-	Scanner scan(infile);
 	
 	// Initialize the scope stack
 	Scope_Stack scope;
 	scope.push(GLOBAL_SCOPE);
+	
+	// Initialize the scanner
+	Scanner scan(infile);
 	
 	
 	/*
