@@ -57,7 +57,7 @@ void pexe (char * filename){
 	pexe_h header;
 	size_t result;
 	
-	info_msg("pexe(): start");
+	msg_print(NULL, V_INFO, "pexe(): start");
 	
 	//Initialize the header
 	header.magic0  = magic0;
@@ -76,28 +76,25 @@ void pexe (char * filename){
 	header.checksum = 0;
 	
 	
-	sprintf(err_array, "pexe(): Size of pexe_h is: %lu", sizeof(pexe_h));
-	info_msg(err_array);
+	msg_print(NULL, V_INFO, "pexe(): Size of pexe_h is: %lu", sizeof(pexe_h));
 	
 	// open the file
-	sprintf(err_array, "pexe(): Creating file: '%s'", filename);
-	info_msg(err_array);
+	msg_print(NULL, V_INFO, "pexe(): Creating file: '%s'", filename);
 	fd = fopen(filename, "w");
 	if(!fd){
-		err_msg("pexe(): Could not open file");
+		msg_print(NULL, V_ERROR, "pexe(): Could not open file");
 		return;
 	}
 	
 	// write header
 	result = fwrite(&header, 1, sizeof(pexe_h), fd);
 	
-	sprintf(err_array, "pexe(): fwrite() returned %lu", result);
-	info_msg(err_array);
+	msg_print(NULL, V_INFO, "pexe(): fwrite() returned %lu", result);
 	
 	fclose(fd);
 	fd=NULL;
 	
-	info_msg("pexe(): stop");
+	msg_print(NULL, V_INFO, "pexe(): stop");
 }
 
 

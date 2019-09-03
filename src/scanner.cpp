@@ -32,12 +32,11 @@ uint    Scanner::line_num;
 
 Scanner::Scanner(const char * filename){
 	
-	//debug_msg("Scanner(): start");
+	//msg_print(NULL, V_DEBUG, "Scanner(): start");
 	
 	// set the infile
 	if(filename){
-		sprintf(err_array, "Reading from: %s", filename);
-		info_msg(err_array);
+		msg_print(NULL, V_INFO, "Reading from: %s", filename);
 		yyin = fopen(filename, "r");
 		if(!yyin) {
 			sprintf(err_array, "No such file: %s", filename);
@@ -45,19 +44,19 @@ Scanner::Scanner(const char * filename){
 		}
 	}
 	else{
-		info_msg("Reading from: stdin");
+		msg_print(NULL, V_INFO, "Reading from: stdin");
 		yyin = stdin;
 	}
 	
 	next_token(); // initialize the token
 	
-	//debug_msg("Scanner(): stop");
+	//msg_print(NULL, V_DEBUG, "Scanner(): stop");
 }
 Scanner::~Scanner(void){
 	
-	debug_msg("Scanner::~Scanner(): start");
+	msg_print(NULL, V_DEBUG, "Scanner::~Scanner(): start");
 	fclose(yyin);
-	debug_msg("Scanner::~Scanner(): stop");
+	msg_print(NULL, V_DEBUG, "Scanner::~Scanner(): stop");
 }
 
 
@@ -66,7 +65,7 @@ void Scanner::next_token(void){
 	static token_t token_buf;
 	static bool    denting;
 	
-	//debug_msg("Scanner::next_token(): start");
+	//msg_print(NULL, V_DEBUG, "Scanner::next_token(): start");
 	
 	// We can only call yylex() if we are not currently denting
 	if(!denting) scan_token = yylex();
@@ -84,7 +83,7 @@ void Scanner::next_token(void){
 	// If we're denting
 	if(denting && tabs_last_ln > tabs_this_ln){
 		sprintf(err_array, "%u > %u", tabs_last_ln, tabs_this_ln);
-		debug_msg(err_array);
+		msg_print(NULL, V_DEBUG, "%s", err_array);
 		scan_token = T_OUTD;
 		scan_text = NULL;
 		txtlen    = 0;
@@ -94,7 +93,7 @@ void Scanner::next_token(void){
 	}
 	else if(denting && tabs_last_ln < tabs_this_ln){
 		sprintf(err_array, "%u < %u", tabs_last_ln, tabs_this_ln);
-		debug_msg(err_array);
+		msg_print(NULL, V_DEBUG, "%s", err_array);
 		scan_token = T_IND;
 		scan_text = NULL;
 		txtlen    = 0;
@@ -126,7 +125,7 @@ void Scanner::next_token(void){
 		);
 	#endif
 	
-	//debug_msg("Scanner::next_token(): stop");
+	//msg_print(NULL, V_DEBUG, "Scanner::next_token(): stop");
 	
 }
 
@@ -152,7 +151,7 @@ sym_pt Scanner::add_lit_sym(token_t token, const char * str){
 		sym->constant = true;
 		sym->str = Program_data::add_string(str);
 	}
-	else err_msg("Scanner::add_lit_sym(): brokdidit");
+	else msg_print(NULL, V_ERROR, "Scanner::add_lit_sym(): brokdidit");
 	
 	return sym;
 }
@@ -175,7 +174,7 @@ sym_pt Scanner::add_lit_sym(token_t token, const char * str){
 //			case '\\': str[j]='\\'; break;
 //			case '"' : str[j]= '"'; break;
 //			case '\n':         j--; break;
-//			default: err_msg("Invalid escape sequence");
+//			default: msg_print(NULL, V_ERROR, "Invalid escape sequence");
 //			}
 //		}
 //		else str[j]=str[i];
@@ -189,7 +188,8 @@ sym_pt Scanner::add_lit_sym(token_t token, const char * str){
 umax Scanner::read_char(const char * str){
 	if(Scanner::length() == 1) return str[0];
 	else if (Scanner::length() == 2){
-		if(str[0] != '\\') err_msg("funky multibyte character");
+		if(str[0] != '\\') msg_print(NULL, V_ERROR,
+			"funky multibyte character");
 		switch (str[1]){
 		case 'n' : return '\n';
 		case 'f' : return '\f';
@@ -199,10 +199,10 @@ umax Scanner::read_char(const char * str){
 		case '\\': return '\\';
 		//case '0' : return '\0'; // why would we need this?
 		case '\'': return '\'';
-		default  : err_msg("funky multibyte character");
+		default  : msg_print(NULL, V_ERROR, "funky multibyte character");
 		}
 	}
-	else err_msg("Character unusually large");
+	else msg_print(NULL, V_ERROR, "Character unusually large");
 	
 	return UMAX_MAX;
 }
@@ -220,7 +220,7 @@ umax Scanner::read_num(const char * str) {
 	// hex number
 	if(str[1] == 'x' || str[1] == 'X'){ 
 		if(Scanner::length() > hexmax +2){ // overflow
-			err_msg("Number is too large");
+			msg_print(NULL, V_ERROR, "Number is too large");
 			return UMAX_MAX;
 		}
 		
@@ -231,14 +231,15 @@ umax Scanner::read_num(const char * str) {
 				num = (num << 4) | (str[i] - 'A' + 10);
 			else if(str[i]>= 'a' && str[i]<='f')
 				num = (num << 4) | (str[i] - 'a' + 10);
-			else err_msg("Internal: Scope_Stack::read_num(): hex");
+			else msg_print(NULL, V_ERROR, 
+				"Internal: Scope_Stack::read_num(): hex");
 		}
 	}
 	
 	// decimal number
 	else {
 		if(Scanner::length() > decmax){ // overflow
-			err_msg("Number is too large");
+			msg_print(NULL, V_ERROR, "Number is too large");
 			return UMAX_MAX;
 		}
 		

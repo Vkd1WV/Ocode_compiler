@@ -14,7 +14,7 @@ extern "C"{
 }
 
 #include "errors.h"
-#include "my_types.h"
+#include <util/types.h>
 #include "prog_data.h"
 #include "proto.h"
 
@@ -28,13 +28,16 @@ const char * default_pexe = ".pexe";
 static inline void Set_files(char ** infilename, yuck_t * arg_pt){
 	uint   sum;
 	char * debug_file;
+	msg_log_lvl v;
 	
-	// default verbosity
-	verbosity = (verb_t) (DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag);
+	// calculate verbosity
+	v = (msg_log_lvl) (DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag);
+	msg_set_verbosity(v);
 	
-	if (arg_pt->nargs > 1) warn_msg("Too many arguments...Ignoring.");
 	
-	if(verbosity >= V_DEBUG) fprintf(stderr, "\
+	if (arg_pt->nargs > 1) msg_print(NULL, V_WARN, "Too many arguments...Ignoring.");
+	
+	msg_print(logfile, V_DEBUG, "\
 ARGUMENTS PASSED\n\
 nargs             :\t%lu\n\
 args              :\t%s\n\
@@ -47,18 +50,18 @@ x86_long_flag     :\t%u\n\
 x86_protected_flag:\t%u\n\
 arm_v7_flag       :\t%u\n\
 arm_v8_flag       :\t%u\n\n" ,
-			arg_pt->nargs      ,
-			*arg_pt->args      ,
-			arg_pt->dashv_flag ,
-			arg_pt->dashq_flag ,
-			arg_pt->dashD_arg  ,
-			arg_pt->dashd_flag ,
-			arg_pt->dashp_flag ,
-			arg_pt->x86_long_flag     ,
-			arg_pt->x86_protected_flag,
-			arg_pt->arm_v7_flag       ,
-			arg_pt->arm_v8_flag
-		);
+		arg_pt->nargs      ,
+		*arg_pt->args      ,
+		arg_pt->dashv_flag ,
+		arg_pt->dashq_flag ,
+		arg_pt->dashD_arg  ,
+		arg_pt->dashd_flag ,
+		arg_pt->dashp_flag ,
+		arg_pt->x86_long_flag     ,
+		arg_pt->x86_protected_flag,
+		arg_pt->arm_v7_flag       ,
+		arg_pt->arm_v8_flag
+	);
 	
 	// test for a target architecture
 	sum = arg_pt->x86_long_flag + arg_pt->x86_protected_flag;
@@ -70,7 +73,7 @@ arm_v8_flag       :\t%u\n\n" ,
 	
 	// if no target has been selected
 	if(sum < 1 && !arg_pt->dashp_flag) {
-		info_msg("Using default target x86-long");
+		msg_print(NULL, V_INFO, "Using default target x86-long");
 		arg_pt->x86_long_flag = true;
 	}
 	
@@ -104,7 +107,7 @@ static inline void Generate_code(yuck_t * arg_pt){
 	uint sum;
 	char *pexefile, *asmfile;
 	
-	info_msg("Generate_code(): start");
+	msg_print(NULL, V_INFO, "Generate_code(): start");
 	
 	// pexe
 	if (arg_pt->dashp_flag){
@@ -115,7 +118,7 @@ static inline void Generate_code(yuck_t * arg_pt){
 		pexefile = strncat(pexefile, default_pexe, strlen(default_pexe));
 		
 		sprintf(err_array, "pexefile is: '%s'", pexefile);
-		info_msg(err_array);
+		msg_print(NULL, V_INFO, "%s", err_array);
 		
 		pexe(pexefile);
 		
@@ -141,17 +144,16 @@ static inline void Generate_code(yuck_t * arg_pt){
 		
 		asmfile = strncat(asmfile, default_asm, strlen(default_asm));
 		
-		sprintf(err_array, "asmfile is: '%s'", asmfile);
-		info_msg(err_array);
+		msg_print(NULL, V_INFO, "asmfile is: '%s'", asmfile);
 		
 		if(arg_pt->x86_long_flag) x86(asmfile, true);
 		else if(arg_pt->x86_protected_flag) x86(asmfile, false);
-		else err_msg("Unimplemented Target");
+		else msg_print(NULL, V_ERROR, "Unimplemented Target");
 		
 		free(asmfile);
 	}
 	
-	info_msg("Generate_code(): stop");
+	msg_print(NULL, V_INFO, "Generate_code(): stop");
 }
 
 

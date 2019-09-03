@@ -20,7 +20,7 @@
 
 
 #include "token.h"
-#include "my_types.h"
+#include <util/types.h>
 #include "prog_data.h"
 
 

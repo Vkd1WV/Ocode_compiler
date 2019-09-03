@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 int main(int argc, char** argv){
-	verbosity = V_DEBUG;
-	debug_msg("main():start");
+	msg_set_verbosity(V_TRACE);
+	msg_print(NULL, V_TRACE, "main():start");
 	
 	argc = argc;
 	
@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 	
 	delete ss.pop();
 	
-	debug_msg("main(): stop");
+	msg_print(NULL, V_TRACE, "main(): stop");
 	
 	return EXIT_SUCCESS;
 }

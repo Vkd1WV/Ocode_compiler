@@ -215,7 +215,7 @@ static void For(){
 	match_token(T_FOR);
 	
 	// FIXME
-	err_msg("Internal: For() is not completely implemented");
+	msg_print(NULL, V_ERROR, "Internal: For() is not completely implemented");
 	
 	Statement();
 }
@@ -238,7 +238,7 @@ static void Switch(void){
 	
 	// FIXME
 	
-	err_msg("Internal: Switch() is not completely implemented");
+	msg_print(NULL, V_ERROR, "Internal: Switch() is not completely implemented");
 	
 	while(Scanner::token() == T_CASE) Case();
 	Default();

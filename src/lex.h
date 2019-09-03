@@ -19,7 +19,7 @@ the rest of the scanner.
 
 
 #include "token.h"
-#include "my_types.h"
+#include <util/types.h>
 #include "errors.h"
 
 

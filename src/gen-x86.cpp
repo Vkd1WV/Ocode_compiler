@@ -275,7 +275,7 @@ static void Gen_blk(FILE * out_fd, Instruction_Queue * blk){
 void x86 (char * filename, bool B64){
 	FILE * out_fd;
 	
-	info_msg("\tx86(): start");
+	msg_print(NULL, V_INFO, "\tx86(): start");
 	
 	out_fd = fopen(filename, "w");
 	
@@ -302,7 +302,7 @@ void x86 (char * filename, bool B64){
 	fclose(out_fd);
 	out_fd = NULL;
 	
-	info_msg("\tx86(): stop");
+	msg_print(NULL, V_INFO, "\tx86(): stop");
 }
 
 

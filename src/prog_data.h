@@ -21,7 +21,7 @@
 //#include <data.h>
 typedef struct _root* DS;
 
-#include "my_types.h"
+#include <util/types.h>
 
 
 /******************************* NAME ARRAY ***********************************/

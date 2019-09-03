@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
 
 
 /******************************************************************************/
@@ -39,6 +40,9 @@
 str_dx break_this = NO_NAME, continue_this = NO_NAME;
 
 
+jmp_buf anewline;  ///< to facilitate error recovery
+
+
 /******************************************************************************/
 //                             INLINE FUNCTIONS
 /******************************************************************************/
@@ -47,37 +51,32 @@ str_dx break_this = NO_NAME, continue_this = NO_NAME;
 /************************ ERROR REPORTING & RECOVERY **************************/
 
 static inline void parse_crit(sym_pt arg1, sym_pt arg2, const char * message){
-	if (verbosity >= V_ERROR){
-		fprintf(
-			stderr,
-			"PARSER CRITICAL ERROR: %s, on line %d.\n",
-			message,
-			Scanner::lnum()
-		);
-		Print_sym(stderr, arg1);
-		Print_sym(stderr, arg2);
-	}
+	msg_print(NULL,V_ERROR,"PARSER CRITICAL ERROR: %s, on line %d.\n",
+		message,
+		Scanner::lnum()
+	);
+	Print_sym(stderr, arg1);
+	Print_sym(stderr, arg2);
 	
 	exit(EXIT_FAILURE);
 }
 
 static inline void parse_error(const char * message){
-	fprintf(stderr, "CODE ERROR: %s, on line %d.\n",
+	msg_print(NULL,V_ERROR, "CODE ERROR: %s, on line %d.\n",
 		message,
 		Scanner::lnum()
 	);
 	while(Scanner::token() != T_EOF && Scanner::token() != T_NL)
 		Scanner::next_token();
-	fprintf(stderr, "continuing...\n");
+	msg_print(NULL,V_ERROR, "continuing...\n");
 	longjmp(anewline, 1);
 }
 
 static inline void parse_warn(const char * message){
-	if(verbosity >= V_WARN)
-		fprintf(stderr, "WARNING: %s, on line %d.\n",
-			message,
-			Scanner::lnum()
-		);
+	msg_print(NULL,V_WARN, "%s, on line %d.\n",
+		message,
+		Scanner::lnum()
+	);
 }
 
 //static inline void Warn_comparison(sym_pt arg1, sym_pt arg2){
@@ -94,17 +93,13 @@ static inline void expected(const char* thing){
 }
 
 static inline void debug_sym(const char * message, sym_pt sym){
-	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, Scanner::lnum());
-		Print_sym(stderr, sym);
-	}
+	msg_print(NULL, V_DEBUG, "%s, on line %4d: ", message, Scanner::lnum());
+	Print_sym(stderr, sym);
 }
 
 static inline void debug_iop(const char * message, iop_pt iop){
-	if (verbosity >= V_DEBUG){
-		fprintf(stderr, "%s, on line %4d: ", message, Scanner::lnum());
-		Print_iop(stderr, iop);
-	}
+	msg_print(NULL, V_DEBUG, "%s, on line %4d: ", message, Scanner::lnum());
+	Print_iop(stderr, iop);
 }
 
 /********************************* GETTERS ************************************/
@@ -254,7 +249,7 @@ bool Parse(const char * infile){
 	
 	
 	if(errors){
-		warn_msg("Parse(): errors were found");
+		msg_print(NULL, V_WARN, "Parse(): errors were found");
 		return true;
 	}
 	else{

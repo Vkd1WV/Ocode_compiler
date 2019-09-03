@@ -54,15 +54,15 @@ Program_data::Program_data(void){
 }
 
 Program_data::~Program_data(void){
-	debug_msg("Program_data::~Program_data(): start");
+	msg_print(NULL, V_DEBUG, "Program_data::~Program_data(): start");
 	
-	debug_msg("Deleting the name array");
+	msg_print(NULL, V_DEBUG, "Deleting the name array");
 	free(string_array);
 	
-	debug_msg("Deleting the symbol table");
+	msg_print(NULL, V_DEBUG, "Deleting the symbol table");
 	DS_delete(symbols);
 	
-	debug_msg("Program_data::~Program_data(): stop");
+	msg_print(NULL, V_DEBUG, "Program_data::~Program_data(): stop");
 }
 
 
@@ -136,7 +136,7 @@ sym_pt Program_data::find_sym(const char * name){
 }
 void Program_data::remove_sym(str_dx dx){
 	if( DS_find(symbols, get_string(dx)) ) DS_remove(symbols);
-	else err_msg("Program_data::remove_sym(): Internal: couldn't find symbol");
+	else msg_print(NULL, V_ERROR, "Program_data::remove_sym(): Internal: couldn't find symbol");
 }
 
 
@@ -144,8 +144,8 @@ void Program_data::remove_sym(str_dx dx){
 void Program_data::Dump_sym(FILE * fd) const {
 	sym_pt sym;
 	
-	debug_msg("\tDump_symbols(): start");
-	if (!fd) err_msg("Internal: Dump_symbols(): received NULL file descriptor");
+	msg_print(NULL, V_DEBUG, "\tDump_symbols(): start");
+	if (!fd) msg_print(NULL, V_ERROR, "Internal: Dump_symbols(): received NULL file descriptor");
 	
 	if (DS_count(symbols)){
 		fputs("  Name:\t   Type Width Flags Dref\n", fd);
@@ -160,11 +160,11 @@ void Program_data::Dump_sym(FILE * fd) const {
 		#endif
 	}
 	else{
-		info_msg("\tDump_symbols(): The Symbol list is empty");
+		msg_print(NULL, V_INFO, "\tDump_symbols(): The Symbol list is empty");
 		fputs("Empty\n", fd);
 	}
 	
-	debug_msg("\tDump_symbols(): stop");
+	msg_print(NULL, V_DEBUG, "\tDump_symbols(): stop");
 }
 
 
@@ -183,13 +183,13 @@ Block_Queue::Block_Queue(void) {
 Block_Queue::~Block_Queue(void) {
 	Instruction_Queue * iq;
 	
-	debug_msg("Block_Queue::~Block_Queue(): start");
+	msg_print(NULL, V_DEBUG, "Block_Queue::~Block_Queue(): start");
 	
 	while(( iq = dq() )) delete iq;
 	
 	DS_delete(bq);
 	
-	debug_msg("Block_Queue::~Block_Queue(): stop");
+	msg_print(NULL, V_DEBUG, "Block_Queue::~Block_Queue(): stop");
 }
 
 bool Block_Queue::isempty(void) const { return DS_isempty(bq); }
@@ -231,15 +231,15 @@ Instruction_Queue * Block_Queue::dq(void){
 void Block_Queue::Dump(FILE * fd) const {
 	Instruction_Queue * blk_pt;
 	
-	debug_msg("\tBlock_Queue::Dump(): start");
+	msg_print(NULL, V_DEBUG, "\tBlock_Queue::Dump(): start");
 	if (!fd)
-		err_msg("Internal: Block_Queue::Dump(): received NULL file descriptor");
+		msg_print(NULL, V_ERROR, "Internal: Block_Queue::Dump(): received NULL file descriptor");
 	
 	if(!isempty()){
 		blk_pt = first();
 		fputs("LBL   :\tI_OP\t RESULT \t  ARG1  \t  ARG2", fd);
 		do {
-			if(!blk_pt) err_msg("\tBlock_Queue::Dump(): found an empty block");
+			if(!blk_pt) msg_print(NULL, V_ERROR, "\tBlock_Queue::Dump(): found an empty block");
 			
 			else{
 				fputs("\n", fd);
@@ -248,11 +248,11 @@ void Block_Queue::Dump(FILE * fd) const {
 		} while(( blk_pt = next() ));
 	}
 	else {
-		info_msg("\tBlock_Queue::Dump(): The block queue is empty");
+		msg_print(NULL, V_INFO, "\tBlock_Queue::Dump(): The block queue is empty");
 		fputs("Empty\n", fd);
 	}
 	
-	debug_msg("\tBlock_Queue::Dump(): stop");
+	msg_print(NULL, V_DEBUG, "\tBlock_Queue::Dump(): stop");
 }
 
 
@@ -418,7 +418,7 @@ void Instruction_Queue::add_inst(
 	
 	#ifdef IOP_ADDR
 	sprintf(err_array, "iop saved at: %p", temp);
-	debug_msg(err_array);
+	msg_print(NULL, V_DEBUG, err_array);
 	#endif
 	
 }
@@ -426,8 +426,8 @@ void Instruction_Queue::add_inst(
 void Instruction_Queue::Dump(FILE * fd) const {
 	iop_pt iop;
 	
-	//debug_msg("\tDump_iq(): start");
-	if (!fd) err_msg("Internal: Dump_iq(): received NULL file descriptor");
+	//msg_print(NULL, V_DEBUG, "\tDump_iq(): start");
+	if (!fd) msg_print(NULL, V_ERROR, "Internal: Dump_iq(): received NULL file descriptor");
 	
 	#ifdef FLUSH_FILES
 		fflush(fd);
@@ -438,7 +438,7 @@ void Instruction_Queue::Dump(FILE * fd) const {
 		do {
 			#ifdef IOP_ADDR
 			sprintf(err_array, "Printing iop at: %p", (void*)iop);
-			debug_msg(err_array);
+			msg_print(NULL, V_DEBUG, err_array);
 			#endif
 		
 			Print_iop(fd, iop);
@@ -449,11 +449,11 @@ void Instruction_Queue::Dump(FILE * fd) const {
 		} while (( iop = next() ));
 	}
 	else {
-		info_msg("\tDump_iq(): The queue is empty");
+		msg_print(NULL, V_INFO, "\tDump_iq(): The queue is empty");
 		fputs("Empty\n", fd);
 	}
 	
-	//debug_msg("\tDump_iq(): stop");
+	//msg_print(NULL, V_DEBUG, "\tDump_iq(): stop");
 }
 
 

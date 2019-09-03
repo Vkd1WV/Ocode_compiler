@@ -33,20 +33,20 @@ static Instruction_Queue * Mk_blk(Instruction_Queue * q){
 	Instruction_Queue * blk = NULL;
 	iop_pt iop;
 	
-	debug_msg("\tMk_blk(): start");
+	msg_print(NULL, V_DEBUG, "\tMk_blk(): start");
 	sprintf(err_array, "\tMk_blk(): queue has %u", q->count());
-	debug_msg(err_array);
+	msg_print(NULL, V_DEBUG, "%s", err_array);
 	
 	if(!q->isempty()){
 		
-		debug_msg("\tMk_blk(): the queue is not empty");
+		msg_print(NULL, V_DEBUG, "\tMk_blk(): the queue is not empty");
 		
 		// Each block must contain at least one instruction
 		iop = q->dq();
 		if(!iop)
 			crit_error("\tInternal: Mk_blk(): counld not dq from non empty q");
 		
-		info_msg("\tMk_blk(): Making Block");
+		msg_print(NULL, V_INFO, "\tMk_blk(): Making Block");
 		
 		blk = new Instruction_Queue();
 		
@@ -70,12 +70,12 @@ static Instruction_Queue * Mk_blk(Instruction_Queue * q){
 			// statements after exits are leaders
 		}
 	}
-	else info_msg("\tMk_blk(): The queue is empty, no block made");
+	else msg_print(NULL, V_INFO, "\tMk_blk(): The queue is empty, no block made");
 	
 	// recover memory
 	q->flush();
 	
-	debug_msg("\tMk_blk(): stop");
+	msg_print(NULL, V_DEBUG, "\tMk_blk(): stop");
 	
 	return blk;
 }
@@ -104,9 +104,9 @@ static void Inner_loop(Instruction_Queue * blk){
 	If the end of a basic block is a jmp to its head then surely it is an inner loop
 	*/
 	if( first_lbl && last_targ && !strcmp(first_lbl, last_targ) ){
-		info_msg("\tInner_loop(): start");
+		msg_print(NULL, V_INFO, "\tInner_loop(): start");
 		// aggressively optomize the loop
-		info_msg("\tInner_loop(): stop");
+		msg_print(NULL, V_INFO, "\tInner_loop(): stop");
 	}
 }
 
@@ -115,7 +115,7 @@ static void Inner_loop(Instruction_Queue * blk){
 static void Liveness(Instruction_Queue * blk){
 	iop_pt iop;
 	
-	debug_msg("\tLiveness(): start");
+	msg_print(NULL, V_DEBUG, "\tLiveness(): start");
 	
 	iop = blk->last();
 	if(!iop) crit_error("Internal: Liveness() received an empty block");
@@ -209,7 +209,7 @@ static void Liveness(Instruction_Queue * blk){
 		}
 	} while(( iop = blk->previous() ));
 	
-	debug_msg("\tLiveness(): stop");
+	msg_print(NULL, V_DEBUG, "\tLiveness(): stop");
 }
 
 
@@ -221,7 +221,7 @@ static void Liveness(Instruction_Queue * blk){
 void Optomize(Instruction_Queue * inst_q){
 	Instruction_Queue * blk_pt;
 	
-	info_msg("Optomize(): start");
+	msg_print(NULL, V_INFO, "Optomize(): start");
 	
 	if(! inst_q->isempty() ){
 		
@@ -237,7 +237,7 @@ void Optomize(Instruction_Queue * inst_q){
 				"Optomize(): Mk_blk() returned address: %p",
 				(void*) blk_pt
 			);
-			debug_msg(err_array);
+			msg_print(NULL, V_DEBUG, err_array);
 			#endif
 			
 /*			sprintf(*/
@@ -245,7 +245,7 @@ void Optomize(Instruction_Queue * inst_q){
 /*				"Optomize(): Printing block of size %u",*/
 /*				DS_count(blk)*/
 /*			);*/
-/*			debug_msg(err_array);*/
+/*			msg_print(NULL, V_DEBUG, err_array);*/
 /*			*/
 /*			if(verbosity >= V_DEBUG) Dump_iq(stderr, blk);*/
 		
@@ -257,7 +257,7 @@ void Optomize(Instruction_Queue * inst_q){
 /*				"Block queue has %u, adding one",*/
 /*				DS_count(prog->block_q)*/
 /*			);*/
-/*			debug_msg(err_array);*/
+/*			msg_print(NULL, V_DEBUG, err_array);*/
 			
 			Program_data::block_q.nq(blk_pt);
 			
@@ -266,13 +266,14 @@ void Optomize(Instruction_Queue * inst_q){
 /*				"Block queue has %u now",*/
 /*				DS_count(prog->block_q)*/
 /*			);*/
-/*			debug_msg(err_array);*/
+/*			msg_print(NULL, V_DEBUG, err_array);*/
 			
 			if( blk_pt != Program_data::block_q.last() )
-				err_msg("Internal: Queued block does not match first block");
+				msg_print(NULL, V_ERROR,
+					"Internal: Queued block does not match first block");
 		}
 	}
-	else info_msg("Optomize(): The queue is empty");
+	else msg_print(NULL, V_INFO, "Optomize(): The queue is empty");
 	
 	delete inst_q;
 	
@@ -281,9 +282,9 @@ void Optomize(Instruction_Queue * inst_q){
 				"Block queue has %u finally",
 				Program_data::block_q.count()
 			);
-			debug_msg(err_array);
+			msg_print(NULL, V_DEBUG, "%s", err_array);
 	
-	info_msg("Optomize(): stop");
+	msg_print(NULL, V_INFO, "Optomize(): stop");
 }
 
 

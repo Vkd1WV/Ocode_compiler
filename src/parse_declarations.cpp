@@ -50,7 +50,8 @@ static void Initializer(sym_pt symbol){
 		
 		
 		initializer=Boolean();
-		if (!initializer->set) err_msg("Using an uninitialized value");
+		if (!initializer->set)
+			msg_print(NULL, V_ERROR, "Using an uninitialized value");
 		if (initializer->type != st_lit_int)
 			parse_error("Initializers must be a constant expressions");
 		

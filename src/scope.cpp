@@ -47,11 +47,12 @@ Scope_Stack::Scope_Stack (void){
 Scope_Stack::~Scope_Stack(void){
 	contxt_pt pt;
 	
-	debug_msg("Scope_Stack::~Scope_Stack(): start");
+	msg_print(NULL, V_DEBUG, "Scope_Stack::~Scope_Stack(): start");
 	
 	// just make sure the stack is empty
 	while(( pt = (contxt_pt)DS_pop(stack) )){
-		err_msg("Internal: Scope_Stack::~Scope_Stack(): the stack isn't empty");
+		msg_print(NULL, V_ERROR,
+			"Internal: Scope_Stack::~Scope_Stack(): the stack isn't empty");
 		delete pt->inst_q;
 	}
 	
@@ -59,7 +60,7 @@ Scope_Stack::~Scope_Stack(void){
 	
 	free(buffer);
 	
-	debug_msg("Scope_Stack::~Scope_Stack(): stop");
+	msg_print(NULL, V_DEBUG, "Scope_Stack::~Scope_Stack(): stop");
 }
 
 
