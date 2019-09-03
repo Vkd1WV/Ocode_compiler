@@ -1,11 +1,84 @@
 # Omega make file
 
+################################## FILES #######################################
+
+LIBS   :=-ldata -lmsg
+
+### DIRECTORIES
+
+WORKDIR   :=./work
+SRCDIR    :=./src
+INSTALLDIR:=$(HOME)/prg
+LIBDIR    :=$(INSTALLDIR)/lib/util
+INCDIR    :=$(INSTALLDIR)/include
+
+### SOURCES
+
+# Presource files
+lex_source:=lex.l
+yuck_source:=occ.yuck
+
+# Intermediate Source names
+lex_cpp:=lex.cpp
+yuck_c:=yuck.c
+yuck_h:=yuck.h
+
+# Source file names
+headers:=$(wildcard $(SRCDIR)/*.h)
+cpp_sources:=$(wildcard $(SRCDIR)/*.cpp)
+
+parse_sources:= parse.cpp parse_declarations.cpp
+
+#Prefix sources
+lex_cpp      :=$(addprefix $(SRCDIR)/, $(lex_cpp))
+yuck_c       :=$(addprefix $(SRCDIR)/, $(yuck_c))
+yuck_h       :=$(addprefix $(SRCDIR)/, $(yuck_h))
+parse_sources:=$(addprefix $(SRCDIR)/, $(parse_sources))
+
+# intermediate source files
+autofiles:=$(lex_cpp) $(yuck_c) $(yuck_h)
+
+interface:= $(headers) $(yuck_h)
+c_sources:= $(yuck_c)
+
+### OBJECTS
+
+CPP_OBJECTS:= \
+	scantest.o \
+	prog_data.o \
+	iq.o \
+	scanner.o \
+	scope.o \
+	opt.o \
+	gen-pexe.o gen-x86.o \
+	global.o main.o
+
+yuck_o:=yuck.o
+lex_o :=lex.o
+parse_o:=parse.o
+
+OCC_OBJECTS:= \
+	lex.o scanner.o \
+	prog_data.o \
+	scope.o parse.o \
+	opt.o \
+	gen-pexe.o gen-x86.o \
+	yuck.o global.o main.o
+
+SCAN_OBJECTS:=global.o lex.o scanner.o scope.o prog_data.o scantest.o
+
+#prefix objects
+OCC_OBJECTS :=$(addprefix $(WORKDIR)/, $(OCC_OBJECTS) )
+SCAN_OBJECTS:=$(addprefix $(WORKDIR)/, $(SCAN_OBJECTS))
+CPP_OBJECTS :=$(addprefix $(WORKDIR)/, $(CPP_OBJECTS))
+yuck_o      :=$(addprefix $(WORKDIR)/, $(yuck_o))
+lex_o       :=$(addprefix $(WORKDIR)/, $(lex_o))
+parse_o     :=$(addprefix $(WORKDIR)/, $(parse_o))
+
+source_files:= Makefile $(headers) $(cpp_sources) $(lex_source) $(yuck_source)
+
 ################################## FLAGS #######################################
 
-SOURCEDIR:=$(HOME)/devel
-INSTALLDIR:=$(HOME)/prg
-LIBDIR:=$(INSTALLDIR)/lib/util
-INCDIR:=$(INSTALLDIR)/include
 
 CWARNINGS:=-Wall -Wextra -pedantic \
 	-Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations \
@@ -35,97 +108,63 @@ CXXWARNINGS:=-Wall -Wextra -pedantic \
 	-Wwrite-strings \
 	-Wconversion -Wdisabled-optimization
 
-DEBUG_OPT:=-DDBG_PARSE -DDBG_SCAN \
+DEBUG_OPT:=#-DDBG_PARSE -DDBG_SCAN \
 #-DBLK_ADDR -DDBG_EMIT_IOP -DIOP_ADDR -DFLUSH_FILES
 
-CFLAGS:=  --std=c11   $(CWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR) -g
-CXXFLAGS:=--std=c++14 $(CXXWARNINGS) $(DEBUG_OPT) -I$(INCDIR) -I./ -L$(LIBDIR) -g
+CFLAGS:=  --std=c11   -g $(CWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR)
+CXXFLAGS:=--std=c++14 -g $(CXXWARNINGS) -I$(INCDIR) -I./ -L$(LIBDIR)
 LFLAGS:=#-d
 LEX:= flex
 
-################################## FILES #######################################
+################################# TARGETS ######################################
 
-HEADERS:=prog_data.h errors.h my_types.h proto.h scanner.h token.h
-LIBS   :=-ldata -lmsg
+.PHONEY: all dist print debug
+all: scantest occ
+dist: clean $(autofiles)
 
-PARSER:= \
-	parse.cpp \
-	parse_declarations.cpp parse_expressions.cpp parse_statements.cpp
+print:
+	@echo "headers:" $(headers)
+	@echo "cpp_sources:" $(cpp_sources)
+	@echo "scan objects:" $(SCAN_OBJECTS)
+	@echo "occ objects:" $(OCC_OBJECTS)
 
-SRC    := \
-	Makefile cmd_line.yuck main.c \
-	scanner.l scanner.cpp \
-	$(PARSER) \
-	opt.c \
-	gen-pexe.c gen-arm.c gen-x86.c
-
-AUTOFILES:=lex.yy.c yuck.h yuck.c
-
-OCC_OBJECTS:= \
-	yuck.o global.o main.o \
-	lex.yy.o scanner.o parse.o \
-	opt.o prog_data.o scope.o \
-	gen-pexe.o gen-x86.o #gen-arm.o
-
-SCAN_OBJECTS:=global.o lex.yy.o scanner.o prog_data.o scope.o scantest.o
-
-ALLFILES:= $(SRC) $(HEADERS)
-
-
-
-.PHONEY: all dist dev-occ
-all: occ scantest
-dist: CFLAGS += $(CWARNINGS)
-dist: $(AUTOFILES)
-dev-occ: CFLAGS +=  $(DEBUG_OPT)
-dev-occ: CXXFLAGS +=  $(DEBUG_OPT)
-dev-occ: occ
+debug: CXXFLAGS += $(DEBUG_OPT)
+debug: scantest omega
 
 ############################### PRODUCTIONS ####################################
 
-scantest: CXXFLAGS += $(DEBUG_OPT)
-scantest: $(SCAN_OBJECTS) scanner.h prog_data.h scope.h token.h errors.h
-	$(CXX) $(CXXFLAGS) -o $@ $(SCAN_OBJECTS) $(LIBS)
+scantest: $(SCAN_OBJECTS) $(interface)
+	$(CXX) $(CXXFLAGS) -O0 -o $@ $(SCAN_OBJECTS) $(LIBS)
 
-
-occ: $(OCC_OBJECTS)
+occ: $(OCC_OBJECTS) $(interface)
 	$(CXX) $(CXXFLAGS) -o $@ $(OCC_OBJECTS) $(LIBS)
 
-parse.o: $(PARSER) scanner.h prog_data.h errors.h scope.h proto.h
-	$(CXX) $(CXXFLAGS) -Wno-switch -c -o $@ parse.cpp
-
-scanner.o: scanner.cpp scanner.h   errors.h scope.h lex.h
-scope.o: scope.cpp     prog_data.h errors.h scope.h
-main.o: main.cpp       prog_data.h errors.h proto.h scanner.h yuck.h my_types.h
-global.o: global.cpp   prog_data.h errors.h token.h lex.h
-opt.o: opt.cpp         prog_data.h errors.h proto.h
-
+# objects
+$(CPP_OBJECTS): $(WORKDIR)/%.o: $(SRCDIR)/%.cpp $(interface) | $(WORKDIR)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+$(parse_o): $(parse_sources) | $(WORKDIR)
+	$(CXX) $(CXXFLAGS) -Wno-switch -c -o $@ $<
 
 # suppress warnings for third party slop
-lex.yy.o: lex.yy.c lex.h 
-	$(CXX) $(CXXFLAGS) -fpermissive -Wno-conversion -Wno-switch-default -Wno-sign-compare -c lex.yy.c
-yuck.o: yuck.c yuck.h
-	$(CC) $(CFLAGS) -Wno-padded -Wno-c++-compat -Wno-switch-enum -Wno-sign-conversion -c $<
-
+$(lex_o): $(lex_cpp) $(inteface) | $(WORKDIR)
+	$(CXX) $(CXXFLAGS) -fpermissive -Wno-conversion -Wno-switch-default -Wno-sign-compare -c -o $@ $<
+$(yuck_o): $(yuck_c) $(yuck_h) | $(WORKDIR)
+	$(CC) $(CFLAGS) -Wno-padded -Wno-c++-compat -Wno-switch-enum -Wno-sign-conversion -c -o $@ $<
 
 # Automatically generated files
-lex.yy.c: lex.l
-	$(LEX) $(LFLAGS) $<
-yuck.c yuck.h: occ.yuck
-	yuck gen -Hyuck.h -o yuck.c $<
+$(lex_cpp): $(lex_source)
+	$(LEX) $(LFLAGS) -o $@ $<
+$(yuck_c) $(yuck_h): $(yuck_source)
+	yuck gen -H$(yuck_h) -o $(yuck_c) $<
 
-
-# General Rules
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $<
-
-%.o: %.cpp %.h $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $<
+# working directory
+$(WORKDIR):
+	mkdir -p $@
 
 ################################## UTILITIES ###################################
 
 CLEANFILES:= \
-	*.o *.o *.opp occ scantest \
+	*.o *.opp occ scantest omega \
 	./tests/*.dbg ./tests/*.asm ./tests/*.pexe \
 	*.output *.tab.c
 
@@ -133,9 +172,10 @@ CLEANFILES:= \
 
 clean:
 	rm -f $(CLEANFILES)
+	rm -fr $(WORKDIR)
 
-very-clean:
-	rm -f $(CLEANFILES) $(AUTOFILES)
+very-clean: clean
+	rm -f $(autofiles)
 
 todolist:
 	-@for file in $(ALLFILES:Makefile=); do fgrep -H -e TODO -e FIXME $$file; done; true
