@@ -3,8 +3,8 @@ A first cross compiler for O-code.
 
 
 ##Debugging
-  -v   be verbose. -vv produces tons of debuging output.
-  -q   be less verbose supress all warnings. -qq silently fail on errors
+  -v   be verbose. -vv produces tons of debugging output.
+  -q   be less verbose suppress all warnings. -qq silently fail on errors
   -d   produce debug file.
 
 ##External Constant Definitions

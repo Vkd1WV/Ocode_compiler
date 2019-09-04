@@ -1,31 +1,29 @@
 # The Omega Code Compiler
 
-I'm proving I can build my own programming language. I am not currently licencing this software in any way.
+This was one of my language design experiments.
 
-##Usage:
-`occ [OPTIONS]... FILE...`
+##Usage
 
-###Debugging
-  `-v`   be verbose
+Usage: occ [OPTION]... FILE
 
-###External Constant Definitions
-`  -D NAME=VALUE`   Initialize an external constant. If no value is given it is assumed to be 1.
+A first cross compiler for O-code.
 
-###Output Options
-  `--outfile=FILE` Redirect the output to a different file.
-  `-d`             produce debug file.
-  `-p`             produce portable executable
-  `-a`             produce assembler
+  -h, --help            display this help and exit
+  -V, --version         output version information and exit
+  -v                    be verbose. -vv produces tons of debugging output.
+  -q                    be less verbose suppress all warnings. -qq silently fail on errors
+  -d                    produce debug file.
+  -D NAME               VALUE   Initialize an external constant. If no value is given it is assumed to be 1.
+  -p                    produce portable executable
+      --x86-long        produce assembler for x86 Long Mode
+      --x86-protected   produce assembler for x86 Protected Mode
+      --arm-v7
+      --arm-v8
 
-###Target Architecture Options
-  `--x86-long`      Build for x86 Long Mode
-  `--x86-protected` Build for x86 Protected Mode
-  `--arm-v7`
-  `--arm-v8`
 
-## Architecture
+## Components
 
-### Components
+The software architecture looks roughly like this.
 
 `oc file` -> scanner -> `token`
 
@@ -39,116 +37,9 @@ I'm proving I can build my own programming language. I am not currently licencin
 
 `Program_data` -> x86  -> `x86.asm`
 
-For simplicity assembly and linking are not built-in.
+I had intended to output a NASM compatible assembler file. As it stands it outputs a text representation of its intermediate data structures in a debugging file if asked for (-d).
 
-Because we can nest statements we require an instruction queue stack. The first member is the global instruction queue followed by those for each declared procedure (class, function, subroutine). As each context is exited the top instruction queue must be popped and passed to the optomizer to be appended to the block queue.
-
-## OCode
-
-I want a type checking mode between one type, and void (any type), such that I can list the allowable types. particularly for function calls, so one parameter can be used to interpret what the others should be. Like a union without having to wrap each parameter in a union before passing it.
-
-Enumerated types should each be in their own namespace
-
-Signed integers are typedefs, where multiplication and division are operator overloaded.
-
-`typedef word sword`
-`typedef max smax`
-
-
-
-## Intermediate Code
-The intermetiate represetation consists of three parts:
-*	The name array
-*	The symbol table
-*	The instruction queue
-
-The name array is a dynamically sized array containing all the user and compiler defined names. I can also include all the program's string literals.
-
-The symbol table contains each variable's declaration information including types and sizes and an index into the name array.
-
-The op-code queue contains a series of three-address op-codes:
-
-Binary Operators
-
-OP	RSLT	ARG1	ARG2
-
-Unary Operators
-
-OP	RSLT	ARG
-
-Flow Control
-
-LBL
-JMP
-CJMP	CND	LBL
-
-parameter pass
-call function
-return function
-
- # literal numbers
- % temp variables / register place holders.
-
-## TO DO
-*	finish gen-x86
-*	add procedures
-*	add arrays
-*	add records
-*	add type definitions (classes)
-*	Make declarations return sym_pt or DS to build member lists
-
-## Done
-*	build an instruction queue stack and redesign the optomizer to handle one queue at a time.
-
-## Other junk
-
-What if all declared types were classes
-	could there be implicit member selection if there is only one member?
-
-the only fundamental operations are
-	declarations
-		constants
-		variables
-		classes
-		functions
-	assignments
-	reference / dereference
-	function calls
-	label / jump
-	if / else
-
-for simplicity we need to assume only one data type: unsigned qword
-
-First:
-	variable declarations (one type)
-	assignments
-	expressions
-
-Second:
-	function calls
-
-fourth:
-	ref / deref (arithmetic depends on typesizes)?
-
-REFERENCES
-*	With Ref operator
-	*	variables must be implicitly dereferenced
-	*	reference passing must be done explicitly
-*	Without ref operator
-	*	all variables need to be dereferenced to get their value
-	*	constants do not need to be dereferenced, but may for consistancy
-	*	passing anything to a function always passes the reference allows us to make explicit whether they are in or out.
-
-DECLARATIONS
-*	Mixed
-	* harder to read
-	* can be freely mixed with conditionals
-	* conditionals still wouldn't change declarations.
-	* class instantiation may be a problem
-*	Separate
-	* better formatting
-	* conditional declarations need to be treated differently anyway
-	* allow for class instantiation anywhere
+I consider this project closed and unfinished.
 
 
 
