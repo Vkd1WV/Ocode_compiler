@@ -20,6 +20,12 @@ A first cross compiler for O-code.
       --arm-v7
       --arm-v8
 
+## Dependencies
+This project uses "make" as a build system. Some changes to the Makefile will be necessary if you want to build this software.
+
+This project depends on my [lib-util](https://github.com/ammon0/lib-util) you will need that installed somewhere before building this project.
+
+This project uses [flex](https://github.com/westes/flex) to build lex.cpp and [yuck](https://github.com/hroptatyr/yuck) to build yuck.c and yuck.h. You will not need these tools unless you need to rebuild those files.
 
 ## Components
 
