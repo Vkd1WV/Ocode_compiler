@@ -17,9 +17,6 @@
 // opt.c
 void Optomize(Instruction_Queue * inst_q);
 
-// parse.cpp
-bool Parse(const char * infile);
-
 // gen-pexe.c
 void pexe (char * filename);
 

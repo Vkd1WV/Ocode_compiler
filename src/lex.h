@@ -54,10 +54,9 @@ EXTERN uint tabs_this_ln;
 
 /// Report errors in the scanner
 static inline void scan_error(const char * message){
-	char array[100];
-	
-	sprintf(array, "SCAN ERROR: %s, on line %d\n", message, yylineno);
-	fputs(array, stderr);
+	msg_print(logfile, V_ERROR, "SCANNER: %s, on line %d\n", 
+		message, yylineno
+	);
 }
 
 #define YY_DECL token_t yylex(void)

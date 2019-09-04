@@ -7,11 +7,12 @@
  ******************************************************************************/
 
 
-#include "scanner.h"
-#include "prog_data.h"
+
+
 #include "errors.h"
 #include "proto.h"
 #include "scope.h"
+#include "parse.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -92,15 +93,7 @@ static inline void expected(const char* thing){
 	parse_error(err_array);
 }
 
-static inline void debug_sym(const char * message, sym_pt sym){
-	msg_print(NULL, V_DEBUG, "%s, on line %4d: ", message, Scanner::lnum());
-	Print_sym(stderr, sym);
-}
 
-static inline void debug_iop(const char * message, iop_pt iop){
-	msg_print(NULL, V_DEBUG, "%s, on line %4d: ", message, Scanner::lnum());
-	Print_iop(stderr, iop);
-}
 
 /********************************* GETTERS ************************************/
 
@@ -212,6 +205,8 @@ void Statement (void);
 bool Parse(const char * infile){
 	int errors;
 	
+	msg_print(logfile,V_TRACE,"Parse(): start");
+	
 	// set various global pointers
 //	intermed = d;
 //	scanner = s;
@@ -245,7 +240,8 @@ bool Parse(const char * infile){
 		Statement();
 	} while (scan.token() != T_EOF);
 	
-	scope.emit_op(I_RTRN, NULL, NULL, NULL);
+	// FIXME: this should be a return 0. ret is a unary operator.
+	scope.emit_op(I_RTRN, NULL, Program_data::unq_sym(st_lit_int), NULL);
 	
 	
 	
@@ -255,6 +251,7 @@ bool Parse(const char * infile){
 	}
 	else{
 		Optomize(scope.pop());
+		msg_print(logfile,V_TRACE,"Parse(): stop");
 		return false;
 	}
 }

@@ -63,6 +63,7 @@ static void Return(void){
 	
 	match_token(T_RTRN);
 	if(Scanner::token() != T_NL) ret_val = Boolean();
+	else ret_val = Program_data::unq_sym(st_lit_int);
 	match_token(T_NL);
 	
 	// TODO: check return type
@@ -75,9 +76,7 @@ static void If(void){
 	sym_pt condition;
 	str_dx skip_label, else_label;
 	
-	#ifdef DBG_PARSE
-	debug_msg("If(): start");
-	#endif
+	msg_trace(logfile, "If(): start");
 	
 	match_token(T_IF);
 	Scope_Stack::emit_cmnt("IF");
@@ -113,9 +112,8 @@ static void If(void){
 	
 	Scope_Stack::emit_cmnt("END IF");
 	
-	#ifdef DBG_PARSE
-	debug_msg("If(): stop");
-	#endif
+	
+	msg_trace(logfile, "If(): stop");
 }
 
 
@@ -163,9 +161,7 @@ static void Do(void){
 	str_dx continue_label, break_label, true_label;
 	sym_pt condition;
 	
-	#ifdef DBG_PARSE
-	debug_msg("Do(): start");
-	#endif
+	msg_trace(logfile, "Do(): start");
 	
 	// Save the previous break and continue labels
 	continue_label = continue_this;
@@ -205,9 +201,7 @@ static void Do(void){
 	continue_this = continue_label;
 	break_this    = break_label;
 	
-	#ifdef DBG_PARSE
-	debug_msg("Do(): stop");
-	#endif
+	msg_trace(logfile, "Do(): stop");
 }
 
 
@@ -268,7 +262,7 @@ void Statement (void){ // any single line. always ends with NL
 	sym_pt sym;
 	
 	#ifdef DBG_PARSE
-	debug_msg("Statement(): start");
+	msg_trace(logfile, "Statement(): start");
 	#endif
 	
 	if (Scanner::token() == T_NL){
@@ -332,7 +326,7 @@ void Statement (void){ // any single line. always ends with NL
 		}
 	
 	#ifdef DBG_PARSE
-	debug_msg("Statement(): stop");
+	msg_trace(logfile, "Statement(): stop");
 	#endif
 }
 

@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 
-#include <data.h>
+#include <util/data.h>
 #include "scope.h"
 #include "errors.h"
 #include "scanner.h"
@@ -47,12 +47,12 @@ Scope_Stack::Scope_Stack (void){
 Scope_Stack::~Scope_Stack(void){
 	contxt_pt pt;
 	
-	msg_print(NULL, V_DEBUG, "Scope_Stack::~Scope_Stack(): start");
+	msg_trace(logfile, "~Scope_Stack(): start");
 	
 	// just make sure the stack is empty
 	while(( pt = (contxt_pt)DS_pop(stack) )){
-		msg_print(NULL, V_ERROR,
-			"Internal: Scope_Stack::~Scope_Stack(): the stack isn't empty");
+		msg_print(NULL, V_NOTE,
+			"Internal: ~Scope_Stack(): the stack isn't empty");
 		delete pt->inst_q;
 	}
 	
@@ -60,7 +60,7 @@ Scope_Stack::~Scope_Stack(void){
 	
 	free(buffer);
 	
-	msg_print(NULL, V_DEBUG, "Scope_Stack::~Scope_Stack(): stop");
+	msg_trace(logfile, "~Scope_Stack(): stop");
 }
 
 

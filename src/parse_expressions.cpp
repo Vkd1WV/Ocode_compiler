@@ -1073,9 +1073,7 @@ static sym_pt Assign(sym_pt target){
 static sym_pt Boolean(void){
 	sym_pt arg1, arg2, result;
 	
-	#ifdef DBG_PARSE
-	debug_msg("Boolean(): start");
-	#endif
+	msg_trace(logfile, "Boolean(): start");
 	
 	arg1 = Equation();
 	
@@ -1178,9 +1176,7 @@ static sym_pt Boolean(void){
 		arg1 = result;
 	}
 	
-	#ifdef DBG_PARSE
-	debug_msg("Boolean(): stop");
-	#endif
+	msg_trace(logfile, "Boolean(): stop");
 	return arg1;
 }
 

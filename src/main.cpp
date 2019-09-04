@@ -17,6 +17,7 @@ extern "C"{
 #include <util/types.h>
 #include "prog_data.h"
 #include "proto.h"
+#include "parse.h"
 
 // Default output files
 const char * default_dbg  = ".dbg" ;
@@ -25,15 +26,17 @@ const char * default_asm  = ".asm" ;
 const char * default_pexe = ".pexe";
 
 
-static inline void Set_files(char ** infilename, yuck_t * arg_pt){
-	uint   sum;
-	char * debug_file;
+static inline void set_log_level(yuck_t * arg_pt){
 	msg_log_lvl v;
 	
-	// calculate verbosity
-	v = (msg_log_lvl) (DEFAULT_VERBOSITY + arg_pt->dashv_flag - arg_pt->dashq_flag);
-	msg_set_verbosity(v);
+	// calculate log level
+	v = (msg_log_lvl) (DEFAULT_VERBOSITY + (arg_pt->dashv_flag*2) - arg_pt->dashq_flag);
 	
+	if(v > V_TRACE) v = V_TRACE;
+	else if(v<0) v = V_QUIET;
+	
+	msg_set_verbosity(v);
+	msg_print(logfile, V_INFO, "Log level set to %u",v);
 	
 	if (arg_pt->nargs > 1) msg_print(NULL, V_WARN, "Too many arguments...Ignoring.");
 	
@@ -62,6 +65,14 @@ arm_v8_flag       :\t%u\n\n" ,
 		arg_pt->arm_v7_flag       ,
 		arg_pt->arm_v8_flag
 	);
+}
+
+
+static inline void set_files(char ** infilename, yuck_t * arg_pt){
+	uint   sum;
+	char * debug_file = NULL;
+	
+	msg_print(logfile, V_TRACE, "set_files():start");
 	
 	// test for a target architecture
 	sum = arg_pt->x86_long_flag + arg_pt->x86_protected_flag;
@@ -85,6 +96,7 @@ arm_v8_flag       :\t%u\n\n" ,
 	if (arg_pt->dashd_flag){
 		make_debug = true;
 		
+		// FIXME: debug file from stdin causes segfault in strlen
 		debug_file = (char*) malloc(strlen(*arg_pt->args)+strlen(default_dbg)+1);
 		if(!debug_file) crit_error("Out of Memory");
 		
@@ -100,6 +112,8 @@ arm_v8_flag       :\t%u\n\n" ,
 		free(debug_file);
 	}
 	else make_debug = false;
+	
+	msg_print(logfile, V_TRACE, "set_files():stop");
 }
 
 
@@ -165,13 +179,17 @@ int main (int argc, char** argv){
 	
 	// Setup
 	yuck_parse(arg_pt, argc, argv);
-	Set_files(&infile, arg_pt);
+	set_log_level(arg_pt);
+	set_files(&infile, arg_pt);
 	
 	
 	// Compile
 	errors = Parse(infile);
 	
-	if(make_debug) prog_data.Dump(debug_fd);
+	if(make_debug){
+		fputs("\n== AFTER OPTOMIZATION ==\n", debug_fd);
+		prog_data.Dump(debug_fd);
+	} 
 	
 	if(!errors) Generate_code(arg_pt);
 	

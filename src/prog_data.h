@@ -325,9 +325,9 @@ public:
 	// Dump current state
 	void Dump_sym(FILE * fd) const;
 	void Dump(FILE * fd) const {
-		fputs("\nSYMBOLS\n", fd);
+		fputs("\nSymbol Table\n", fd);
 		Dump_sym(fd);
-		fputs("\nBLOCK QUEUE\n", fd);
+		fputs("\nBlock Queue\n", fd);
 		block_q.Dump(fd);
 	}
 };

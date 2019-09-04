@@ -19,7 +19,7 @@
 #include <util/msg.h>
 
 #include <stdio.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 #include <stdlib.h>
 
 //typedef enum {
@@ -36,7 +36,7 @@
 /******************************************************************************/
 
 
-#define DEFAULT_VERBOSITY (msg_log_lvl)V_WARN
+#define DEFAULT_VERBOSITY (msg_log_lvl)V_NOTE
 #define ERR_ARR_SZ  100 ///< temp arrays used in error reporting
 
 
@@ -76,26 +76,6 @@ static inline void crit_error(const char* message){
 	msg_print(NULL, V_ERROR, "CRITICAL: %s.\n", message);
 	exit(EXIT_FAILURE);
 }
-
-//static inline void err_msg(const char * message){
-//	if (verbosity >= V_ERROR)
-//		fprintf(stderr, "ERROR: %s.\n", message);
-//}
-
-//static inline void warn_msg(const char * message){
-//	if (verbosity >= V_WARN)
-//		fprintf(stderr, "WARNING: %s.\n", message);
-//}
-
-//static inline void info_msg(const char * message){
-//	if (verbosity >= V_INFO)
-//		fprintf(stderr, "INFO: %s.\n", message);
-//}
-
-//static inline void debug_msg(const char * message){
-//	if (verbosity >= V_DEBUG)
-//		fprintf(stderr, "DEBUG: %s.\n", message);
-//}
 
 
 #endif // _ERRORS_H
